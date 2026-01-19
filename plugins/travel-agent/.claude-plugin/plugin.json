@@ -5,7 +5,7 @@
   "author": {
     "name": "Omar Shahine"
   },
-  "repository": "https://github.com/omarshahine/Claude-Plugins",
+  "repository": "https://github.com/omarshahine/Agent-Plugins",
   "license": "MIT",
   "keywords": ["travel", "flights", "google-flights", "ita-matrix", "flighty", "tripsy"],
   "agents": "./agents/"
