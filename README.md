@@ -1,4 +1,4 @@
-# Claude-Plugins
+# Agent-Plugins
 
 A personal plugin marketplace for Claude Code. Contains reusable plugins that can be shared across projects and machines.
 
@@ -7,13 +7,13 @@ A personal plugin marketplace for Claude Code. Contains reusable plugins that ca
 Add this marketplace to Claude Code:
 
 ```bash
-/plugin marketplace add omarshahine/Claude-Plugins
+/plugin marketplace add omarshahine/Agent-Plugins
 ```
 
 Then install plugins:
 
 ```bash
-/plugin install travel-agent@claude-plugins
+/plugin install travel-agent@agent-plugins
 ```
 
 ## Available Plugins
