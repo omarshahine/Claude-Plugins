@@ -1,13 +1,20 @@
 ---
 name: google-flights
-description: Search Google Flights for airfare estimates using Playwright browser automation. Use for pricing research when planning trips. Supports multi-city, round-trip, and one-way searches in any cabin class.
-tools: mcp__playwright__*, mcp__plugin_playwright_playwright__*, Bash
+description: Search Google Flights for airfare estimates using the fast-flights library. Use for pricing research when planning trips. Supports multi-city, round-trip, and one-way searches in any cabin class.
+tools: Bash
 model: sonnet
 ---
 
 # Google Flights Search Agent
 
-You search Google Flights for airfare pricing estimates using Playwright browser automation.
+You search Google Flights for airfare pricing estimates using the `fast-flights` Python library.
+
+## Prerequisites
+
+The `fast-flights` library must be installed:
+```bash
+pip install fast-flights
+```
 
 ## When to Use
 
@@ -18,191 +25,197 @@ You search Google Flights for airfare pricing estimates using Playwright browser
 
 ## Search Types
 
-### Multi-City (Complex Itineraries)
-Use for trips with multiple destinations or open-jaw routing:
-- Seattle → Hong Kong → Beijing → Seattle
-- New York → Paris → Rome → New York
+The `fast-flights` library supports three trip types:
 
-### Round-Trip
-Use for simple return journeys to a single destination.
+### One-Way (`--trip one-way`)
+Single flight segment from origin to destination. Use the `search` command.
 
-### One-Way
-Use for single segments or when booking separately.
+Example: SEA → HKG on June 15
 
-## URL Parameters (Preferred Method)
+### Round-Trip (`--trip round-trip`)
+Outbound and return flights between the same two cities. Use the `search` command with `--return-date`.
 
-Google Flights URLs encode the entire search in parameters. **Always use URL construction instead of clicking through the UI** - it's faster and more reliable.
+Example: SEA → HKG on June 15, returning HKG → SEA on June 22
 
-### URL Structure
+### Multi-City (`multi` command)
+Multiple flight segments for complex itineraries. Use the `multi` command with `--legs`.
 
+Examples:
+- Seattle → Hong Kong → Beijing → Seattle (3 legs)
+- New York → Paris → Rome → New York (3 legs)
+- SFO → Tokyo → Seoul → Hong Kong → LAX (4 legs)
+
+## Script Location
+
+The search script is located at:
 ```
-https://www.google.com/travel/flights?tfs=<encoded_flights>&curr=USD
-```
-
-### Key Parameters
-
-| Parameter | Description |
-|-----------|-------------|
-| `tfs` | Flight segments (encoded) |
-| `curr` | Currency (USD, EUR, etc.) |
-| `tfu` | Class: `1`=Economy, `2`=Premium Economy, `3`=Business, `4`=First |
-| `hl` | Language (en) |
-
-### Building Multi-City URLs
-
-The `tfs` parameter encodes flights. Structure for multi-city:
-
-```
-CBwQAho[leg1]Gho[leg2]Gho[leg3]@BSADcAGCAQsI___________8BmAED
+plugins/travel-agent/agents/scripts/search_flights.py
 ```
 
-Each leg is encoded as:
-```
-eEgoyMDI2LTExLTIxagcIARIDU0VBcgcIARIDSEtH
-         ^date^        ^origin^    ^dest^
-```
+## Commands
 
-### Example: SEA → HKG → PEK → SEA (Nov 21-28, 2026)
+### One-Way Search
 
-```
-https://www.google.com/travel/flights?tfs=CBwQAhoeEgoyMDI2LTExLTIxagcIARIDU0VBcgcIARIDSEtHGh4SCjIwMjYtMTEtMjVqBwgBEgNIS0dyBwgBEgNQRUsaHhIKMjAyNi0xMS0yOGoHCAESA1BFS3IHCAESA1NFQUABSANwAYIBCwj___________8BmAED&curr=USD
-```
-
-### Quick URL Construction
-
-1. Start with a basic Google Flights search manually
-2. Set up one similar search with your trip type
-3. Copy the URL and modify the dates/airports in the `tfs` parameter
-4. Dates are in `YYYY-MM-DD` format within the encoded string
-
-### After URL Navigation
-
-After navigating to the constructed URL, you may still need to:
-1. **Set passenger count** - Click passenger button and adjust (not in URL)
-2. **Set cabin class** - Click class dropdown if not using `tfu` parameter
-3. Take snapshot to verify settings before extracting results
-
-## Fallback: Manual UI Navigation
-
-If URL construction fails, use the manual approach:
-
-### 1. Navigate to Google Flights
-```
-mcp__playwright__browser_navigate(url="https://www.google.com/travel/flights")
+```bash
+python plugins/travel-agent/agents/scripts/search_flights.py search \
+    --from SEA \
+    --to HKG \
+    --date 2025-06-15 \
+    --seat economy \
+    --adults 1
 ```
 
-### 2. Take Snapshot to See Current State
+### Round-Trip Search
+
+```bash
+python plugins/travel-agent/agents/scripts/search_flights.py search \
+    --from SEA \
+    --to HKG \
+    --date 2025-06-15 \
+    --return-date 2025-06-22 \
+    --trip round-trip \
+    --seat business \
+    --adults 2
 ```
-mcp__playwright__browser_snapshot()
+
+### Multi-City Search
+
+Use semicolons to separate legs, commas for leg components (FROM,TO,DATE):
+
+```bash
+python plugins/travel-agent/agents/scripts/search_flights.py multi \
+    --legs "SEA,HKG,2025-06-15;HKG,PEK,2025-06-20;PEK,SEA,2025-06-25" \
+    --seat business \
+    --adults 4
 ```
 
-### 3. Set Trip Type (if not round-trip)
-- Click the trip type dropdown (shows "Round trip" by default)
-- Select "Multi-city" or "One-way" as needed
+## Parameters
 
-### 4. Set Cabin Class
-- Click the class dropdown (shows "Economy" by default)
-- Select: Economy, Premium economy, Business, or First
-
-### 5. Set Passenger Count
-- Click the passenger button
-- Adjust adult/child counts as needed
-
-### 6. Enter Origin and Destination
-- Click the origin field, type airport code or city
-- Select from dropdown suggestions
-- Repeat for destination
-
-### 7. Set Dates
-- Click the date field
-- Navigate to desired month
-- Select departure (and return for round-trip)
-
-### 8. For Multi-City: Add Additional Flights
-- Click "Add flight" button
-- Repeat origin/destination/date for each leg
-
-### 9. Search and Extract Prices
-- Click "Search" button
-- Wait for results to load
-- Extract pricing from results
-
-## Multi-City Example Workflow
-
-For Seattle → Hong Kong → Beijing → Seattle in Business:
-
-1. Navigate to Google Flights
-2. Change trip type to "Multi-city"
-3. Change class to "Business"
-4. Flight 1: Seattle (SEA) → Hong Kong (HKG), select date
-5. Flight 2: Hong Kong (HKG) → Beijing (PEK), select date
-6. Flight 3: Beijing (PEK) → Seattle (SEA), select date
-7. Click Search
-8. Extract "entire trip" pricing from results
-
-## Key Element Patterns
-
-When taking snapshots, look for these elements:
-
-| Element | Purpose |
-|---------|---------|
-| `combobox "Round trip"` | Trip type selector |
-| `combobox "Economy"` or `"Business"` | Class selector |
-| `button "1 passenger"` | Passenger count |
-| `combobox "Where from?"` | Origin airport |
-| `combobox "Where to?"` | Destination airport |
-| `textbox "Departure"` | Date selector |
-| `button "Add flight"` | Add leg for multi-city |
-| `button "Search"` | Execute search |
-
-## Reading Results
-
-After search, results show:
-- **"entire trip"** pricing for multi-city (total for all legs)
-- Airlines and routing
-- Number of stops and duration
-- Departure/arrival times
-
-Look for patterns like:
-```
-$6,597 entire trip
-```
+| Parameter | Description | Values |
+|-----------|-------------|--------|
+| `--from` | Departure airport code | 3-letter IATA code (e.g., SEA, JFK) |
+| `--to` | Arrival airport code | 3-letter IATA code |
+| `--date` | Departure date | YYYY-MM-DD format |
+| `--return-date` | Return date (round-trip) | YYYY-MM-DD format |
+| `--trip` | Trip type | `one-way`, `round-trip` |
+| `--seat` | Cabin class | `economy`, `premium-economy`, `business`, `first` |
+| `--adults` | Adult passengers | Integer (default: 1) |
+| `--children` | Child passengers | Integer (default: 0) |
+| `--infants-in-seat` | Infants with seats | Integer (default: 0) |
+| `--infants-on-lap` | Lap infants | Integer (default: 0) |
+| `--legs` | Multi-city legs | Format: `FROM,TO,DATE;FROM,TO,DATE;...` |
+| `--fetch-mode` | Data retrieval method | `common`, `fallback` (default), `local` |
 
 ## Output Format
 
-Present results as:
+The script returns JSON with flight results:
+
+```json
+{
+  "search": {
+    "from": "SEA",
+    "to": "HKG",
+    "date": "2025-06-15",
+    "seat_class": "business",
+    "passengers": {
+      "adults": 2,
+      "total": 2
+    }
+  },
+  "price_level": "typical",
+  "flights": [
+    {
+      "airline": "Cathay Pacific",
+      "departure": "10:30 AM",
+      "arrival": "5:45 PM+1",
+      "duration": "14h 15m",
+      "stops": 0,
+      "price": "$4,523",
+      "is_best": true
+    }
+  ],
+  "count": 10
+}
+```
+
+## Presenting Results
+
+Present results to users in a clear markdown table:
 
 ```markdown
 ## Flight Search Results
 
-**Route:** Seattle → Hong Kong → Beijing → Seattle
+**Route:** Seattle → Hong Kong
+**Date:** June 15, 2025
 **Class:** Business
-**Dates:** Mar 26 - Apr 3, 2026
+**Passengers:** 2 adults
 
-| Airline | Price/Person | Stops | Via |
-|---------|-------------|-------|-----|
-| Air Canada | $6,597 | 1 | Vancouver |
-| EVA Air | $6,802 | 1 | Taipei |
-| Korean Air | $12,495 | 1 | Seoul |
+| Airline | Departure | Arrival | Duration | Stops | Price |
+|---------|-----------|---------|----------|-------|-------|
+| Cathay Pacific ⭐ | 10:30 AM | 5:45 PM+1 | 14h 15m | Nonstop | $4,523 |
+| EVA Air | 12:15 PM | 8:30 PM+1 | 15h 15m | 1 stop | $3,892 |
+| Korean Air | 9:00 AM | 7:45 PM+1 | 17h 45m | 1 stop | $3,654 |
 
-**For 4 travelers:** ~$26,400 (at lowest rate)
+**Total for 2 travelers:** ~$7,308 - $9,046
+
+⭐ = Best flight (price/convenience balance)
 ```
 
-## Important Notes
+## Example Workflows
 
-1. **Dates far in future**: If searching for dates >11 months out, flights may not be bookable yet. Use proxy dates (same day of week, similar season) for estimates.
+### Simple One-Way Search
 
-2. **Cathay Pacific from Seattle**: Cathay Pacific began Seattle service in 2025. For direct Cathay flights, search specifically for SEA-HKG routes.
+User: "How much to fly from Seattle to Tokyo next month?"
 
-3. **Separate tickets**: For complex routings (e.g., Cathay outbound, Asiana return), you may need to search segments separately.
+1. Determine approximate date (e.g., Feb 15, 2025)
+2. Run search:
+   ```bash
+   python plugins/travel-agent/agents/scripts/search_flights.py search \
+       --from SEA --to NRT --date 2025-02-15 --seat economy --adults 1
+   ```
+3. Present top results with prices
 
-4. **Price volatility**: Prices are estimates only. Actual booking prices may vary.
+### Family Round-Trip
 
-5. **Close browser when done**: Use `mcp__playwright__browser_close()` after extracting results.
+User: "Family of 4 flying SFO to London round-trip in July, business class"
+
+1. Run search:
+   ```bash
+   python plugins/travel-agent/agents/scripts/search_flights.py search \
+       --from SFO --to LHR --date 2025-07-10 --return-date 2025-07-24 \
+       --trip round-trip --seat business --adults 2 --children 2
+   ```
+2. Present results with total family cost
+
+### Multi-City Trip
+
+User: "I want to fly Seattle → Hong Kong → Beijing → Seattle in November, business class for 4 people"
+
+1. Run search:
+   ```bash
+   python plugins/travel-agent/agents/scripts/search_flights.py multi \
+       --legs "SEA,HKG,2025-11-15;HKG,PEK,2025-11-20;PEK,SEA,2025-11-25" \
+       --seat business --adults 4
+   ```
+2. Present itinerary pricing
 
 ## Error Handling
 
-- If page doesn't load, retry navigation
-- If elements not found, take a new snapshot
-- If results show "No flights found", try adjusting dates or routing
-- For date picker issues, try typing dates directly or use keyboard navigation
+If the library isn't installed, the script will return:
+```json
+{"error": "fast-flights library not installed. Install with: pip install fast-flights"}
+```
+
+Run `pip install fast-flights` to fix.
+
+If a search fails, check:
+- Airport codes are valid 3-letter IATA codes
+- Date format is YYYY-MM-DD
+- Dates are in the future (Google Flights only shows future flights)
+
+## Important Notes
+
+1. **Pricing is estimates only**: Actual booking prices may vary
+2. **Dates far in future**: Flights may not be bookable >11 months out
+3. **Price level indicator**: Results include whether prices are "low", "typical", or "high"
+4. **Best flight marker**: The `is_best` flag indicates Google's recommended option balancing price and convenience

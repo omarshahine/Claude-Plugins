@@ -39,14 +39,16 @@ Task(subagent_type="travel-agent:tripsy", prompt="Get details for Japan trip")
 
 ## Requirements
 
-### For google-flights and ita-matrix
+### For google-flights
 
-- **Playwright MCP server** configured:
+- **fast-flights** Python library:
   ```bash
-  claude mcp add --scope user playwright -- npx -y @playwright/mcp@latest --headless --browser msedge
+  pip install fast-flights
   ```
 
-- For ita-matrix, a **headed Playwright** instance is required (ITA Matrix blocks headless browsers):
+### For ita-matrix
+
+- **Playwright MCP server** configured (ITA Matrix requires headed browser):
   ```bash
   claude mcp add --scope user plugin_playwright_playwright -- npx -y @anthropic/claude-code-mcp-plugin-playwright@latest
   ```
@@ -65,13 +67,13 @@ Task(subagent_type="travel-agent:tripsy", prompt="Get details for Japan trip")
 
 ### google-flights
 
-Uses Playwright browser automation to search Google Flights. Supports:
+Uses the [fast-flights](https://github.com/AWeirdDev/flights) library to search Google Flights. Supports:
 - Multi-city itineraries
 - Round-trip and one-way searches
 - All cabin classes (Economy, Premium Economy, Business, First)
 - Multiple passengers
 
-Best for quick price comparisons and availability checks.
+Fast and reliable - no browser automation required. Best for quick price comparisons and availability checks.
 
 ### ita-matrix
 
