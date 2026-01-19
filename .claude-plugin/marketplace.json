@@ -1,0 +1,21 @@
+{
+  "name": "claude-plugins",
+  "owner": {
+    "name": "Omar Shahine"
+  },
+  "metadata": {
+    "description": "Personal plugin marketplace for Claude Code",
+    "version": "1.0.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "travel-agent",
+      "source": "./plugins/travel-agent",
+      "description": "Travel agents for flight research and trip tracking: Google Flights, ITA Matrix, Flighty, Tripsy",
+      "version": "1.0.0",
+      "keywords": ["travel", "flights", "google-flights", "ita-matrix", "flighty", "tripsy"],
+      "category": "productivity"
+    }
+  ]
+}

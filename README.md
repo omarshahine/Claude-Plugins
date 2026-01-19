@@ -14,7 +14,7 @@ claude plugin marketplace add omarshahine/Claude-Plugins
 Then install plugins:
 
 ```bash
-claude plugin install claude-plugins:travel-agents
+claude plugin install travel-agent@claude-plugins
 ```
 
 ## Available Plugins
@@ -32,7 +32,7 @@ Reusable travel-related agents for flight research and tracking:
 
 **Install:**
 ```bash
-claude plugin install claude-plugins:travel-agent
+claude plugin install travel-agent@claude-plugins
 ```
 
 **Use agents via Task tool:**
