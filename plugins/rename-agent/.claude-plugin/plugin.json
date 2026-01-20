@@ -1,0 +1,11 @@
+{
+  "name": "rename-agent",
+  "version": "1.0.0",
+  "description": "AI-powered file renaming using the rename-agent CLI. Analyzes documents, classifies them, and applies consistent naming patterns.",
+  "author": {
+    "name": "Omar Shahine"
+  },
+  "repository": "https://github.com/omarshahine/claude-rename-agent",
+  "license": "MIT",
+  "keywords": ["rename", "files", "documents", "pdf", "organize", "naming", "patterns"]
+}

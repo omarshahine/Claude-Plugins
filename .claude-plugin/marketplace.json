@@ -16,6 +16,14 @@
       "version": "1.0.0",
       "keywords": ["travel", "flights", "google-flights", "ita-matrix", "flighty", "tripsy"],
       "category": "productivity"
+    },
+    {
+      "name": "rename-agent",
+      "source": "./plugins/rename-agent",
+      "description": "AI-powered file renaming using content analysis. Supports PDFs, images, and documents with pattern-based naming.",
+      "version": "1.0.0",
+      "keywords": ["rename", "files", "documents", "pdf", "organize", "naming", "patterns"],
+      "category": "productivity"
     }
   ]
 }

@@ -14,6 +14,7 @@ Then install plugins:
 
 ```bash
 /plugin install travel-agent@agent-plugins
+/plugin install rename-agent@agent-plugins
 ```
 
 ## Available Plugins
@@ -55,9 +56,9 @@ Search business class flights from Seattle to Hong Kong for December 2026
 ```
 
 **Requirements:**
-- Playwright MCP server (headless)
+- `fast-flights` Python library:
   ```bash
-  claude mcp add --scope user playwright -- npx -y @playwright/mcp@latest --headless --browser msedge
+  pip install fast-flights
   ```
 
 ---
@@ -86,9 +87,9 @@ Search ITA Matrix for Seattle to Tokyo round-trip in business class, November 20
 ```
 
 **Requirements:**
-- Playwright MCP server (headed - required, ITA blocks headless)
-  ```bash
-  claude mcp add --scope user plugin_playwright_playwright -- npx -y @anthropic/claude-code-mcp-plugin-playwright@latest
+- Playwright MCP plugin (headed - required, ITA blocks headless browsers):
+  ```
+  /plugin install playwright@claude-plugins-official
   ```
 
 **Note:** ITA Matrix is research-only and doesn't book flights. Use the fare information to book directly with airlines or OTAs.
@@ -165,6 +166,45 @@ Show me the details for my Japan trip
 **Requirements:**
 - Tripsy app installed on macOS
 - Database location: `~/Library/Group Containers/group.app.tripsy.ios/Tripsy.sqlite`
+
+---
+
+### rename-agent
+
+AI-powered file renaming for Claude Code. Analyzes documents (PDFs, images, text files), classifies them, and applies consistent naming patterns.
+
+**Features:**
+- Document analysis (PDFs, images, text files)
+- Smart classification (15+ document types)
+- Pattern-based naming with tokens
+- Pattern learning for reuse
+- Batch processing
+
+**Example use:**
+```
+/rename-agent:rename ~/Downloads/tax-docs
+/rename-agent:rename ~/Documents/receipts --pattern "{Date:YYYY-MM-DD} - {Merchant}"
+```
+
+Or just ask:
+```
+Rename the tax documents in my Downloads folder
+Help me organize these receipts
+```
+
+**Pattern tokens:** `{Date:YYYY-MM-DD}`, `{Year}`, `{Merchant}`, `{Amount}`, `{Institution}`, `{Form Type}`, `{Last 4 Digits}`, `{Description}`
+
+**Document types:** Receipt, Bill, Tax Document, Bank Statement, Invoice, Contract, Medical, Insurance, Investment, Payslip, Identity, Correspondence, Manual, Photo, General
+
+**Requirements:**
+- Python 3.10+
+- `ANTHROPIC_API_KEY` environment variable
+- Install CLI:
+  ```bash
+  pip install claude-rename-agent
+  ```
+
+**Source:** https://github.com/omarshahine/claude-rename-agent
 
 ---
 
