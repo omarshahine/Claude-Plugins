@@ -1,0 +1,21 @@
+{
+  "name": "credit-card-benefits",
+  "version": "1.0.0",
+  "description": "Track and maximize premium credit card benefits, credits, and perks with anniversary-aware checklists",
+  "author": {
+    "name": "Omar Shahine",
+    "email": "omarshahine@users.noreply.github.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "credit-cards",
+    "benefits",
+    "travel-credits",
+    "amex-platinum",
+    "venture-x",
+    "sapphire-reserve",
+    "delta-reserve",
+    "alaska-atmos",
+    "ynab"
+  ]
+}
