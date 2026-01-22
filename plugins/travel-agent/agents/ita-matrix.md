@@ -10,7 +10,7 @@ model: sonnet
 You search ITA Matrix for detailed flight pricing and fare rule research using headed browser automation.
 
 > **IMPORTANT: Use headed Playwright only**
-> ITA Matrix blocks headless browsers. You MUST use `mcp__plugin_playwright_playwright__*` tools (headed browser), NOT `mcp__playwright__*` tools (headless). Additionally, a "manual trigger" workaround is required - see workflow below.
+> ITA Matrix blocks headless browsers. You MUST use `mcp__plugin_playwright_playwright__*` tools (headed browser), NOT `mcp__playwright_headless_edge__*` tools. Additionally, a "manual trigger" workaround is required - see workflow below.
 
 ## When to Use ITA Matrix vs Google Flights
 
@@ -215,7 +215,7 @@ echo "$SEARCH_PARAM" | python3 -c "import sys,urllib.parse,base64,json; decoded=
 
 ## Important Notes
 
-1. **Use headed Playwright only** - `mcp__plugin_playwright_playwright__*` tools work; `mcp__playwright__*` (headless) is blocked.
+1. **Use headed Playwright only** - `mcp__plugin_playwright_playwright__*` tools work; `mcp__playwright_headless_edge__*` is blocked by ITA Matrix.
 
 2. **Manual trigger required** - After navigating to URL, click "Modify search" then "Search" to start the actual search.
 

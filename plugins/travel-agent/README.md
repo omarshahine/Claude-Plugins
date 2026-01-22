@@ -48,9 +48,9 @@ Task(subagent_type="travel-agent:tripsy", prompt="Get details for Japan trip")
 
 ### For ita-matrix
 
-- **Playwright MCP server** configured (ITA Matrix requires headed browser):
-  ```bash
-  claude mcp add --scope user plugin_playwright_playwright -- npx -y @anthropic/claude-code-mcp-plugin-playwright@latest
+- **Playwright MCP plugin** (ITA Matrix requires headed browser - headless is blocked):
+  ```
+  /plugin install playwright@claude-plugins-official
   ```
 
 ### For flighty
