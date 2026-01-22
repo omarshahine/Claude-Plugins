@@ -24,8 +24,19 @@ lastUpdated: 2026-01-01
 amex-platinum:
   name: American Express Platinum
   annualFee: 895
-  accountOpenDate: YYYY-MM-DD  # TODO: Enter your card open date
   resetType: mixed
+
+  # Anniversary tracking - the annual fee posting date IS your anniversary
+  # Import a CSV statement to auto-detect, or enter manually
+  accountOpenDate: null           # Original open date (optional)
+  lastAnnualFeeDate: null         # Most recent annual fee posting date
+  nextAnnualFeeDate: null         # Expected next annual fee date
+  annualFeeHistory: []            # Track fee changes over time
+  # Example:
+  #   - date: 2025-03-15
+  #     amount: 695
+  #   - date: 2026-03-15
+  #     amount: 895
 
   benefits:
     # -------------------------------------------------------------------------
@@ -219,8 +230,13 @@ amex-platinum:
 capital-one-venture-x:
   name: Capital One Venture X
   annualFee: 395
-  accountOpenDate: YYYY-MM-DD  # TODO: Enter your card open date
   resetType: anniversary
+
+  # Anniversary tracking
+  accountOpenDate: null
+  lastAnnualFeeDate: null         # This IS your anniversary for credits
+  nextAnnualFeeDate: null
+  annualFeeHistory: []
 
   benefits:
     # -------------------------------------------------------------------------
@@ -277,8 +293,13 @@ capital-one-venture-x:
 chase-sapphire-reserve:
   name: Chase Sapphire Reserve
   annualFee: 795
-  accountOpenDate: YYYY-MM-DD  # TODO: Enter your card open date
   resetType: mixed
+
+  # Anniversary tracking
+  accountOpenDate: null
+  lastAnnualFeeDate: null         # Travel credit resets on this date
+  nextAnnualFeeDate: null
+  annualFeeHistory: []
 
   benefits:
     # -------------------------------------------------------------------------
@@ -365,8 +386,13 @@ chase-sapphire-reserve:
 alaska-atmos-summit:
   name: Alaska Airlines Atmos Rewards Summit
   annualFee: 395
-  accountOpenDate: YYYY-MM-DD  # TODO: Enter your card open date
   resetType: anniversary
+
+  # Anniversary tracking - lounge passes and companion fare reset on this date
+  accountOpenDate: null
+  lastAnnualFeeDate: null
+  nextAnnualFeeDate: null
+  annualFeeHistory: []
 
   benefits:
     # -------------------------------------------------------------------------
@@ -431,8 +457,13 @@ alaska-atmos-summit:
 delta-reserve:
   name: Delta SkyMiles Reserve
   annualFee: 650
-  accountOpenDate: YYYY-MM-DD  # TODO: Enter your card open date
   resetType: mixed
+
+  # Anniversary tracking - Delta Stays and Companion Cert reset on this date
+  accountOpenDate: null
+  lastAnnualFeeDate: null
+  nextAnnualFeeDate: null
+  annualFeeHistory: []
 
   benefits:
     # -------------------------------------------------------------------------
@@ -535,15 +566,23 @@ delta-reserve:
 # =============================================================================
 # YNAB INTEGRATION (Optional)
 # =============================================================================
+# To set up YNAB integration:
+# 1. Get your API token from https://app.ynab.com/settings/developer
+# 2. Run: /credit-card-benefits:ynab setup
+#    This will securely store your token at ~/.config/credit-card-benefits/ynab-token
+#    (This file is NOT tracked in git)
+# 3. The setup will list your YNAB accounts and help you map them below
+#
 ynab:
   enabled: false
-  budgetId: last-used
-  tokenPath: ~/.config/credit-card-benefits/ynab-token
+  budgetId: last-used         # Or specific budget ID from YNAB
   lastSync: null
 
   # Map your YNAB credit card accounts to the cards above
+  # Run /credit-card-benefits:ynab setup to get your account IDs
+  # Format: card-key: "ynab-account-uuid"
   accountMapping:
-    amex-platinum: null       # TODO: Add YNAB account ID
+    amex-platinum: null
     capital-one-venture-x: null
     chase-sapphire-reserve: null
     alaska-atmos-summit: null
