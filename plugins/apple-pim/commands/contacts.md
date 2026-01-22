@@ -1,6 +1,14 @@
 ---
 description: Manage macOS contacts - list, search, get details, create, update, delete
 argument-hint: "[groups|list|search|get|create|update|delete] [options]"
+allowed-tools:
+  - mcp__apple-pim__contact_groups
+  - mcp__apple-pim__contact_list
+  - mcp__apple-pim__contact_search
+  - mcp__apple-pim__contact_get
+  - mcp__apple-pim__contact_create
+  - mcp__apple-pim__contact_update
+  - mcp__apple-pim__contact_delete
 ---
 
 # Contact Management
