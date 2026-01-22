@@ -80,6 +80,8 @@ let keysToFetch: [CNKeyDescriptor] = [
     CNContactBirthdayKey as CNKeyDescriptor,
     CNContactNoteKey as CNKeyDescriptor,
     CNContactImageDataAvailableKey as CNKeyDescriptor,
+    CNContactThumbnailImageDataKey as CNKeyDescriptor,
+    CNContactImageDataKey as CNKeyDescriptor,
     CNContactTypeKey as CNKeyDescriptor,
     CNContactRelationsKey as CNKeyDescriptor,
     CNContactSocialProfilesKey as CNKeyDescriptor,
@@ -174,12 +176,28 @@ func contactToDict(_ contact: CNContact, brief: Bool = false) -> [String: Any] {
         dict["birthday"] = birthdayDict
     }
 
-    if !contact.note.isEmpty {
+    // Notes may not be available due to macOS privacy restrictions
+    if contact.isKeyAvailable(CNContactNoteKey), !contact.note.isEmpty {
         dict["notes"] = contact.note
     }
 
-    dict["hasImage"] = contact.imageDataAvailable
+    // Check if image keys are available before accessing
+    let hasImageKey = contact.isKeyAvailable(CNContactImageDataAvailableKey)
+    dict["hasImage"] = hasImageKey ? contact.imageDataAvailable : false
     dict["contactType"] = contact.contactType == .person ? "person" : "organization"
+
+    // Include image data as base64 if available (prefer thumbnail for smaller payload)
+    if hasImageKey && contact.imageDataAvailable {
+        if contact.isKeyAvailable(CNContactThumbnailImageDataKey),
+           let thumbnailData = contact.thumbnailImageData {
+            dict["imageBase64"] = thumbnailData.base64EncodedString()
+            dict["imageType"] = "thumbnail"
+        } else if contact.isKeyAvailable(CNContactImageDataKey),
+                  let imageData = contact.imageData {
+            dict["imageBase64"] = imageData.base64EncodedString()
+            dict["imageType"] = "full"
+        }
+    }
 
     if !contact.contactRelations.isEmpty {
         dict["relations"] = contact.contactRelations.map { labeled in

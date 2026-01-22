@@ -10,6 +10,7 @@ struct CalendarCLI: AsyncParsableCommand {
         subcommands: [
             ListCalendars.self,
             ListEvents.self,
+            GetEvent.self,
             SearchEvents.self,
             CreateEvent.self,
             UpdateEvent.self,
@@ -313,6 +314,29 @@ struct ListEvents: AsyncParsableCommand {
                 "from": ISO8601DateFormatter().string(from: startDate),
                 "to": ISO8601DateFormatter().string(from: endDate)
             ]
+        ])
+    }
+}
+
+struct GetEvent: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "get",
+        abstract: "Get a single event by ID"
+    )
+
+    @Option(name: .long, help: "Event ID")
+    var id: String
+
+    func run() async throws {
+        try await requestCalendarAccess()
+
+        guard let event = eventStore.event(withIdentifier: id) else {
+            throw CLIError.notFound("Event not found: \(id)")
+        }
+
+        outputJSON([
+            "success": true,
+            "event": eventToDict(event)
         ])
     }
 }

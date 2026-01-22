@@ -13,6 +13,13 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SWIFT_BIN_DIR = join(__dirname, "..", "swift", ".build", "release");
 
+// Helper to calculate relative date string from days offset
+function relativeDateString(daysOffset) {
+  const date = new Date();
+  date.setDate(date.getDate() + daysOffset);
+  return date.toISOString().split("T")[0]; // YYYY-MM-DD format
+}
+
 // Helper to run CLI commands
 async function runCLI(cli, args) {
   return new Promise((resolve, reject) => {
@@ -78,11 +85,35 @@ const tools = [
           type: "string",
           description: "End date (default: 7 days from start)",
         },
+        lastDays: {
+          type: "number",
+          description:
+            "Include events from N days ago (alternative to 'from'). E.g., 7 means include events from 7 days ago",
+        },
+        nextDays: {
+          type: "number",
+          description:
+            "Include events up to N days in the future (alternative to 'to'). E.g., 14 means include events up to 14 days from now",
+        },
         limit: {
           type: "number",
           description: "Maximum number of events (default: 100)",
         },
       },
+    },
+  },
+  {
+    name: "calendar_get",
+    description: "Get a single calendar event by ID",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "Event ID",
+        },
+      },
+      required: ["id"],
     },
   },
   {
@@ -234,11 +265,35 @@ const tools = [
           type: "boolean",
           description: "Include completed reminders (default: false)",
         },
+        lastDays: {
+          type: "number",
+          description:
+            "Include reminders due from N days ago (for HyperContext compatibility). Note: Currently reminders are not filtered by date in the CLI",
+        },
+        nextDays: {
+          type: "number",
+          description:
+            "Include reminders due up to N days in the future (for HyperContext compatibility). Note: Currently reminders are not filtered by date in the CLI",
+        },
         limit: {
           type: "number",
           description: "Maximum number of reminders (default: 100)",
         },
       },
+    },
+  },
+  {
+    name: "reminder_get",
+    description: "Get a single reminder by ID",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "Reminder ID",
+        },
+      },
+      required: ["id"],
     },
   },
   {
@@ -411,7 +466,8 @@ const tools = [
   },
   {
     name: "contact_get",
-    description: "Get full details for a contact",
+    description:
+      "Get full details for a contact, including base64-encoded photo if available",
     inputSchema: {
       type: "object",
       properties: {
@@ -534,10 +590,22 @@ async function handleTool(name, args) {
     case "calendar_events":
       cliArgs.push("events");
       if (args.calendar) cliArgs.push("--calendar", args.calendar);
-      if (args.from) cliArgs.push("--from", args.from);
-      if (args.to) cliArgs.push("--to", args.to);
+      // Support both from/to and lastDays/nextDays
+      if (args.lastDays !== undefined) {
+        cliArgs.push("--from", relativeDateString(-args.lastDays));
+      } else if (args.from) {
+        cliArgs.push("--from", args.from);
+      }
+      if (args.nextDays !== undefined) {
+        cliArgs.push("--to", relativeDateString(args.nextDays));
+      } else if (args.to) {
+        cliArgs.push("--to", args.to);
+      }
       if (args.limit) cliArgs.push("--limit", String(args.limit));
       return await runCLI("calendar-cli", cliArgs);
+
+    case "calendar_get":
+      return await runCLI("calendar-cli", ["get", "--id", args.id]);
 
     case "calendar_search":
       cliArgs.push("search", args.query);
@@ -584,6 +652,9 @@ async function handleTool(name, args) {
       if (args.completed) cliArgs.push("--completed");
       if (args.limit) cliArgs.push("--limit", String(args.limit));
       return await runCLI("reminder-cli", cliArgs);
+
+    case "reminder_get":
+      return await runCLI("reminder-cli", ["get", "--id", args.id]);
 
     case "reminder_search":
       cliArgs.push("search", args.query);

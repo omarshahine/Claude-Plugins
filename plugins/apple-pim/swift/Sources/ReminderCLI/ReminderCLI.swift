@@ -10,6 +10,7 @@ struct ReminderCLI: AsyncParsableCommand {
         subcommands: [
             ListLists.self,
             ListReminders.self,
+            GetReminder.self,
             SearchReminders.self,
             CreateReminder.self,
             CompleteReminder.self,
@@ -270,6 +271,29 @@ struct ListReminders: AsyncParsableCommand {
             "success": true,
             "reminders": Array(filtered),
             "count": filtered.count
+        ])
+    }
+}
+
+struct GetReminder: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "get",
+        abstract: "Get a single reminder by ID"
+    )
+
+    @Option(name: .long, help: "Reminder ID")
+    var id: String
+
+    func run() async throws {
+        try await requestReminderAccess()
+
+        guard let reminder = eventStore.calendarItem(withIdentifier: id) as? EKReminder else {
+            throw CLIError.notFound("Reminder not found: \(id)")
+        }
+
+        outputJSON([
+            "success": true,
+            "reminder": reminderToDict(reminder)
         ])
     }
 }
