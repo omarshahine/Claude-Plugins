@@ -1,6 +1,13 @@
 ---
 description: Manage macOS calendar events - list, search, create, update, delete
 argument-hint: "[list|events|search|create|update|delete] [options]"
+allowed-tools:
+  - mcp__apple-pim__calendar_list
+  - mcp__apple-pim__calendar_events
+  - mcp__apple-pim__calendar_search
+  - mcp__apple-pim__calendar_create
+  - mcp__apple-pim__calendar_update
+  - mcp__apple-pim__calendar_delete
 ---
 
 # Calendar Management
