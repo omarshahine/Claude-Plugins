@@ -16,6 +16,7 @@ Then install plugins:
 /plugin install travel-agent@omarshahine-agent-plugins
 /plugin install rename-agent@omarshahine-agent-plugins
 /plugin install apple-pim@omarshahine-agent-plugins
+/plugin install credit-card-benefits@omarshahine-agent-plugins
 ```
 
 ## Available Plugins
@@ -25,6 +26,7 @@ Then install plugins:
 | [travel-agent](#travel-agent) | Flight research and trip tracking (Google Flights, ITA Matrix, Flighty, Tripsy) |
 | [rename-agent](#rename-agent) | AI-powered file renaming with pattern-based naming |
 | [apple-pim](#apple-pim) | Native macOS Calendar, Reminders, and Contacts integration |
+| [credit-card-benefits](#credit-card-benefits) | Track and maximize premium credit card benefits and statement credits |
 
 ---
 
@@ -341,6 +343,101 @@ On first use, macOS will prompt for access to Calendar, Reminders, and Contacts.
 
 ---
 
+## credit-card-benefits
+
+Track and maximize your premium credit card benefits with anniversary-aware checklists, multiple data source support, and automatic transaction matching.
+
+### Supported Cards
+
+| Card | Annual Fee | Reset Type |
+|------|------------|------------|
+| American Express Platinum | $895 | Calendar Year / Monthly |
+| Capital One Venture X | $395 | Account Anniversary |
+| Chase Sapphire Reserve | $795 | Mixed (Anniversary + Calendar) |
+| Bank of America Alaska Airlines Atmos Summit | $395 | Account Anniversary |
+| Delta SkyMiles Reserve | $650 | Mixed (Monthly + Anniversary) |
+
+### Quick Start
+
+```bash
+# 1. Install the plugin
+/plugin install credit-card-benefits@omarshahine-agent-plugins
+
+# 2. Configure your cards and data source
+/credit-card-benefits:configure
+
+# 3. Initial sync pulls 12 months of history to find anniversaries
+/credit-card-benefits:sync --full
+
+# 4. Check your benefit status
+/credit-card-benefits:status
+```
+
+### Data Sources
+
+The plugin supports multiple ways to track your transactions:
+
+| Source | Best For | Setup |
+|--------|----------|-------|
+| **YNAB MCP** | YNAB users with MCP server | Auto-detected |
+| **YNAB API** | YNAB users | Requires API token |
+| **CSV Import** | Any card | Download from card website |
+| **Manual** | Simple tracking | No external data |
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `/credit-card-benefits:configure` | Interactive setup for cards and data sources |
+| `/credit-card-benefits:sync` | Sync transactions (incremental or full 12-month) |
+| `/credit-card-benefits:status` | View all benefits and unused credits |
+| `/credit-card-benefits:import` | Import transactions from CSV files |
+| `/credit-card-benefits:remind` | Show benefits expiring soon |
+| `/credit-card-benefits:use` | Manually record benefit usage |
+| `/credit-card-benefits:info` | Show detailed card benefit information |
+| `/credit-card-benefits:update` | Research and apply benefit changes from web |
+
+### Key Features
+
+- **Anniversary Detection**: Uses annual fee posting date as the most reliable anniversary indicator
+- **Multiple Reset Types**: Calendar year, anniversary, monthly, quarterly, semi-annual
+- **Benefit Research**: `/update` command searches official and trusted sources for benefit changes
+- **Incremental Sync**: After initial setup, only fetches new transactions
+- **YAML Checklist**: Human-readable format with comments for easy manual editing
+
+### Natural Language
+
+The `benefits-tracker` agent can be invoked naturally:
+
+```
+What Amex credits do I still need to use?
+Show me my unused Chase Sapphire benefits
+What benefits are expiring this month?
+Check for any new credit card benefits
+```
+
+### Benefits by Reset Period
+
+**Monthly (Use Every Month!):**
+- Amex: Uber Cash ($15), Entertainment ($25), Equinox ($25)
+- Delta: Resy ($20), Rideshare ($10)
+
+**Quarterly:**
+- Amex: Resy ($100), Lululemon ($75)
+
+**Semi-Annual:**
+- Amex: Hotel ($300), Saks ($50)
+- Chase: The Edit ($250), Exclusive Tables ($150)
+
+**Annual:**
+- Amex: Airline Fee ($200), CLEAR ($209)
+- Venture X: Travel ($300), 10K Miles
+- Chase: Travel ($300)
+- Delta: Delta Stays ($200), Companion Cert
+- Alaska: 8 Lounge Passes, Companion Fare
+
+---
+
 ## Usage
 
 After installation, use agents via the Task tool:
@@ -351,6 +448,7 @@ Task(subagent_type="travel-agent:flighty", prompt="List upcoming flights")
 Task(subagent_type="travel-agent:ita-matrix", prompt="Search SEA-NRT round-trip business Nov 2026")
 Task(subagent_type="travel-agent:tripsy", prompt="Show my upcoming trips")
 Task(subagent_type="apple-pim:pim-assistant", prompt="What's on my calendar this week?")
+Task(subagent_type="credit-card-benefits:benefits-tracker", prompt="What credits are expiring this month?")
 ```
 
 ## Creating New Plugins
