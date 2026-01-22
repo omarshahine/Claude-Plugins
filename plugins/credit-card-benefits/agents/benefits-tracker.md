@@ -48,10 +48,12 @@ You are a credit card benefits expert that helps users track and maximize their 
 ## Data Location
 
 The user's benefits tracking data is stored at:
-- `~/.config/credit-card-benefits/checklist.json` - Main checklist data
+- `~/.config/credit-card-benefits/checklist.yaml` - Main checklist (YAML for easy editing)
 - Plugin card documentation: Check the `cards/` directory in the plugin for benefit details
 
-If the checklist file doesn't exist, offer to create it from the template.
+If the checklist file doesn't exist, offer to create it from the template at `data/checklist-template.yaml`.
+
+**Why YAML?** The checklist uses YAML for human readability and comments. Transaction logs within the YAML are stored as arrays for easy programmatic access.
 
 ## Capabilities
 
