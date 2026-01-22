@@ -105,6 +105,23 @@ Show detailed benefit information for a card.
 /credit-card-benefits:info chase
 ```
 
+### `/credit-card-benefits:update [card] [--all] [--dry-run]`
+Research current benefits online and update your checklist with changes.
+
+```bash
+/credit-card-benefits:update amex-platinum    # Update one card
+/credit-card-benefits:update --all            # Update all cards
+/credit-card-benefits:update --dry-run        # Preview changes only
+```
+
+The update command:
+1. Searches official card issuer sites and trusted sources (TPG, NerdWallet)
+2. Compares found benefits against your current checklist
+3. Asks for approval before adding new benefits or removing old ones
+4. Logs all changes to `updateHistory` in your checklist
+
+**Recommended frequency:** Monthly during Q1, quarterly otherwise, or after major card announcements.
+
 ## Agent
 
 The `benefits-tracker` agent can be invoked naturally:

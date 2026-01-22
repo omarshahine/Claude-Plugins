@@ -603,8 +603,36 @@ delta-reserve:
       nextEligible: null
 
 # =============================================================================
+# UPDATE HISTORY
+# =============================================================================
+# Tracks when benefit information was researched and updated
+# Run /credit-card-benefits:update to check for new/changed benefits
+updateHistory:
+  lastFullCheck: null           # Last time all cards were checked
+  nextRecommendedCheck: null    # Suggested next check date
+
+  # Log of changes applied
+  # Example:
+  #   - date: 2026-01-22
+  #     card: amex-platinum
+  #     changes:
+  #       - type: added
+  #         benefit: walmart-plus
+  #         details: "$12.95/month credit"
+  #       - type: modified
+  #         benefit: annual-fee
+  #         from: 695
+  #         to: 895
+  #     sources:
+  #       - americanexpress.com
+  #       - thepointsguy.com
+  changes: []
+
+# =============================================================================
 # END OF CHECKLIST
 # =============================================================================
-# Run /credit-card-benefits:status to see your current benefit usage
-# Run /credit-card-benefits:sync to update from your data source
-# Run /credit-card-benefits:remind to see expiring benefits
+# Commands:
+# /credit-card-benefits:status  - See current benefit usage
+# /credit-card-benefits:sync    - Update from data source (YNAB/CSV)
+# /credit-card-benefits:remind  - See expiring benefits
+# /credit-card-benefits:update  - Check for new/changed benefits online
