@@ -54,6 +54,70 @@ cd Agent-Plugins/plugins/apple-pim
 cc --plugin-dir .
 ```
 
+## Configuration
+
+You can optionally restrict which calendars and reminder lists the plugin can access. This is useful for privacy or to reduce noise from calendars you don't need Claude to see.
+
+### Interactive Setup
+
+Run the configure command to interactively set up access:
+
+```
+/apple-pim:configure
+```
+
+This will:
+1. List your available calendars and reminder lists
+2. Let you select which ones to allow
+3. Set default calendars for new events/reminders
+4. Write the config file
+
+### Manual Configuration
+
+Create `~/.claude/apple-pim.local.md` with YAML frontmatter:
+
+```yaml
+---
+calendars:
+  mode: allowlist  # allowlist | blocklist | all
+  items:
+    - "Personal"
+    - "Work"
+reminders:
+  mode: allowlist
+  items:
+    - "Reminders"
+    - "Shopping"
+contacts:
+  mode: all
+default_calendar: "Personal"
+default_reminder_list: "Reminders"
+---
+
+# Apple PIM Configuration
+```
+
+### Configuration Options
+
+| Option | Values | Description |
+|--------|--------|-------------|
+| `mode` | `allowlist`, `blocklist`, `all` | How to filter items |
+| `items` | List of names | Calendar/list names to allow or block |
+| `default_calendar` | Calendar name | Where new events are created |
+| `default_reminder_list` | List name | Where new reminders are created |
+
+### Modes
+
+- **allowlist**: Only listed calendars/lists are accessible
+- **blocklist**: All EXCEPT listed items are accessible
+- **all**: No filtering (default if no config file exists)
+
+### Notes
+
+- Config is read when Claude Code starts - restart after changes
+- No config file = all calendars/lists accessible (backwards compatible)
+- Write operations to blocked calendars fail with a helpful error message
+
 ## Usage
 
 ### Commands
@@ -105,12 +169,12 @@ The `pim-assistant` agent triggers proactively for natural language requests:
 
 ## MCP Tools
 
-The plugin exposes 17 MCP tools:
+The plugin exposes 22 MCP tools:
 
 | Category | Tools |
 |----------|-------|
-| **Calendar** | `calendar_list`, `calendar_events`, `calendar_search`, `calendar_create`, `calendar_update`, `calendar_delete` |
-| **Reminders** | `reminder_lists`, `reminder_items`, `reminder_search`, `reminder_create`, `reminder_complete`, `reminder_update`, `reminder_delete` |
+| **Calendar** | `calendar_list`, `calendar_events`, `calendar_get`, `calendar_search`, `calendar_create`, `calendar_update`, `calendar_delete` |
+| **Reminders** | `reminder_lists`, `reminder_items`, `reminder_get`, `reminder_search`, `reminder_create`, `reminder_complete`, `reminder_update`, `reminder_delete` |
 | **Contacts** | `contact_groups`, `contact_list`, `contact_search`, `contact_get`, `contact_create`, `contact_update`, `contact_delete` |
 
 ## Architecture

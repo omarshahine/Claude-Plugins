@@ -9,6 +9,19 @@ import {
 import { spawn } from "child_process";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import {
+  loadConfig,
+  filterCalendars,
+  filterReminderLists,
+  filterEvents,
+  filterReminders,
+  isCalendarAllowed,
+  isReminderListAllowed,
+  validateCalendarForWrite,
+  validateReminderListForWrite,
+  getDefaultCalendar,
+  getDefaultReminderList,
+} from "./config.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SWIFT_BIN_DIR = join(__dirname, "..", "swift", ".build", "release");
@@ -584,10 +597,27 @@ async function handleTool(name, args) {
 
   switch (name) {
     // Calendar tools
-    case "calendar_list":
-      return await runCLI("calendar-cli", ["list"]);
+    case "calendar_list": {
+      const result = await runCLI("calendar-cli", ["list"]);
+      // Filter calendars based on config
+      if (result.calendars) {
+        result.calendars = await filterCalendars(result.calendars);
+      }
+      return result;
+    }
 
-    case "calendar_events":
+    case "calendar_events": {
+      // Validate calendar filter if specified
+      if (args.calendar) {
+        const allowed = await isCalendarAllowed(args.calendar);
+        if (!allowed) {
+          throw new Error(
+            `Calendar '${args.calendar}' is not in your allowed list.\n` +
+              `Edit ~/.claude/apple-pim.local.md to add it, then restart Claude Code.`
+          );
+        }
+      }
+
       cliArgs.push("events");
       if (args.calendar) cliArgs.push("--calendar", args.calendar);
       // Support both from/to and lastDays/nextDays
@@ -602,24 +632,70 @@ async function handleTool(name, args) {
         cliArgs.push("--to", args.to);
       }
       if (args.limit) cliArgs.push("--limit", String(args.limit));
-      return await runCLI("calendar-cli", cliArgs);
 
-    case "calendar_get":
-      return await runCLI("calendar-cli", ["get", "--id", args.id]);
+      const result = await runCLI("calendar-cli", cliArgs);
+      // Filter events based on config (in case no specific calendar was requested)
+      if (result.events) {
+        result.events = await filterEvents(result.events);
+      }
+      return result;
+    }
 
-    case "calendar_search":
+    case "calendar_get": {
+      const result = await runCLI("calendar-cli", ["get", "--id", args.id]);
+      // Check if event's calendar is allowed
+      if (result.calendar) {
+        const allowed = await isCalendarAllowed(result.calendar);
+        if (!allowed) {
+          throw new Error(
+            `This event belongs to calendar '${result.calendar}' which is not in your allowed list.\n` +
+              `Edit ~/.claude/apple-pim.local.md to add it, then restart Claude Code.`
+          );
+        }
+      }
+      return result;
+    }
+
+    case "calendar_search": {
+      // Validate calendar filter if specified
+      if (args.calendar) {
+        const allowed = await isCalendarAllowed(args.calendar);
+        if (!allowed) {
+          throw new Error(
+            `Calendar '${args.calendar}' is not in your allowed list.\n` +
+              `Edit ~/.claude/apple-pim.local.md to add it, then restart Claude Code.`
+          );
+        }
+      }
+
       cliArgs.push("search", args.query);
       if (args.calendar) cliArgs.push("--calendar", args.calendar);
       if (args.from) cliArgs.push("--from", args.from);
       if (args.to) cliArgs.push("--to", args.to);
       if (args.limit) cliArgs.push("--limit", String(args.limit));
-      return await runCLI("calendar-cli", cliArgs);
 
-    case "calendar_create":
+      const result = await runCLI("calendar-cli", cliArgs);
+      // Filter results based on config
+      if (result.events) {
+        result.events = await filterEvents(result.events);
+      }
+      return result;
+    }
+
+    case "calendar_create": {
+      // Validate target calendar
+      await validateCalendarForWrite(args.calendar);
+
+      // Use default calendar from config if not specified
+      let targetCalendar = args.calendar;
+      if (!targetCalendar) {
+        targetCalendar = await getDefaultCalendar();
+      }
+
       cliArgs.push("create", "--title", args.title, "--start", args.start);
       if (args.end) cliArgs.push("--end", args.end);
       if (args.duration) cliArgs.push("--duration", String(args.duration));
-      if (args.calendar) cliArgs.push("--calendar", args.calendar);
+      if (targetCalendar) cliArgs.push("--calendar", targetCalendar);
       if (args.location) cliArgs.push("--location", args.location);
       if (args.notes) cliArgs.push("--notes", args.notes);
       if (args.allDay) cliArgs.push("--all-day");
@@ -629,8 +705,21 @@ async function handleTool(name, args) {
         }
       }
       return await runCLI("calendar-cli", cliArgs);
+    }
 
-    case "calendar_update":
+    case "calendar_update": {
+      // First get the event to check its calendar
+      const event = await runCLI("calendar-cli", ["get", "--id", args.id]);
+      if (event.calendar) {
+        const allowed = await isCalendarAllowed(event.calendar);
+        if (!allowed) {
+          throw new Error(
+            `This event belongs to calendar '${event.calendar}' which is not in your allowed list.\n` +
+              `Edit ~/.claude/apple-pim.local.md to add it, then restart Claude Code.`
+          );
+        }
+      }
+
       cliArgs.push("update", "--id", args.id);
       if (args.title) cliArgs.push("--title", args.title);
       if (args.start) cliArgs.push("--start", args.start);
@@ -638,34 +727,111 @@ async function handleTool(name, args) {
       if (args.location) cliArgs.push("--location", args.location);
       if (args.notes) cliArgs.push("--notes", args.notes);
       return await runCLI("calendar-cli", cliArgs);
+    }
 
-    case "calendar_delete":
+    case "calendar_delete": {
+      // First get the event to check its calendar
+      const event = await runCLI("calendar-cli", ["get", "--id", args.id]);
+      if (event.calendar) {
+        const allowed = await isCalendarAllowed(event.calendar);
+        if (!allowed) {
+          throw new Error(
+            `This event belongs to calendar '${event.calendar}' which is not in your allowed list.\n` +
+              `Edit ~/.claude/apple-pim.local.md to add it, then restart Claude Code.`
+          );
+        }
+      }
+
       return await runCLI("calendar-cli", ["delete", "--id", args.id]);
+    }
 
     // Reminder tools
-    case "reminder_lists":
-      return await runCLI("reminder-cli", ["lists"]);
+    case "reminder_lists": {
+      const result = await runCLI("reminder-cli", ["lists"]);
+      // Filter lists based on config
+      if (result.lists) {
+        result.lists = await filterReminderLists(result.lists);
+      }
+      return result;
+    }
 
-    case "reminder_items":
+    case "reminder_items": {
+      // Validate list filter if specified
+      if (args.list) {
+        const allowed = await isReminderListAllowed(args.list);
+        if (!allowed) {
+          throw new Error(
+            `Reminder list '${args.list}' is not in your allowed list.\n` +
+              `Edit ~/.claude/apple-pim.local.md to add it, then restart Claude Code.`
+          );
+        }
+      }
+
       cliArgs.push("items");
       if (args.list) cliArgs.push("--list", args.list);
       if (args.completed) cliArgs.push("--completed");
       if (args.limit) cliArgs.push("--limit", String(args.limit));
-      return await runCLI("reminder-cli", cliArgs);
 
-    case "reminder_get":
-      return await runCLI("reminder-cli", ["get", "--id", args.id]);
+      const result = await runCLI("reminder-cli", cliArgs);
+      // Filter reminders based on config (in case no specific list was requested)
+      if (result.reminders) {
+        result.reminders = await filterReminders(result.reminders);
+      }
+      return result;
+    }
 
-    case "reminder_search":
+    case "reminder_get": {
+      const result = await runCLI("reminder-cli", ["get", "--id", args.id]);
+      // Check if reminder's list is allowed
+      if (result.list) {
+        const allowed = await isReminderListAllowed(result.list);
+        if (!allowed) {
+          throw new Error(
+            `This reminder belongs to list '${result.list}' which is not in your allowed list.\n` +
+              `Edit ~/.claude/apple-pim.local.md to add it, then restart Claude Code.`
+          );
+        }
+      }
+      return result;
+    }
+
+    case "reminder_search": {
+      // Validate list filter if specified
+      if (args.list) {
+        const allowed = await isReminderListAllowed(args.list);
+        if (!allowed) {
+          throw new Error(
+            `Reminder list '${args.list}' is not in your allowed list.\n` +
+              `Edit ~/.claude/apple-pim.local.md to add it, then restart Claude Code.`
+          );
+        }
+      }
+
       cliArgs.push("search", args.query);
       if (args.list) cliArgs.push("--list", args.list);
       if (args.completed) cliArgs.push("--completed");
       if (args.limit) cliArgs.push("--limit", String(args.limit));
-      return await runCLI("reminder-cli", cliArgs);
 
-    case "reminder_create":
+      const result = await runCLI("reminder-cli", cliArgs);
+      // Filter results based on config
+      if (result.reminders) {
+        result.reminders = await filterReminders(result.reminders);
+      }
+      return result;
+    }
+
+    case "reminder_create": {
+      // Validate target list
+      await validateReminderListForWrite(args.list);
+
+      // Use default list from config if not specified
+      let targetList = args.list;
+      if (!targetList) {
+        targetList = await getDefaultReminderList();
+      }
+
       cliArgs.push("create", "--title", args.title);
-      if (args.list) cliArgs.push("--list", args.list);
+      if (targetList) cliArgs.push("--list", targetList);
       if (args.due) cliArgs.push("--due", args.due);
       if (args.notes) cliArgs.push("--notes", args.notes);
       if (args.priority !== undefined)
@@ -676,13 +842,39 @@ async function handleTool(name, args) {
         }
       }
       return await runCLI("reminder-cli", cliArgs);
+    }
 
-    case "reminder_complete":
+    case "reminder_complete": {
+      // First get the reminder to check its list
+      const reminder = await runCLI("reminder-cli", ["get", "--id", args.id]);
+      if (reminder.list) {
+        const allowed = await isReminderListAllowed(reminder.list);
+        if (!allowed) {
+          throw new Error(
+            `This reminder belongs to list '${reminder.list}' which is not in your allowed list.\n` +
+              `Edit ~/.claude/apple-pim.local.md to add it, then restart Claude Code.`
+          );
+        }
+      }
+
       cliArgs.push("complete", "--id", args.id);
       if (args.undo) cliArgs.push("--undo");
       return await runCLI("reminder-cli", cliArgs);
+    }
 
-    case "reminder_update":
+    case "reminder_update": {
+      // First get the reminder to check its list
+      const reminder = await runCLI("reminder-cli", ["get", "--id", args.id]);
+      if (reminder.list) {
+        const allowed = await isReminderListAllowed(reminder.list);
+        if (!allowed) {
+          throw new Error(
+            `This reminder belongs to list '${reminder.list}' which is not in your allowed list.\n` +
+              `Edit ~/.claude/apple-pim.local.md to add it, then restart Claude Code.`
+          );
+        }
+      }
+
       cliArgs.push("update", "--id", args.id);
       if (args.title) cliArgs.push("--title", args.title);
       if (args.due) cliArgs.push("--due", args.due);
@@ -690,11 +882,25 @@ async function handleTool(name, args) {
       if (args.priority !== undefined)
         cliArgs.push("--priority", String(args.priority));
       return await runCLI("reminder-cli", cliArgs);
+    }
 
-    case "reminder_delete":
+    case "reminder_delete": {
+      // First get the reminder to check its list
+      const reminder = await runCLI("reminder-cli", ["get", "--id", args.id]);
+      if (reminder.list) {
+        const allowed = await isReminderListAllowed(reminder.list);
+        if (!allowed) {
+          throw new Error(
+            `This reminder belongs to list '${reminder.list}' which is not in your allowed list.\n` +
+              `Edit ~/.claude/apple-pim.local.md to add it, then restart Claude Code.`
+          );
+        }
+      }
+
       return await runCLI("reminder-cli", ["delete", "--id", args.id]);
+    }
 
-    // Contact tools
+    // Contact tools (no filtering for contacts by default, but groups could be filtered)
     case "contact_groups":
       return await runCLI("contacts-cli", ["groups"]);
 
@@ -747,7 +953,7 @@ async function handleTool(name, args) {
 const server = new Server(
   {
     name: "apple-pim",
-    version: "1.0.0",
+    version: "1.1.0",
   },
   {
     capabilities: {
