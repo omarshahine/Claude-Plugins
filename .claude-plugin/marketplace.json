@@ -27,7 +27,10 @@
     },
     {
       "name": "apple-pim",
-      "source": "./plugins/apple-pim",
+      "source": {
+        "source": "github",
+        "repo": "omarshahine/Apple-PIM-Agent-Plugin"
+      },
       "description": "Native macOS integration for Calendar, Reminders, and Contacts using EventKit and Contacts frameworks",
       "version": "1.1.0",
       "keywords": ["calendar", "reminders", "contacts", "eventkit", "macos", "pim", "scheduling"],
