@@ -13,17 +13,26 @@ Add this marketplace to Claude Code:
 Then install plugins:
 
 ```bash
-/plugin install travel-agent@agent-plugins
-/plugin install rename-agent@agent-plugins
+/plugin install travel-agent@omarshahine-agent-plugins
+/plugin install rename-agent@omarshahine-agent-plugins
+/plugin install apple-pim@omarshahine-agent-plugins
 ```
 
 ## Available Plugins
 
-### travel-agent
+| Plugin | Description |
+|--------|-------------|
+| [travel-agent](#travel-agent) | Flight research and trip tracking (Google Flights, ITA Matrix, Flighty, Tripsy) |
+| [rename-agent](#rename-agent) | AI-powered file renaming with pattern-based naming |
+| [apple-pim](#apple-pim) | Native macOS Calendar, Reminders, and Contacts integration |
+
+---
+
+## travel-agent
 
 Reusable travel-related agents for flight research and trip tracking.
 
-#### Agents Overview
+### Agents Overview
 
 | Agent | Type | Model | Description |
 |-------|------|-------|-------------|
@@ -31,8 +40,6 @@ Reusable travel-related agents for flight research and trip tracking.
 | `ita-matrix` | Browser automation (headed) | sonnet | Advanced fare research with detailed pricing rules |
 | `flighty` | Local database query | haiku | Query Flighty app for flight tracking data |
 | `tripsy` | Local database query | haiku | Query Tripsy app for trip planning data |
-
----
 
 ### google-flights
 
@@ -60,8 +67,6 @@ Search business class flights from Seattle to Hong Kong for December 2026
   ```bash
   pip install fast-flights
   ```
-
----
 
 ### ita-matrix
 
@@ -93,8 +98,6 @@ Search ITA Matrix for Seattle to Tokyo round-trip in business class, November 20
   ```
 
 **Note:** ITA Matrix is research-only and doesn't book flights. Use the fare information to book directly with airlines or OTAs.
-
----
 
 ### flighty
 
@@ -132,8 +135,6 @@ Show me my flight statistics
 - Flighty app installed on macOS
 - Database location: `~/Library/Containers/com.flightyapp.flighty/Data/Documents/MainFlightyDatabase.db`
 
----
-
 ### tripsy
 
 **Purpose:** Query the Tripsy app's local database for trip planning information.
@@ -169,7 +170,7 @@ Show me the details for my Japan trip
 
 ---
 
-### rename-agent
+## rename-agent
 
 AI-powered file renaming for Claude Code. Analyzes documents (PDFs, images, text files), classifies them, and applies consistent naming patterns.
 
@@ -208,6 +209,138 @@ Help me organize these receipts
 
 ---
 
+## apple-pim
+
+Native macOS integration for Calendar, Reminders, and Contacts using EventKit and Contacts frameworks.
+
+### Features
+
+- **Calendar Management**: Full CRUD operations for calendar events
+- **Reminder Management**: Manage reminders with priorities, due dates, and completion tracking
+- **Contact Management**: Search, view, and manage contacts with full details
+- **Flexible Date Ranges**: Use `lastDays`/`nextDays` or explicit `from`/`to` dates
+- **Natural Language**: Accepts dates like "tomorrow", "next Tuesday", "in 2 hours"
+- **MCP Integration**: Runs as an MCP server for direct tool access
+
+### Components
+
+| Component | Purpose |
+|-----------|---------|
+| `pim-assistant` agent | Natural language assistant for PIM operations |
+| `apple-pim` skill | EventKit/Contacts framework knowledge |
+| Slash commands | `/apple-pim:calendars`, `/apple-pim:reminders`, `/apple-pim:contacts` |
+| MCP server | Native Swift CLIs wrapped in Node.js MCP |
+
+### Installation
+
+1. Install the plugin:
+   ```bash
+   /plugin install apple-pim@omarshahine-agent-plugins
+   ```
+
+2. Run the setup script to build Swift CLIs and install dependencies:
+   ```bash
+   ~/.claude/plugins/cache/omarshahine-agent-plugins/apple-pim/setup.sh
+   ```
+
+3. Restart Claude Code to load the MCP server.
+
+### Usage
+
+**Via slash commands:**
+```
+/apple-pim:calendars events
+/apple-pim:calendars create "Team Meeting" --start "tomorrow 2pm" --duration 60
+/apple-pim:reminders items --list "Shopping"
+/apple-pim:reminders create "Buy milk" --due "tomorrow"
+/apple-pim:contacts search "John"
+```
+
+**Via natural language (uses pim-assistant agent):**
+```
+Schedule a meeting with the team for next Tuesday at 2pm
+Remind me to call the dentist tomorrow
+What's on my calendar this week?
+Find John's phone number
+```
+
+**Via MCP tools directly:**
+```
+mcp__apple-pim__calendar_events(lastDays=7, nextDays=14)
+mcp__apple-pim__reminder_create(title="Buy groceries", due="tomorrow 5pm", list="Shopping")
+mcp__apple-pim__contact_search(query="John")
+```
+
+### Slash Commands
+
+| Command | Description |
+|---------|-------------|
+| `/apple-pim:calendars` | Manage calendar events (list, events, search, create, update, delete) |
+| `/apple-pim:reminders` | Manage reminders (lists, items, search, create, complete, update, delete) |
+| `/apple-pim:contacts` | Manage contacts (groups, list, search, get, create, update, delete) |
+
+### Available MCP Tools
+
+**Calendar:**
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `calendar_list` | List all calendars | - |
+| `calendar_events` | List events in date range | `calendar`, `from`/`to` OR `lastDays`/`nextDays`, `limit` |
+| `calendar_get` | Get single event by ID | `id` |
+| `calendar_search` | Search events | `query`, `calendar`, `from`, `to`, `limit` |
+| `calendar_create` | Create new event | `title`, `start`, `end`/`duration`, `calendar`, `location`, `notes`, `allDay`, `alarm` |
+| `calendar_update` | Update existing event | `id`, `title`, `start`, `end`, `location`, `notes` |
+| `calendar_delete` | Delete event | `id` |
+
+**Reminders:**
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `reminder_lists` | List all reminder lists | - |
+| `reminder_items` | List reminders | `list`, `completed`, `limit` |
+| `reminder_get` | Get single reminder by ID | `id` |
+| `reminder_search` | Search reminders | `query`, `list`, `completed`, `limit` |
+| `reminder_create` | Create new reminder | `title`, `list`, `due`, `notes`, `priority` (0/1/5/9), `alarm` |
+| `reminder_complete` | Mark complete/incomplete | `id`, `undo` |
+| `reminder_update` | Update reminder | `id`, `title`, `due`, `notes`, `priority` |
+| `reminder_delete` | Delete reminder | `id` |
+
+**Contacts:**
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `contact_groups` | List contact groups | - |
+| `contact_list` | List contacts | `group`, `limit` |
+| `contact_search` | Search contacts | `query`, `limit` |
+| `contact_get` | Get full contact details | `id` |
+| `contact_create` | Create new contact | `name`/`firstName`+`lastName`, `email`, `phone`, `organization`, `jobTitle`, `notes` |
+| `contact_update` | Update contact | `id`, `firstName`, `lastName`, `email`, `phone`, `organization`, `jobTitle`, `notes` |
+| `contact_delete` | Delete contact | `id` |
+
+### Date Range Examples
+
+```
+# Explicit dates
+calendar_events(from="2024-01-15", to="2024-01-22")
+
+# Relative days (7 days ago to 14 days from now)
+calendar_events(lastDays=7, nextDays=14)
+
+# Natural language
+calendar_events(from="today", to="next week")
+```
+
+### Requirements
+
+- macOS 14+ (Sonoma) recommended
+- Xcode Command Line Tools (for Swift compilation)
+- Node.js 18+
+- Grant Calendar, Reminders, and Contacts access when prompted
+
+### Permissions
+
+On first use, macOS will prompt for access to Calendar, Reminders, and Contacts. Grant access in System Settings > Privacy & Security.
+
+---
+
 ## Usage
 
 After installation, use agents via the Task tool:
@@ -217,6 +350,7 @@ Task(subagent_type="travel-agent:google-flights", prompt="Search business class 
 Task(subagent_type="travel-agent:flighty", prompt="List upcoming flights")
 Task(subagent_type="travel-agent:ita-matrix", prompt="Search SEA-NRT round-trip business Nov 2026")
 Task(subagent_type="travel-agent:tripsy", prompt="Show my upcoming trips")
+Task(subagent_type="apple-pim:pim-assistant", prompt="What's on my calendar this week?")
 ```
 
 ## Creating New Plugins
@@ -224,7 +358,8 @@ Task(subagent_type="travel-agent:tripsy", prompt="Show my upcoming trips")
 1. Create a new directory under `plugins/`
 2. Add `.claude-plugin/plugin.json` with metadata
 3. Add agents, skills, or commands as needed
-4. Update this README
+4. Register the plugin in `.claude-plugin/marketplace.json`
+5. Update this README
 
 ### Plugin Structure
 
@@ -241,6 +376,26 @@ plugins/
     ├── commands/
     │   └── my-command.md
     └── README.md
+```
+
+### Marketplace Configuration
+
+The marketplace is defined in `.claude-plugin/marketplace.json`. Add new plugins to the `plugins` array:
+
+```json
+{
+  "name": "omarshahine-agent-plugins",
+  "plugins": [
+    {
+      "name": "my-plugin",
+      "source": "./plugins/my-plugin",
+      "description": "Description of my plugin",
+      "version": "1.0.0",
+      "keywords": ["keyword1", "keyword2"],
+      "category": "productivity"
+    }
+  ]
+}
 ```
 
 ## License
