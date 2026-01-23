@@ -16,7 +16,7 @@
 | Credit | Amount | Frequency | Reset | Notes |
 |--------|--------|-----------|-------|-------|
 | **The Edit Hotel Credit** | $500 | Semi-annual ($250 each) | Jan 1, Jul 1 (flexible in 2026) | Prepaid bookings via Chase Travel at The Edit hotels. 2-night minimum. **2026 Change**: Can use both $250 credits anytime during year |
-| **Exclusive Tables Dining** | $300 | Semi-annual ($150 each) | Jan 1, Jul 1 | Restaurants in the Sapphire Reserve Exclusive Tables program |
+| **Exclusive Tables Dining** | $300 | Semi-annual ($150 each) | Jan 1, Jul 1 | Restaurants in the Sapphire Reserve Exclusive Tables program. Book via OpenTable. |
 
 ### 2026 Special Credit (One-Time Benefit)
 
@@ -30,29 +30,53 @@
 - $300 from annual travel credit
 = **Up to $800** on one well-planned hotel stay
 
+### Monthly Credits
+
+| Credit | Amount | Frequency | Reset | Notes |
+|--------|--------|-----------|-------|-------|
+| **Peloton Credit** | $120/year | Monthly ($10) | 1st of month | Applies to Peloton membership or gear. Valid through Dec 31, 2027. |
+| **Lyft Credit** | $120/year | Monthly ($10) | 1st of month | Credit toward Lyft rides. |
+
+### One-Time Enrollment Credits
+
+| Credit | Amount | Availability | Notes |
+|--------|--------|--------------|-------|
+| **Apple Music** | Full credit | One-time enrollment | Enroll to receive streaming credit |
+| **Apple TV+** | Full credit | One-time enrollment | Enroll to receive streaming credit. Excludes Apple One bundles. |
+
 ### Multi-Year Credits
 
 | Credit | Amount | Frequency | Reset |
 |--------|--------|-----------|-------|
-| **Global Entry/TSA PreCheck** | $120 (GE) / $85 (TSA) | Every 4 years | Application date |
+| **Global Entry/TSA PreCheck/NEXUS** | $120 (GE/NEXUS) / $85 (TSA) | Every 4 years | Application date |
+
+## $75,000 Annual Spend Benefits
+
+Unlock these additional benefits after spending $75,000 in a calendar year:
+
+| Benefit | Value | Notes |
+|---------|-------|-------|
+| **IHG One Rewards Diamond Elite Status** | Premium | Highest IHG tier: 100% bonus points, free breakfast at select properties, room upgrades, Hertz Five Star status. Valid remainder of qualifying year + following year. |
+| **Southwest Rapid Rewards A-List Status** | Premium | Priority boarding, free same-day standby, bonus points earning, free checked bags. |
+| **Southwest Airlines Credit** | $500 | Credited via Chase Travel when booking Southwest flights. |
+| **Shops at Chase Statement Credit** | $250 | Valid at curated retailers: Baccarat, Bang & Olufsen, Breitling, Tumi, Dyson, Sony, Therabody. |
 
 ## Lounge Access
 
-- **Priority Pass Select**: Unlimited access to 1,300+ lounges worldwide
-- **Chase Sapphire Lounges**: Access at select airports (expanding network)
-- **Plaza Premium Lounges**: Access included
+- **Chase Sapphire Lounges by The Club**: Access at select airports (expanding network)
+- **Priority Pass Select**: Unlimited access to 1,300+ lounges worldwide (guests included)
+- **Air Canada Maple Leaf Lounges**: Access when traveling on Star Alliance flights
 
 ## Points Earning
 
-- **10X** on hotels and rental cars via Chase Travel (after $300 travel credit used)
-- **10X** on Chase Dining purchases
-- **5X** on flights via Chase Travel (after $300 travel credit used)
-- **3X** on other travel and dining worldwide
+- **8X** on hotels and car rentals via Chase Travel
+- **4X** on flights and hotels booked directly
+- **3X** on dining at restaurants
 - **1X** on all other purchases
 
 **Point Transfer**: Transfer 1:1 to airline and hotel partners (Hyatt, United, Southwest, Marriott, etc.)
 
-**Point Redemption Boost**: Points worth 50% more when redeemed through Chase Travel (1.5 cents per point)
+**Point Redemption Boost**: Points worth 50% more when redeemed through Chase Travel (1.5 cents per point). 2X redemption rate for The Edit hotels and premium cabin airfare.
 
 ## Travel Benefits
 
@@ -62,13 +86,33 @@
 - Lost luggage reimbursement
 - Emergency medical evacuation
 - No foreign transaction fees
-- Complimentary DashPass subscription
+- Complimentary DashPass subscription (DoorDash)
 - Complimentary Lyft Pink membership
 
-## Total Potential Annual Value: ~$2,000+
+## Exclusive Tables - Participating Restaurants
+
+### New York City
+Altro Paradiso, Aska, Bar Kabawa, Bar Miller, Brass, Casa Mono, Chez Fifi, Demo, Di An Di, Estela, Falansai, Gjelina, Hawksmoor, IRIS, Kabawa, Koloman, l'abeille, Le B., Lodi, Momofuku Noodle Bar (Downtown & Uptown), Moody Tongue Sushi, Noz Market, Odo, Phoenix Palace, Pig and Khao, Potluck Club, Roscioli, Sappe, Scarr's Pizza, Strange Delight, Sushi Ichimura, Sushi Noz, The Golden Swan, The North Fork Table & Inn
+
+### Seattle
+Atoma, Cafe Juanita, Lark, Takai by Kashiba, Tomo, Westward
+
+### Houston
+Agnes and Sherman, BCN Taste & Tradition, Brasserie 19, ChopnBlok, Kiran's, Lees Den, March, Maximo, Októ, Rosie Cannonball, Street To Kitchen, Turner's Cut
+
+**To book:** Visit [OpenTable](https://www.opentable.com/c/chasedining/) and add your eligible card for access.
+
+## Important Dates
+
+- **Launch Date (New Benefits):** June 23, 2025
+- **Grandfathering:** Existing cardmembers keep current benefits through October 25, 2025
+- **Full Transition:** October 26, 2025
+
+## Total Potential Annual Value: ~$2,500+
 
 ## Sources
 
 - [Chase Sapphire Reserve Benefits](https://account.chase.com/sapphire/reserve/benefits)
+- [Chase Sapphire Reserve Dining Credit](https://account.chase.com/sapphire/reserve/reservedbysapphire)
 - [New Sapphire Reserve Benefits October 2025 - The Points Guy](https://thepointsguy.com/credit-cards/chase-sapphire-reserve-new-benefits-october-2025/)
 - [Maximizing 2026 Hotel Credits - The Points Guy](https://thepointsguy.com/news/new-and-enhanced-hotel-credits-for-sapphire-reserve-cards/)

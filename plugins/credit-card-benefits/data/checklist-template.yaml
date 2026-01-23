@@ -246,6 +246,18 @@ amex-platinum:
       monthsUsed: []
 
     # -------------------------------------------------------------------------
+    # WALMART+ - ~$155/year ($12.95/month)
+    # Enrollment required in Amex account
+    # -------------------------------------------------------------------------
+    walmart-plus:
+      name: Walmart+ Credit
+      amount: 155
+      monthlyAmount: 12.95
+      period: monthly
+      enrolled: false  # TODO: Enroll in Amex account
+      monthsUsed: []
+
+    # -------------------------------------------------------------------------
     # OTHER ANNUAL BENEFITS
     # -------------------------------------------------------------------------
     clear-plus:
@@ -411,13 +423,81 @@ chase-sapphire-reserve:
       transactions: []
       notes: Can stack with The Edit for up to $800 on one booking!
 
+    # -------------------------------------------------------------------------
+    # PELOTON CREDIT - $120/year ($10/month)
+    # Applies to membership or gear. Valid through Dec 31, 2027.
+    # -------------------------------------------------------------------------
+    peloton:
+      name: Peloton Credit
+      amount: 120
+      monthlyAmount: 10
+      period: monthly
+      validUntil: "2027-12-31"
+      monthsUsed: []
+
+    # -------------------------------------------------------------------------
+    # LYFT CREDIT - $120/year ($10/month)
+    # -------------------------------------------------------------------------
+    lyft:
+      name: Lyft Credit
+      amount: 120
+      monthlyAmount: 10
+      period: monthly
+      monthsUsed: []
+
+    # -------------------------------------------------------------------------
+    # APPLE STREAMING CREDITS - One-Time Enrollment
+    # Excludes Apple One bundles
+    # -------------------------------------------------------------------------
+    apple-music:
+      name: Apple Music Credit
+      period: one-time
+      enrolled: false
+      enrolledDate: null
+
+    apple-tv-plus:
+      name: Apple TV+ Credit
+      period: one-time
+      enrolled: false
+      enrolledDate: null
+      notes: Excludes Apple One bundles
+
     global-entry:
-      name: Global Entry/TSA PreCheck
+      name: Global Entry/TSA PreCheck/NEXUS
       amount: 120
       period: multi-year
       intervalYears: 4
       lastUsed: null
       nextEligible: null
+
+    # -------------------------------------------------------------------------
+    # $75,000 ANNUAL SPEND BENEFITS
+    # Unlocked after $75K spend in a calendar year
+    # -------------------------------------------------------------------------
+    spend-75k-tier:
+      name: $75K Spend Benefits
+      spendThreshold: 75000
+      currentYearSpend: 0
+      unlocked: false
+      benefits:
+        ihg-diamond:
+          name: IHG One Rewards Diamond Elite Status
+          earned: false
+          notes: Highest IHG tier. Valid remainder of year + following year.
+        southwest-alist:
+          name: Southwest A-List Status
+          earned: false
+          notes: Priority boarding, same-day standby, bonus points
+        southwest-credit:
+          name: Southwest Airlines Credit
+          amount: 500
+          used: 0
+          notes: Via Chase Travel for Southwest flights
+        shops-at-chase:
+          name: Shops at Chase Credit
+          amount: 250
+          used: 0
+          notes: "Retailers: Baccarat, Bang & Olufsen, Breitling, Tumi, Dyson, Sony, Therabody"
 
 # =============================================================================
 # ALASKA AIRLINES ATMOS REWARDS SUMMIT

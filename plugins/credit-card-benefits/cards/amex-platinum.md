@@ -18,6 +18,7 @@
 | **Airline Fee Credit** | $200 | Annual | Jan 1 | Incidental fees at one selected qualifying airline |
 | **Saks Fifth Avenue** | $100 | Semi-annual ($50 each) | Jan 1, Jul 1 | Saks Fifth Avenue purchases |
 | **Equinox Credit** | $300 | Monthly ($25) | Monthly | Gym and Equinox+ app memberships |
+| **Walmart+ Credit** | ~$155 | Monthly ($12.95) | 1st of month | Walmart+ membership. Enrollment required in Amex account. |
 | **CLEAR+ Credit** | $209 | Annual | Account anniversary | CLEAR+ membership |
 
 ### Multi-Year Credits
