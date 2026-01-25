@@ -218,15 +218,15 @@ question: "Which premium credit cards do you have?"
 header: "Your cards"
 multiSelect: true
 options:
-  - label: "American Express Platinum ($895/year)"
+  - label: "American Express Platinum ($695/year)"
     description: "Uber, Saks, airline credits, Centurion lounges, hotel credits, and more"
-  - label: "Chase Sapphire Reserve ($795/year)"
+  - label: "Chase Sapphire Reserve ($550/year)"
     description: "Travel credit, DoorDash, Lyft, Priority Pass lounges, The Edit hotel credits"
   - label: "Capital One Venture X ($395/year)"
     description: "Travel credit, Capital One lounges, anniversary miles bonus"
   - label: "Delta SkyMiles Reserve ($650/year)"
     description: "Sky Club access, companion certificate, Resy credit, rideshare credit"
-  - label: "Alaska Atmos Summit ($395/year)"
+  - label: "Alaska Atmos Summit ($325/year)"
     description: "Lounge passes, companion fare, free bags, Wi-Fi passes"
 ```
 
@@ -291,9 +291,12 @@ Your setup:
 • Cards tracked: Amex Platinum, Chase Sapphire Reserve, Delta Reserve
 
 Next steps:
+• /credit-card-benefits:sync - Run first to detect card anniversary dates from annual fee transactions
 • /credit-card-benefits:status - View your current benefits
-• /credit-card-benefits:sync - Pull transactions and update usage
 • /credit-card-benefits:remind - See benefits expiring soon
+
+Note: Card anniversary dates will be automatically detected from annual fee
+transactions when you run sync. This is needed for cardmember-year benefits.
 ```
 
 ---
