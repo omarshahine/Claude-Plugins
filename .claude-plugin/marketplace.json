@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Personal plugin marketplace for Claude Code",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "pluginRoot": "./plugins"
   },
   "plugins": [
@@ -43,6 +43,30 @@
       "version": "1.1.0",
       "keywords": ["credit-cards", "benefits", "travel-credits", "amex-platinum", "venture-x", "sapphire-reserve", "delta-reserve", "alaska-atmos", "ynab"],
       "category": "finance"
+    },
+    {
+      "name": "inbox-to-reminder",
+      "source": "./plugins/inbox-to-reminder",
+      "description": "Scan email inbox for action items and create reminders in Apple Reminders",
+      "version": "1.0.0",
+      "keywords": ["email", "reminders", "tasks", "bills", "deadlines"],
+      "category": "productivity"
+    },
+    {
+      "name": "newsletter-unsubscriber",
+      "source": "./plugins/newsletter-unsubscriber",
+      "description": "Scan inbox for newsletters and help unsubscribe from unwanted ones",
+      "version": "1.0.0",
+      "keywords": ["email", "newsletters", "unsubscribe", "cleanup"],
+      "category": "productivity"
+    },
+    {
+      "name": "inbox-to-parcel",
+      "source": "./plugins/inbox-to-parcel",
+      "description": "Process shipping emails and add tracking to Parcel app",
+      "version": "1.0.0",
+      "keywords": ["email", "packages", "tracking", "parcel", "shipping"],
+      "category": "productivity"
     }
   ]
 }

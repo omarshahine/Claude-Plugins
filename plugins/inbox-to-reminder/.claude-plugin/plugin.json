@@ -1,0 +1,9 @@
+{
+  "name": "inbox-to-reminder",
+  "version": "1.0.0",
+  "description": "Scan email inbox for action items and create reminders in Apple Reminders",
+  "author": {
+    "name": "Omar Shahine"
+  },
+  "license": "MIT"
+}
