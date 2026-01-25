@@ -1,0 +1,9 @@
+{
+  "name": "newsletter-unsubscriber",
+  "version": "1.0.0",
+  "description": "Scan inbox for newsletters and help unsubscribe from unwanted ones",
+  "author": {
+    "name": "Omar Shahine"
+  },
+  "license": "MIT"
+}

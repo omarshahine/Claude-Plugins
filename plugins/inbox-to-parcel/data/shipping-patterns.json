@@ -1,0 +1,147 @@
+{
+  "subjectPatterns": {
+    "shipped": [
+      "^Shipped:",
+      "has shipped!?$",
+      "A shipment from order .* is on the way",
+      "Shipping Confirmation",
+      "Shipment Notification",
+      "Your order has shipped",
+      "Your .* has shipped"
+    ],
+    "onTheWay": [
+      "is on the way$",
+      "is on its way$",
+      "on the way to you"
+    ],
+    "outForDelivery": [
+      "^Out for delivery:",
+      "out for delivery$",
+      "will be delivered today"
+    ],
+    "delivered": [
+      "^Delivered:",
+      "has been delivered",
+      "was delivered"
+    ]
+  },
+  "excludePatterns": {
+    "orderConfirmations": [
+      "^Order .* confirmed",
+      "^Ordered:",
+      "^We got your order",
+      "^We're processing your order",
+      "shipping soon!?$",
+      "^Receipt for your order",
+      "^Your order has been received",
+      "^Thank you for your order",
+      "^Order confirmation",
+      "^Purchase confirmation"
+    ],
+    "marketing": [
+      "% off",
+      "sale",
+      "deal",
+      "promo",
+      "newsletter",
+      "unsubscribe"
+    ],
+    "accountNotifications": [
+      "password reset",
+      "login alert",
+      "verify your email",
+      "account update"
+    ],
+    "reviewRequests": [
+      "How was your purchase",
+      "Review your order",
+      "Rate your experience",
+      "Tell us what you think"
+    ]
+  },
+  "archiveToOrdersPatterns": {
+    "orderConfirmations": [
+      "^Order .* confirmed",
+      "^Ordered:",
+      "^We got your order",
+      "^We're processing your order",
+      "^Your order has been received",
+      "^Thank you for your order",
+      "^Order confirmation",
+      "^Receipt for your order",
+      "^Your .* order",
+      "^Purchase confirmation"
+    ],
+    "orderUpdates": [
+      "^Your order is being prepared",
+      "^We're preparing your order",
+      "^Your order is ready",
+      "^Ready for pickup",
+      "^Your return has been",
+      "^Refund processed",
+      "^Your .* has been canceled",
+      "^Order update",
+      "^Delivery scheduled",
+      "^Delivery attempt",
+      "^Package held"
+    ]
+  },
+  "senderPatterns": {
+    "amazon": [
+      "shipment-tracking@amazon.com",
+      "auto-confirm@amazon.com",
+      "ship-confirm@amazon.com",
+      "@amazon.com"
+    ],
+    "carriers": [
+      "@ups.com",
+      "@fedex.com",
+      "@usps.com",
+      "@dhl.com",
+      "@ontrac.com"
+    ],
+    "retailers": [
+      "orders@",
+      "order-update@",
+      "shipping@",
+      "noreply@"
+    ]
+  },
+  "trackingPatterns": {
+    "ups": {
+      "pattern": "1Z[A-Z0-9]{16}",
+      "carrierCode": "ups"
+    },
+    "fedex": {
+      "pattern": "\\b\\d{12,22}\\b",
+      "carrierCode": "fedex"
+    },
+    "usps": {
+      "pattern": "\\b(94|93|92|91|90|82|70)[0-9]{18,20}\\b",
+      "carrierCode": "usps"
+    },
+    "ontrac": {
+      "pattern": "\\b(C|1LS)[0-9A-Z]+\\b",
+      "carrierCode": "ont"
+    },
+    "dhl": {
+      "pattern": "\\b\\d{10}\\b",
+      "carrierCode": "dhl"
+    }
+  },
+  "searchQueries": {
+    "shippingEmails": "shipped OR \"on the way\" OR \"on its way\" OR \"out for delivery\" OR \"has shipped\" OR \"shipment notification\"",
+    "orderEmails": "\"order confirmed\" OR \"your order\" OR \"order confirmation\" OR \"thank you for your order\" OR \"we got your order\"",
+    "combined": "shipped OR \"on the way\" OR \"on its way\" OR \"out for delivery\" OR \"has shipped\" OR \"order confirmed\" OR \"your order\" OR \"order confirmation\" OR \"thank you for your order\" OR \"we got your order\""
+  },
+  "carrierCodes": {
+    "UPS": "ups",
+    "FedEx": "fedex",
+    "USPS": "usps",
+    "DHL Express": "dhl",
+    "DHL eCommerce": "dhlecom",
+    "OnTrac": "ont",
+    "LaserShip": "laser",
+    "UPS Mail Innovations": "upsmi"
+  }
+}

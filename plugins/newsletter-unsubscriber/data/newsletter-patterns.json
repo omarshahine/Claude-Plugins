@@ -1,0 +1,228 @@
+{
+  "headerSearchQueries": {
+    "primary": "header:\"List-Unsubscribe\" OR header:\"List-Id\"",
+    "newslettersOnly": "header:\"List-Unsubscribe\"",
+    "includeBulk": "header:\"List-Unsubscribe\" OR header:\"List-Id\" OR header:\"Precedence: bulk\"",
+    "oneClickCapable": "header:\"List-Unsubscribe-Post\""
+  },
+  "rfcHeaders": {
+    "List-Unsubscribe": "RFC 2369 - Contains mailto: and/or https: unsubscribe URLs",
+    "List-Unsubscribe-Post": "RFC 8058 - Enables one-click unsubscribe (List-Unsubscribe=One-Click)",
+    "List-Id": "RFC 2919 - Identifies the mailing list",
+    "Precedence": "Often 'bulk' or 'list' for mass mail",
+    "Feedback-ID": "ESP complaint tracking header"
+  },
+  "espCampaignHeaders": [
+    "X-Campaign",
+    "X-Mailgun-Campaign-Id",
+    "X-MC-Campaign",
+    "X-Sendgrid-Campaign-Id",
+    "X-Mailer",
+    "X-SES-Outgoing"
+  ],
+  "newsletterServiceDomains": [
+    "mailchimp.com",
+    "sendgrid.net",
+    "substack.com",
+    "constantcontact.com",
+    "mailgun.org",
+    "sparkpostmail.com",
+    "amazonses.com",
+    "hubspot.com",
+    "klaviyo.com",
+    "sailthru.com",
+    "braze.com",
+    "iterable.com",
+    "customer.io",
+    "intercom-mail.com",
+    "postmarkapp.com",
+    "sendinblue.com",
+    "mailjet.com",
+    "convertkit.com",
+    "drip.com",
+    "activecampaign.com",
+    "campaignmonitor.com",
+    "getresponse.com",
+    "aweber.com",
+    "beehiiv.com",
+    "ghost.io",
+    "buttondown.email",
+    "revue.co",
+    "tinyletter.com"
+  ],
+  "bulkSenderPatterns": [
+    "noreply@",
+    "no-reply@",
+    "newsletter@",
+    "news@",
+    "digest@",
+    "updates@",
+    "marketing@",
+    "promotions@",
+    "info@",
+    "hello@",
+    "team@",
+    "mail@",
+    "email@",
+    "subscribe@",
+    "notifications@",
+    "alerts@",
+    "weekly@",
+    "daily@",
+    "monthly@"
+  ],
+  "unsubscribeLinkTextPatterns": [
+    "unsubscribe",
+    "opt out",
+    "opt-out",
+    "optout",
+    "manage preferences",
+    "email preferences",
+    "update preferences",
+    "subscription preferences",
+    "manage subscription",
+    "update subscription",
+    "email settings",
+    "notification settings",
+    "stop receiving",
+    "remove me",
+    "click here to unsubscribe",
+    "if you no longer wish to receive",
+    "manage your email",
+    "change email preferences"
+  ],
+  "unsubscribeUrlPatterns": [
+    "unsubscribe",
+    "unsub",
+    "optout",
+    "opt-out",
+    "manage-preferences",
+    "email-preferences",
+    "subscription",
+    "preferences",
+    "list-manage",
+    "campaign-archive",
+    "email-settings",
+    "notification-settings",
+    "mailing-list",
+    "remove"
+  ],
+  "subjectIndicators": {
+    "newsletter": [
+      "newsletter",
+      "weekly",
+      "daily",
+      "monthly",
+      "digest",
+      "roundup",
+      "round-up",
+      "update",
+      "bulletin",
+      "briefing",
+      "recap",
+      "highlights",
+      "this week",
+      "this month",
+      "edition"
+    ],
+    "marketing": [
+      "% off",
+      "sale",
+      "deal",
+      "promo",
+      "discount",
+      "limited time",
+      "exclusive offer",
+      "special offer",
+      "flash sale",
+      "clearance",
+      "save now",
+      "shop now",
+      "buy now",
+      "free shipping",
+      "last chance"
+    ]
+  },
+  "excludePatterns": {
+    "transactional": [
+      "order confirmation",
+      "shipping confirmation",
+      "delivery notification",
+      "receipt",
+      "invoice",
+      "payment received",
+      "refund processed",
+      "your order",
+      "track your",
+      "shipped",
+      "delivered"
+    ],
+    "account": [
+      "password reset",
+      "verify your email",
+      "confirm your email",
+      "security alert",
+      "login notification",
+      "account update",
+      "two-factor",
+      "2fa",
+      "authentication"
+    ],
+    "direct": [
+      "re:",
+      "fwd:",
+      "replied to your"
+    ]
+  },
+  "searchQueries": {
+    "primary": "header:\"List-Unsubscribe\" OR header:\"List-Id\"",
+    "fallbackKeywords": "unsubscribe OR \"manage preferences\" OR \"email preferences\""
+  },
+  "webFormPatterns": {
+    "confirmButtons": [
+      "unsubscribe",
+      "confirm",
+      "yes",
+      "submit",
+      "opt out",
+      "remove",
+      "unsubscribe me",
+      "confirm unsubscribe"
+    ],
+    "emailFields": [
+      "email",
+      "e-mail",
+      "email address",
+      "your email"
+    ],
+    "captchaIndicators": [
+      "captcha",
+      "recaptcha",
+      "hcaptcha",
+      "i'm not a robot",
+      "verify you're human",
+      "security check",
+      "challenge"
+    ],
+    "loginIndicators": [
+      "log in",
+      "sign in",
+      "login",
+      "signin",
+      "enter password",
+      "password",
+      "session expired",
+      "please authenticate"
+    ],
+    "successIndicators": [
+      "successfully unsubscribed",
+      "you have been unsubscribed",
+      "unsubscribe successful",
+      "removed from",
+      "you will no longer receive",
+      "subscription canceled",
+      "preferences updated",
+      "thank you"
+    ]
+  }
+}
