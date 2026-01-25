@@ -17,6 +17,9 @@ Then install plugins:
 /plugin install rename-agent@omarshahine-agent-plugins
 /plugin install apple-pim@omarshahine-agent-plugins
 /plugin install credit-card-benefits@omarshahine-agent-plugins
+/plugin install inbox-to-reminder@omarshahine-agent-plugins
+/plugin install newsletter-unsubscriber@omarshahine-agent-plugins
+/plugin install inbox-to-parcel@omarshahine-agent-plugins
 ```
 
 ## Available Plugins
@@ -27,6 +30,9 @@ Then install plugins:
 | [rename-agent](#rename-agent) | AI-powered file renaming with pattern-based naming |
 | [apple-pim](#apple-pim) | Native macOS Calendar, Reminders, and Contacts integration |
 | [credit-card-benefits](#credit-card-benefits) | Track and maximize premium credit card benefits and statement credits |
+| [inbox-to-reminder](#inbox-to-reminder) | Scan inbox for action items and create Apple Reminders |
+| [newsletter-unsubscriber](#newsletter-unsubscriber) | Find and unsubscribe from unwanted newsletters |
+| [inbox-to-parcel](#inbox-to-parcel) | Process shipping emails and add tracking to Parcel app |
 
 ---
 
@@ -438,6 +444,87 @@ Check for any new credit card benefits
 
 ---
 
+## inbox-to-reminder
+
+Scan your email inbox for action items and create reminders in Apple Reminders.
+
+### Features
+
+- Scans inbox for emails containing action items (bills, tasks, deadlines)
+- Identifies different types: bills/payments, meetings, follow-ups, deadlines
+- Creates reminders with appropriate due dates and context
+- Organizes reminders into the correct lists
+- Supports multiple email providers (Fastmail, Gmail, Outlook)
+- Customizable for your household (partner name, family list)
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `/inbox-to-reminder:setup` | Configure email provider and customizations |
+| `/inbox-to-reminder:scan` | Scan inbox for action items |
+
+### Requirements
+
+- Email MCP server (Fastmail, Gmail, or Outlook)
+- `apple-pim` plugin for Apple Reminders
+
+---
+
+## newsletter-unsubscriber
+
+Scan your inbox for newsletters and help you unsubscribe from unwanted ones.
+
+### Features
+
+- Detects newsletters using RFC 2369 email headers (List-Unsubscribe)
+- Maintains an allowlist of newsletters you want to keep
+- Tracks previously unsubscribed senders to flag repeat offenders
+- Executes unsubscribes via mailto or web forms (Playwright)
+- Organizes processed emails to a dedicated folder
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `/newsletter-unsubscriber:setup` | Configure email provider |
+| `/newsletter-unsubscriber:unsubscribe` | Scan and unsubscribe from newsletters |
+
+### Requirements
+
+- Email MCP server (Fastmail, Gmail, or Outlook)
+- Playwright plugin (bundled) for web-based unsubscribes
+
+---
+
+## inbox-to-parcel
+
+Process shipping notification emails and add tracking to Parcel app.
+
+### Features
+
+- Scans inbox for shipment notification emails
+- Extracts tracking numbers and carrier information
+- Adds deliveries to Parcel app via API
+- Moves processed emails to the Orders folder
+- Handles Amazon emails specially (auto-sync to Parcel)
+- Supports UPS, FedEx, USPS, DHL, OnTrac, and more
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `/inbox-to-parcel:setup` | Configure email and Parcel providers |
+| `/inbox-to-parcel:track` | Process shipping emails |
+
+### Requirements
+
+- Email MCP server (Fastmail, Gmail, or Outlook)
+- Parcel API MCP server (`npx -y @smithery/cli@latest install @NOVA-3951/parcel-api-mcp --client claude`)
+- Playwright plugin (bundled) for web-based tracking extraction
+
+---
+
 ## Usage
 
 After installation, use agents via the Task tool:
@@ -449,6 +536,9 @@ Task(subagent_type="travel-agent:ita-matrix", prompt="Search SEA-NRT round-trip 
 Task(subagent_type="travel-agent:tripsy", prompt="Show my upcoming trips")
 Task(subagent_type="apple-pim:pim-assistant", prompt="What's on my calendar this week?")
 Task(subagent_type="credit-card-benefits:benefits-tracker", prompt="What credits are expiring this month?")
+Task(subagent_type="inbox-to-reminder:inbox-to-reminder", prompt="Scan inbox for action items")
+Task(subagent_type="newsletter-unsubscriber:newsletter-unsubscriber", prompt="Scan inbox for newsletters")
+Task(subagent_type="inbox-to-parcel:inbox-to-parcel", prompt="Process shipping emails")
 ```
 
 ## Creating New Plugins
