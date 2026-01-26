@@ -291,9 +291,12 @@ Your setup:
 • Cards tracked: Amex Platinum, Chase Sapphire Reserve, Delta Reserve
 
 Next steps:
+• /credit-card-benefits:sync - Run first to detect card anniversary dates from annual fee transactions
 • /credit-card-benefits:status - View your current benefits
-• /credit-card-benefits:sync - Pull transactions and update usage
 • /credit-card-benefits:remind - See benefits expiring soon
+
+Note: Card anniversary dates will be automatically detected from annual fee
+transactions when you run sync. This is needed for cardmember-year benefits.
 ```
 
 ---

@@ -25,6 +25,36 @@ Fetch new transactions from your configured data source and update benefit track
 - `--since YYYY-MM-DD` - Sync from specific date
 - (no options) - Incremental sync from last sync date
 
+## Execution Steps
+
+When this command runs:
+
+1. **Load configuration** from `~/.config/credit-card-benefits/checklist.yaml`
+2. **Load detection patterns** from plugin's `data/benefit-patterns.yaml`
+3. **Validate YNAB token** (if using YNAB)
+4. **For each enabled card:**
+   - Fetch transactions since last sync (or 13 months for `--full`)
+   - **Detect annual fee** → Automatically set `anniversaryMonth` and `anniversaryDay`
+   - Match transactions to benefits using patterns (payee, memo, category)
+   - Identify statement credits received (positive amounts in YNAB)
+5. **Update checklist.yaml** with:
+   - Anniversary dates discovered from fees
+   - Benefit usage status
+   - Last sync date
+6. **Display summary** of changes
+
+## Benefit Detection Patterns
+
+Patterns are defined in `data/benefit-patterns.yaml` and include:
+- **payee**: Merchant name patterns to match
+- **memo**: Transaction memo/note patterns
+- **category**: YNAB category patterns
+- **credit_payee**: Statement credit payee patterns
+- **amount_range**: Expected charge amounts
+- **credit_amount**: Expected credit amounts
+
+**Note:** Some benefits like Uber Cash are NOT statement credits - they're loaded to external accounts and must be tracked manually.
+
 ## How It Works
 
 ### Incremental Sync (Default)
@@ -110,15 +140,117 @@ Then run:
 
 ## Transaction Processing
 
-### 1. Detect Annual Fees
+### 1. Detect Annual Fees & Set Anniversary Month
+
+**This is critical for cardmember-year benefits.** Search for annual fee transactions to automatically set anniversary months.
+
+#### Annual Fee Detection Strategy
+
+**Don't hardcode fee amounts** - they change yearly. Instead, detect by:
+
+1. **Transaction patterns** (payee name, memo, category)
+2. **Amount range** ($250-$900 for premium cards)
+3. **One per year** per account
+
+#### Detection Patterns
+
+Search for transactions matching ANY of these patterns:
+
+| Field | Patterns to Match (case-insensitive) |
+|-------|--------------------------------------|
+| Payee name | "annual fee", "membership fee", "annual membership" |
+| Memo | "annual fee", "membership fee", "annual membership", "card fee" |
+| Category | "annual fee", "membership fee", "credit card fee" |
+
+**Amount filter:** Between $250 and $900 (covers all premium cards with buffer for fee increases)
+
+#### YNAB API Query for Fees
+
+```bash
+# Search each mapped account for annual fee transactions
+TOKEN=$(cat ~/.config/credit-card-benefits/ynab-token)
+BUDGET_ID="<budget-id>"
+ACCOUNT_ID="<account-id>"
+
+# Fetch transactions from past 13 months to catch recent anniversary
+SINCE_DATE=$(date -v-13m +%Y-%m-%d)
+
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://api.youneedabudget.com/v1/budgets/$BUDGET_ID/accounts/$ACCOUNT_ID/transactions?since_date=$SINCE_DATE" \
+  | jq '[.data.transactions[] | select(
+      # Amount between $250-$900 (negative in YNAB = charge)
+      (.amount < -250000 and .amount > -900000) and
+      # Match fee patterns in payee, memo, or category
+      (
+        (.payee_name // "" | ascii_downcase | test("annual|membership fee")) or
+        (.memo // "" | ascii_downcase | test("annual|membership fee|card fee")) or
+        (.category_name // "" | ascii_downcase | test("annual|membership|card fee"))
+      )
+    )] | sort_by(.date) | last | {date, amount: (-.amount/1000), payee: .payee_name, memo, category: .category_name}'
+```
+
+**Note:** YNAB amounts are in milliunits (divide by 1000). Negative = charge to card.
+
+#### Automatic Anniversary Detection
+
+When a fee transaction is found, show details so user can verify:
 
 ```
 Looking for annual fee transactions...
 
-Found: Jan 15 - ANNUAL MEMBERSHIP FEE $895.00 (Amex Platinum)
-→ Updated lastAnnualFeeDate: 2026-01-15
-→ Calculated nextAnnualFeeDate: 2027-01-15
-→ Added to annualFeeHistory
+Amex Platinum (b6bf939d-9bba-41fa-bfdd-c2db36e0f445):
+  Found fee transaction:
+    Date: 2025-11-15
+    Amount: $895.00
+    Payee: "AMERICAN EXPRESS"
+    Memo: "ANNUAL MEMBERSHIP FEE"
+    Category: "Credit Card Fees"
+  → Setting anniversaryMonth: 11 (November)
+  → Card anniversary: November 15th each year
+
+Chase Sapphire Reserve (1cb07ea3-8345-4d3c-bc33-bba7a0bcd679):
+  Found fee transaction:
+    Date: 2025-08-22
+    Amount: $795.00
+    Payee: "CHASE CARD SERVICES"
+    Memo: "ANNUAL FEE"
+    Category: "Subscriptions"
+  → Setting anniversaryMonth: 8 (August)
+  → Card anniversary: August 22nd each year
+
+Capital One Venture X (8c34a47f-5233-41dc-9123-097acc9f5d20):
+  No annual fee found in past 13 months
+  → anniversaryMonth: null (set manually or wait for next fee)
+
+  Tip: Check that the fee transaction has "annual" or "membership fee"
+  in the payee name, memo, or category in YNAB.
+```
+
+#### Update Checklist with Anniversary
+
+```yaml
+# Updated in checklist.yaml
+benefits:
+  amex-platinum:
+    anniversaryMonth: 11
+    anniversaryDay: 15
+    lastAnnualFeeDate: "2025-11-15"
+    lastAnnualFeeAmount: 895
+    lastAnnualFeePayee: "AMERICAN EXPRESS"
+    lastAnnualFeeMemo: "ANNUAL MEMBERSHIP FEE"
+    nextAnnualFeeDate: "2026-11-15"
+```
+
+This enables proper tracking of cardmember-year benefits (travel credits, companion certificates, etc.) that reset on card anniversary rather than calendar year.
+
+#### Manual Override
+
+If automatic detection fails, user can manually set in checklist.yaml:
+
+```yaml
+amex-platinum:
+  anniversaryMonth: 11
+  anniversaryDay: 15
 ```
 
 ### 2. Match Benefits
