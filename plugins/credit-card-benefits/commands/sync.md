@@ -201,7 +201,7 @@ Looking for annual fee transactions...
 Amex Platinum (b6bf939d-9bba-41fa-bfdd-c2db36e0f445):
   Found fee transaction:
     Date: 2025-11-15
-    Amount: $695.00
+    Amount: $895.00
     Payee: "AMERICAN EXPRESS"
     Memo: "ANNUAL MEMBERSHIP FEE"
     Category: "Credit Card Fees"
@@ -211,7 +211,7 @@ Amex Platinum (b6bf939d-9bba-41fa-bfdd-c2db36e0f445):
 Chase Sapphire Reserve (1cb07ea3-8345-4d3c-bc33-bba7a0bcd679):
   Found fee transaction:
     Date: 2025-08-22
-    Amount: $550.00
+    Amount: $795.00
     Payee: "CHASE CARD SERVICES"
     Memo: "ANNUAL FEE"
     Category: "Subscriptions"
@@ -235,7 +235,7 @@ benefits:
     anniversaryMonth: 11
     anniversaryDay: 15
     lastAnnualFeeDate: "2025-11-15"
-    lastAnnualFeeAmount: 695
+    lastAnnualFeeAmount: 895
     lastAnnualFeePayee: "AMERICAN EXPRESS"
     lastAnnualFeeMemo: "ANNUAL MEMBERSHIP FEE"
     nextAnnualFeeDate: "2026-11-15"
