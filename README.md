@@ -7,7 +7,7 @@ A personal plugin marketplace for Claude Code. Contains reusable plugins that ca
 Add this marketplace to Claude Code:
 
 ```bash
-/plugin marketplace add omarshahine/Agent-Plugins
+/plugin marketplace add omarshahine/agent-plugins
 ```
 
 Then install plugins:
