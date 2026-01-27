@@ -98,10 +98,22 @@ ALLOWLIST: domain2.com
 
 ### 1.1 Load Configuration
 
-Read these files first:
-- `data/settings.local.yaml` if exists, else `data/settings.yaml` (provider config)
-- `data/newsletter-lists.local.yaml` if exists, else `data/newsletter-lists.yaml` (allowlist + previously unsubscribed)
-- `data/newsletter-patterns.json` (detection patterns)
+**Data storage locations:**
+- **Plugin defaults**: `~/GitHub/Agent-Plugins/plugins/newsletter-unsubscriber/data/` (templates, patterns)
+- **User data**: `~/.claude/plugin-data/newsletter-unsubscriber/` (personal allowlist, unsubscribed - persists across reinstalls)
+
+Read these files:
+1. First, check if user data directory exists. If not, create it and copy defaults.
+2. Settings: `~/.claude/plugin-data/newsletter-unsubscriber/settings.yaml`
+3. Lists: `~/.claude/plugin-data/newsletter-unsubscriber/newsletter-lists.yaml` (allowlist + previously unsubscribed)
+4. Patterns: `~/GitHub/Agent-Plugins/plugins/newsletter-unsubscriber/data/newsletter-patterns.json` (from plugin source)
+
+**If user data files don't exist**, copy from plugin defaults:
+```bash
+mkdir -p ~/.claude/plugin-data/newsletter-unsubscriber
+cp ~/GitHub/Agent-Plugins/plugins/newsletter-unsubscriber/data/settings.yaml ~/.claude/plugin-data/newsletter-unsubscriber/
+cp ~/GitHub/Agent-Plugins/plugins/newsletter-unsubscriber/data/newsletter-lists.yaml ~/.claude/plugin-data/newsletter-unsubscriber/
+```
 
 ### 1.2 Get Mailbox IDs
 
@@ -111,10 +123,15 @@ Use the list_mailboxes tool (based on provider) to get:
 
 ### 1.3 Search Inbox for Newsletters
 
-**CRITICAL: Always filter to Inbox only!**
+**CRITICAL: INBOX ONLY - NEVER search Spam, Trash, or other folders!**
+
+⚠️ **MANDATORY**: You MUST pass the `mailboxId` parameter to restrict search to Inbox.
+- If `advanced_search` returns 0 results, do NOT fall back to `search_emails` without mailboxId
+- If you cannot get the Inbox mailboxId, STOP and report the error
+- NEVER use search tools without explicitly filtering to Inbox
 
 Use advanced_search with:
-- mailboxId: [Inbox ID from step 1.2]
+- **mailboxId: [Inbox ID from step 1.2]** ← REQUIRED, do not omit!
 - query: header:"List-Unsubscribe" OR header:"List-Id"
 - limit: 200
 
@@ -128,7 +145,10 @@ For each email found:
 
 **Extract unsubscribe link from:**
 - `List-Unsubscribe` header (preferred) - format: `<mailto:...>, <https://...>`
-- HTML body - look for links with "unsubscribe", "opt out", "manage preferences"
+- HTML body (REQUIRED FALLBACK) - If no List-Unsubscribe header, you MUST scan the HTML body for:
+  - Links containing "unsubscribe", "opt-out", "optout", "manage preferences", "email preferences"
+  - Common newsletter domains (nextdoor.com, substack.com) often lack proper headers but have body links
+  - Look near the footer of the email for these links
 
 **Store for each newsletter:**
 ```
@@ -188,15 +208,15 @@ Tool: mcp__plugin_playwright_playwright__browser_close
 
 ### 2.3 Process Allowlist Additions
 
-If the EXECUTE prompt includes domains to add to the allowlist (e.g., "ALLOWLIST: domain.com"), add them to the allowlist in newsletter-lists.local.yaml.
+If the EXECUTE prompt includes domains to add to the allowlist (e.g., "ALLOWLIST: domain.com"), add them to the allowlist.
 
 ---
 
 ## PHASE 3: CLEANUP
 
-### 3.1 Update newsletter-lists.local.yaml
+### 3.1 Update User Data
 
-Read current file (`newsletter-lists.local.yaml` if exists, else `newsletter-lists.yaml`), merge changes, write back to `newsletter-lists.local.yaml` (create if needed) to keep personal data gitignored:
+Read `~/.claude/plugin-data/newsletter-unsubscriber/newsletter-lists.yaml`, merge changes, write back:
 
 **Add to unsubscribed list:**
 ```yaml
@@ -241,7 +261,7 @@ Failed (1):
 Added to allowlist (1):
 - stratechery.com
 
-Lists updated: newsletter-lists.local.yaml
+Lists updated: ~/.claude/plugin-data/newsletter-unsubscriber/newsletter-lists.yaml
 Emails moved: 23 -> Unsubscribed folder
 ```
 
@@ -274,17 +294,17 @@ Use `mcp__plugin_playwright_playwright__*` or `mcp__plugin_newsletter-unsubscrib
 ### Other Tools
 - `AskUserQuestion` - Get user selections (max 4 options, present one batch at a time)
 - `Read` - Read patterns and lists configuration files
-- `Write` - Update newsletter-lists.local.yaml with allowlist and unsubscribed entries
+- `Write` - Update user data files in ~/.claude/plugin-data/newsletter-unsubscriber/
 
 ## Important Guidelines
 
-1. **INBOX ONLY** - Always filter to Inbox with mailboxId
-2. **Load lists first** - Always load newsletter-lists.local.yaml (or newsletter-lists.yaml) before scanning
+1. **INBOX ONLY** - Always filter to Inbox with mailboxId - NEVER search spam or other folders
+2. **Load lists first** - Always load user data from ~/.claude/plugin-data/newsletter-unsubscriber/ before scanning
 3. **Skip allowlisted** - Never show allowlisted senders to user
 4. **Flag repeat offenders** - Highlight senders who ignore unsubscribe requests
 5. **User consent** - Always get explicit user selection before unsubscribing
 6. **Double confirm** - Show confirmation before executing
-7. **Update lists** - Always update newsletter-lists.local.yaml after actions
+7. **Update lists** - Always update ~/.claude/plugin-data/newsletter-unsubscriber/newsletter-lists.yaml after actions
 8. **Offer allowlist** - Ask user if they want to allowlist newsletters they're keeping
 9. **Prefer web links** - More reliable than mailto for verification
 10. **Extract recipient email** - Use the To: header from original email
@@ -297,18 +317,19 @@ Use `mcp__plugin_playwright_playwright__*` or `mcp__plugin_newsletter-unsubscrib
 
 ## Auto-Approval Configuration
 
-The plugin includes `.claude/settings.local.json` to auto-approve writes to the data directory:
+User data is stored in `~/.claude/plugin-data/newsletter-unsubscriber/` which requires write permission.
+
+The global settings should include permission for this path:
 ```json
 {
   "permissions": {
     "allow": [
-      "Write(data/**)",
-      "Edit(data/**)"
+      "Write(~/.claude/plugin-data/**)",
+      "Edit(~/.claude/plugin-data/**)"
     ]
   }
 }
 ```
-This prevents prompts when updating `newsletter-lists.local.yaml`.
 
 ## Newsletter Detection via RFC Headers
 
