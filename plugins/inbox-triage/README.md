@@ -10,6 +10,7 @@ Self-learning email triage with pattern recognition and automated email digests.
 - **Active Learning**: Improves based on your decisions
 - **Automated Digest**: Summarizes automated emails with priority categorization
 - **Organization Analysis**: Analyzes Trash/Archive for optimization opportunities
+- **Folder Optimization**: Deep scan folders to suggest subfolders, merges, and rule updates
 
 ## Commands
 
@@ -21,6 +22,7 @@ Self-learning email triage with pattern recognition and automated email digests.
 | `/inbox-triage:digest` | Summarize automated emails |
 | `/inbox-triage:analyze` | Find Trash/Archive patterns |
 | `/inbox-triage:suggest` | Recommend folder improvements |
+| `/inbox-triage:optimize` | Deep scan folders for reorganization |
 | `/inbox-triage:rules` | View/manage filing rules |
 
 ## Quick Start
@@ -61,6 +63,19 @@ Self-learning email triage with pattern recognition and automated email digests.
 | Confirm | +5% confidence |
 | Reject | -15% confidence |
 | Correct | New rule created |
+
+### Folder Optimization
+
+The `/inbox-triage:optimize` command performs deep analysis:
+
+1. **Subfolder suggestions**: Identifies folders that could benefit from subdivision
+   - Example: "Travel" with 800+ emails → suggest Flights, Hotels, Car Service subfolders
+2. **Rule consistency**: Finds stale rules that no longer match folder contents
+3. **Missing rules**: Identifies consistent patterns without corresponding rules
+4. **Consolidation**: Suggests merging low-volume or overlapping folders
+5. **Server-side candidates**: Patterns that could be automated at the mail server level
+
+All changes require explicit confirmation before execution.
 
 ## Provider Support
 
