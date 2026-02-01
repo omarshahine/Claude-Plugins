@@ -353,43 +353,20 @@ If no flag requested:
 
 **Reply** (Fastmail):
 ```
-IMPORTANT: Must properly reply to the thread, not create a new email.
+Use mcp__fastmail__reply_to_email - it handles threading and quoting automatically:
+- emailId: The email ID to reply to
+- body: User's reply text (plain text)
+- sendImmediately: false (creates draft by default)
+- replyAll: false (reply to sender only, unless user specifies reply-all)
+- excludeQuote: false (includes quoted original by default)
 
-Step 1: Get the original email's thread info using mcp__fastmail__get_email:
-- messageId: The Message-ID header (array of strings)
-- references: The References header chain (array of strings)
-- from: The sender to reply to
+The tool automatically:
+- Sets correct recipients from original email
+- Adds "Re:" to subject
+- Sets inReplyTo and references headers for threading
+- Quotes the original message below the reply
 
-Step 2: Create threaded reply draft using mcp__fastmail__create_draft with:
-- to: Original sender's email address (from the email's from field)
-- subject: "Re: [original subject]" (preserve original subject with Re: prefix)
-- textBody: User-composed reply + quoted original (see format below)
-- inReplyTo: Original email's messageId array
-- references: Original email's references array + original email's messageId
-
-**Reply body format** (include quoted original):
-```
-[User's reply text]
-
-On [date], at [time], [Sender Name] <[sender@email.com]> wrote:
-
-> [First line of original]
-> [Second line of original]
-> ...
-```
-
-Extract the original email's plain text body and prefix each line with "> ".
-
-Example:
-If original email has:
-  messageId: ["ABC@example.com"]
-  references: ["DEF@example.com", "GHI@example.com"]
-
-Then create_draft should have:
-  inReplyTo: ["ABC@example.com"]
-  references: ["DEF@example.com", "GHI@example.com", "ABC@example.com"]
-
-Step 3: After creating draft, ALWAYS ask what to do with the original email:
+After creating draft, ALWAYS ask what to do with the original email:
 ```
 Draft saved. What should I do with the original email?
 1. Keep in inbox
