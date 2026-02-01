@@ -1,0 +1,41 @@
+# inbox-triage Interview State
+# Tracks session progress for resume capability
+
+# Current session (null if no active session)
+session: null
+# When active, contains:
+#   started: "2025-01-01T10:00:00Z"     # Session start time
+#   last_email_index: 0                  # Last processed email index
+#   total_emails: 0                      # Total emails in session
+#   processed_email_ids: []              # List of processed email IDs
+
+# Session statistics
+statistics:
+  reminders_created: 0
+  events_created: 0
+  emails_archived: 0
+  emails_deleted: 0
+  emails_kept: 0
+  replies_drafted: 0
+
+# Pending actions (for batch execution if needed)
+# Each entry: { action: "archive", emailId: "...", targetFolder: "..." }
+pending_actions: []
+
+# Patterns learned during sessions (added to always-delete list)
+learned_delete_patterns: []
+# Each entry: { domain: "...", category: "...", added: "..." }
+
+# Last session summary
+last_session:
+  completed: null
+  # When set, contains:
+  #   date: "2025-01-01T10:30:00Z"
+  #   emails_processed: 15
+  #   summary:
+  #     reminders_created: 3
+  #     events_created: 1
+  #     emails_archived: 8
+  #     emails_deleted: 2
+  #     emails_kept: 1
+  #     replies_drafted: 0
