@@ -346,9 +346,22 @@ Step 1: Get the original email's thread info using mcp__fastmail__get_email:
 Step 2: Create threaded reply draft using mcp__fastmail__create_draft with:
 - to: Original sender's email address (from the email's from field)
 - subject: "Re: [original subject]" (preserve original subject with Re: prefix)
-- textBody: User-composed reply
+- textBody: User-composed reply + quoted original (see format below)
 - inReplyTo: Original email's messageId array
 - references: Original email's references array + original email's messageId
+
+**Reply body format** (include quoted original):
+```
+[User's reply text]
+
+On [date], at [time], [Sender Name] <[sender@email.com]> wrote:
+
+> [First line of original]
+> [Second line of original]
+> ...
+```
+
+Extract the original email's plain text body and prefix each line with "> ".
 
 Example:
 If original email has:
