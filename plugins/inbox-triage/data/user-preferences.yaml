@@ -1,0 +1,34 @@
+# inbox-triage User Preferences
+
+# Folder aliases (populated during setup/learning)
+folder_aliases: {}
+
+# Sender overrides (always file to specific folder)
+sender_overrides: []
+
+# Domain overrides
+domain_overrides: []
+
+# Never-file list (emails matching these stay in inbox)
+never_file: []
+
+# Always-delete list
+always_delete: []
+
+# Digest preferences
+digest:
+  highlight_categories:
+    - security_alerts
+    - payment_failures
+  summarize_categories:
+    - marketing
+    - social_notifications
+  skip_categories: []
+
+# Filing preferences
+filing:
+  manual_only_folders: []
+  style: flat
+
+# Last updated
+last_updated: null

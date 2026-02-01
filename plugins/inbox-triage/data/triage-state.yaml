@@ -1,0 +1,37 @@
+# inbox-triage Processing State
+
+# Scan state for incremental processing
+scan_state:
+  last_email_date: null
+  processed_email_ids: []
+  last_scan: null
+
+# Processing statistics
+statistics:
+  total_emails_triaged: 0
+  total_emails_filed: 0
+  total_emails_skipped: 0
+  suggestions_confirmed: 0
+  suggestions_rejected: 0
+  suggestions_corrected: 0
+  accuracy_rate: null
+
+  current_session:
+    started_at: null
+    emails_processed: 0
+    emails_filed: 0
+    emails_skipped: 0
+
+# Bootstrap learning state
+bootstrap:
+  completed: false
+  started_at: null
+  completed_at: null
+  folders_analyzed: 0
+  emails_sampled: 0
+  rules_extracted: 0
+
+# Digest generation state
+digest:
+  last_generated: null
+  emails_in_last_digest: 0

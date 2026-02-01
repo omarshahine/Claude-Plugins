@@ -1,0 +1,32 @@
+# inbox-triage Delete Patterns
+# Patterns learned from Trash analysis
+
+# Delete patterns (populated by /inbox-triage:analyze)
+delete_patterns: []
+
+# Categories for classification
+categories:
+  newsletter: "Marketing newsletters and promotional content"
+  real_estate_alerts: "Property listing notifications"
+  calendar_acceptance: "Calendar event acceptances/declines"
+  verification_codes: "2FA codes, login verification"
+  product_review_requests: "Post-purchase review solicitations"
+  weekly_summaries: "Weekly digest emails from services"
+  social_notifications: "Social media notifications"
+  marketing_promo: "Sales and promotional emails"
+
+# Unsubscribe candidates (populated by /inbox-triage:analyze)
+unsubscribe_candidates: []
+
+# Archive misplacement patterns (populated by /inbox-triage:analyze)
+archive_misplacements: []
+
+# Folder suggestions (populated by /inbox-triage:analyze)
+folder_suggestions: []
+
+# Analysis state
+analysis_state:
+  last_trash_analysis: null
+  trash_emails_sampled: 0
+  last_archive_analysis: null
+  archive_emails_sampled: 0

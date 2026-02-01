@@ -1,0 +1,66 @@
+# inbox-triage Provider Configuration
+
+providers:
+  email:
+    # Active email provider: fastmail, gmail, outlook
+    active: fastmail
+
+    # Provider-specific tool mappings
+    mappings:
+      fastmail:
+        list_mailboxes: mcp__fastmail__list_mailboxes
+        get_recent_emails: mcp__fastmail__get_recent_emails
+        search_emails: mcp__fastmail__search_emails
+        advanced_search: mcp__fastmail__advanced_search
+        get_email: mcp__fastmail__get_email
+        move_email: mcp__fastmail__move_email
+        bulk_move: mcp__fastmail__bulk_move
+        mark_email_read: mcp__fastmail__mark_email_read
+        bulk_mark_read: mcp__fastmail__bulk_mark_read
+      gmail:
+        list_mailboxes: mcp__gmail__list_labels
+        get_recent_emails: mcp__gmail__list_messages
+        search_emails: mcp__gmail__search_messages
+        advanced_search: mcp__gmail__search_messages
+        get_email: mcp__gmail__get_message
+        move_email: mcp__gmail__modify_message
+        bulk_move: mcp__gmail__modify_messages
+        mark_email_read: mcp__gmail__modify_message
+        bulk_mark_read: mcp__gmail__modify_messages
+      outlook:
+        list_mailboxes: mcp__outlook__list_folders
+        get_recent_emails: mcp__outlook__list_messages
+        search_emails: mcp__outlook__search_messages
+        advanced_search: mcp__outlook__search_messages
+        get_email: mcp__outlook__get_message
+        move_email: mcp__outlook__move_message
+        bulk_move: mcp__outlook__move_messages
+        mark_email_read: mcp__outlook__update_message
+        bulk_mark_read: mcp__outlook__update_messages
+
+# User preferences
+preferences:
+  # Autonomy level: always_confirm, high_confidence_auto, full_auto
+  autonomy: always_confirm
+
+  # Minimum confidence to suggest filing (0.0-1.0)
+  min_confidence_to_suggest: 0.70
+
+  # Archive handling: move_only, suggest_new, both
+  archive_handling: both
+
+  # Suggest unsubscribe when newsletters detected in Trash patterns
+  suggest_unsubscribe: true
+
+  # Generate daily digest for automated emails
+  generate_digest: true
+
+# Folder configuration (discovered during setup)
+folders:
+  inbox: "Inbox"
+  automated: null
+  archive: null
+  trash: null
+
+# Last setup timestamp
+setup_date: null

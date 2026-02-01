@@ -67,6 +67,14 @@
       "version": "1.0.0",
       "keywords": ["email", "packages", "tracking", "parcel", "shipping"],
       "category": "productivity"
+    },
+    {
+      "name": "inbox-triage",
+      "source": "./plugins/inbox-triage",
+      "description": "Self-learning email triage with pattern recognition and automated email digests",
+      "version": "1.0.0",
+      "keywords": ["email", "triage", "inbox", "filing", "patterns", "learning"],
+      "category": "productivity"
     }
   ]
 }
