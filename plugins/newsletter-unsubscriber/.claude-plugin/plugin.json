@@ -1,6 +1,6 @@
 {
   "name": "newsletter-unsubscriber",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Scan inbox for newsletters and help unsubscribe from unwanted ones",
   "author": {
     "name": "Omar Shahine"
