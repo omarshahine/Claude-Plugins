@@ -1,6 +1,6 @@
 {
   "name": "inbox-triage",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "description": "Self-learning email triage with pattern recognition and automated email digests",
   "license": "MIT"
 }
