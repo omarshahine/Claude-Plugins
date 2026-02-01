@@ -122,6 +122,13 @@ How long is the event?
 3. 2 hours
 4. All day
 ```
+**IMPORTANT**: After creating the event, ALWAYS ask what to do with the email:
+```
+Event created. What should I do with the email?
+1. Keep in inbox
+2. Archive
+3. Delete
+```
 
 **3. Archive** (uses filing-rules.yaml confidence scores):
 
@@ -192,8 +199,9 @@ Check `rfcHeaders`, `newsletterServiceDomains`, `bulkSenderPatterns`:
 
 ### 5. Never-File Check (user-preferences.yaml)
 Check `never_file` patterns and `sender_overrides`:
-- If match: Mark as protected, don't suggest Archive
-- If sender_override with keep_in_inbox: Default to Keep
+- If match: Still show the email to user, but don't suggest Archive as an option
+- If sender_override with keep_in_inbox: Default suggestion is Keep
+- Note: These emails are NOT skipped - user still decides what to do
 
 ### 6. Action Item Detection (from inbox-to-reminder patterns)
 Look for keywords: "please", "need to", "don't forget", "due", "deadline", "by [date]", "invoice", "payment"
@@ -210,16 +218,21 @@ Show one-line suggestion before options based on detection:
 
 ## Response Parsing
 
-Accept flexible voice inputs:
+Accept flexible voice inputs. **Word inputs always map to actions regardless of displayed numbering:**
 
-| User says | Interpreted as |
-|-----------|----------------|
-| "one", "1", "reminder", "remind", "remind me" | Option 1 - Reminder |
-| "two", "2", "calendar", "event", "schedule" | Option 2 - Calendar |
-| "three", "3", "archive", "file", "move" | Option 3 - Archive |
-| "four", "4", "delete", "trash", "remove" | Option 4 - Delete |
-| "five", "5", "keep", "skip", "next" | Option 5 - Keep |
-| "six", "6", "reply", "respond", "draft", "answer" | Option 6 - Reply |
+| User says | Always means |
+|-----------|--------------|
+| "reminder", "remind", "remind me" | Create Reminder |
+| "calendar", "event", "schedule" | Create Calendar Event |
+| "archive", "file", "move" | Archive/File Email |
+| "delete", "trash", "remove" | Delete Email |
+| "keep", "skip", "next" | Keep in Inbox |
+| "reply", "respond", "draft", "answer" | Draft Reply |
+
+**Number inputs map to displayed options** (which may vary based on smart suggestions):
+- Standard: 1=Reminder, 2=Calendar, 3=Archive, 4=Delete, 5=Keep, 6=Reply
+- With package suggestion: 1=Add to Parcel, 2=Reminder, 3=Calendar, etc.
+- With newsletter suggestion: 1=Delete, 2=Unsubscribe, 3=Reminder, etc.
 | "stop", "done", "finish", "quit", "exit" | End session |
 
 ## Session State Management
@@ -272,7 +285,11 @@ On resume (--resume flag):
    e. Execute action (create reminder, archive, etc.)
    f. Update interview-state.yaml
    g. Move to next email
-4. **On completion**: Show summary statistics
+4. **On completion**:
+   a. Show summary statistics
+   b. Clear session state: Set `session: null` in interview-state.yaml
+   c. Move current session to `last_session` for reference
+   d. This prevents next invocation from incorrectly offering resume
 
 ### Action Execution
 
@@ -390,11 +407,11 @@ Draft saved. What should I do with the original email?
 5. **Confirm before actions**: Execute only after user chooses
 6. **Track progress**: Update interview-state.yaml after each email
 7. **Handle interrupts**: Save state so user can resume later
-8. **Be efficient**: Skip emails matching never-file patterns automatically
+8. **Never-file handling**: Show never-file emails but don't suggest Archive (user decides)
 9. **Show progress**: "Email X of Y" in each question
 10. **End gracefully**: Show summary when done or user says "stop"
 11. **VERIFY EXECUTION**: ALWAYS actually call the tool (move_email, delete_email, etc.) - never just say an action was done without calling the tool
-12. **Post-action cleanup**: After Reminder or Reply, always ask what to do with the original email (keep/archive/delete)
+12. **Post-action cleanup**: After Reminder, Calendar, or Reply, always ask what to do with the original email (keep/archive/delete)
 13. **Use existing labels**: If email already has a folder label from server rules, archive to that folder without asking
 14. **Proper threading**: For Reply, use inReplyTo with the original messageId header (not emailId) to maintain thread
 
