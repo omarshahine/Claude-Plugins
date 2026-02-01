@@ -38,3 +38,4 @@ venv/
 
 # Claude Code
 .claude/cache/
+/plugins/inbox-triage/data
