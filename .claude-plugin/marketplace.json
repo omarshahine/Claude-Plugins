@@ -72,7 +72,7 @@
       "name": "inbox-triage",
       "source": "./plugins/inbox-triage",
       "description": "Self-learning email triage with pattern recognition, automated digests, and voice-friendly interview mode",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "keywords": ["email", "triage", "inbox", "filing", "patterns", "learning", "interview", "voice"],
       "category": "productivity"
     }

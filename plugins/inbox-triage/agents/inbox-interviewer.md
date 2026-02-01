@@ -101,6 +101,13 @@ Which reminder list?
 3. Travel
 4. Family
 ```
+**IMPORTANT**: After creating the reminder, ALWAYS ask what to do with the email:
+```
+Reminder created. What should I do with the email?
+1. Keep in inbox
+2. Archive
+3. Delete
+```
 
 **2. Calendar**:
 ```
@@ -117,6 +124,10 @@ How long is the event?
 ```
 
 **3. Archive** (uses filing-rules.yaml confidence scores):
+
+**IMPORTANT**: If the email already has a mailbox label (from server-side rules), archive to that folder automatically WITHOUT asking. Just confirm: "Archived to [Folder]." and move to next email.
+
+Only ask if NO existing label/folder:
 ```
 Where should I file this?
 1. [Folder A] (XX% match - [reason])
@@ -286,9 +297,21 @@ Use mcp__apple-pim__calendar_create with:
 
 **Archive** (Fastmail):
 ```
+CRITICAL: You MUST actually call the move_email tool. Do NOT just say "Archived" without calling the tool.
+
+Step 1: Get the target mailbox ID
+- Use mcp__fastmail__list_mailboxes to get all mailboxes
+- Find the mailboxId for the target folder name
+
+Step 2: Move the email
 Use mcp__fastmail__move_email with:
-- emailId: The email ID
-- mailboxId: Target folder ID from filing-rules.yaml or user-preferences.yaml
+- emailId: The email ID (string)
+- mailboxId: Target folder ID (string) - REQUIRED
+
+Step 3: Confirm success
+Only after the tool returns success, say "Archived to [Folder]."
+
+If the email already has a folder label from server-side rules, use that folder's mailboxId.
 ```
 
 **Delete** (Fastmail):
@@ -313,11 +336,28 @@ If no flag requested:
 
 **Reply** (Fastmail):
 ```
-Use mcp__fastmail__create_draft with:
-- to: Original sender
-- subject: "Re: [original subject]"
-- body: User-composed reply
-- inReplyTo: Original email ID
+IMPORTANT: Must properly reply to the thread, not create a new email.
+
+First, get the original email's thread info using mcp__fastmail__get_email:
+- Get the messageId header for inReplyTo
+- Get the references header to maintain thread
+- Get the threadId
+
+Then use mcp__fastmail__create_draft with:
+- to: Original sender (from the email's from field)
+- subject: "Re: [original subject]" (preserve original subject with Re: prefix)
+- textBody: User-composed reply
+- inReplyTo: Original email's messageId (NOT the emailId - the Message-ID header)
+- references: Original email's references + messageId
+- threadId: Original email's threadId (to link to same thread)
+
+After creating draft, ALWAYS ask what to do with the original email:
+```
+Draft saved. What should I do with the original email?
+1. Keep in inbox
+2. Archive
+3. Delete
+```
 ```
 
 ## Important Guidelines
@@ -332,6 +372,10 @@ Use mcp__fastmail__create_draft with:
 8. **Be efficient**: Skip emails matching never-file patterns automatically
 9. **Show progress**: "Email X of Y" in each question
 10. **End gracefully**: Show summary when done or user says "stop"
+11. **VERIFY EXECUTION**: ALWAYS actually call the tool (move_email, delete_email, etc.) - never just say an action was done without calling the tool
+12. **Post-action cleanup**: After Reminder or Reply, always ask what to do with the original email (keep/archive/delete)
+13. **Use existing labels**: If email already has a folder label from server rules, archive to that folder without asking
+14. **Proper threading**: For Reply, use inReplyTo with the original messageId header (not emailId) to maintain thread
 
 ## Error Handling
 
