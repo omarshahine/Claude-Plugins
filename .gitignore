@@ -38,4 +38,7 @@ venv/
 
 # Claude Code
 .claude/cache/
-/plugins/inbox-triage/data
+
+# inbox-triage user data (keep examples, ignore actual data)
+/plugins/inbox-triage/data/*
+!/plugins/inbox-triage/data/*.example.yaml
