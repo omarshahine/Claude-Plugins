@@ -1,0 +1,59 @@
+# inbox-triage User Preferences
+# Personal email handling preferences
+# Copy to user-preferences.yaml and customize
+
+# Folder aliases (human names to folder IDs)
+# Populate after running /inbox-triage:setup
+folder_aliases:
+  # "Inbox": "folder-id-here"
+  # "Archive": "folder-id-here"
+  {}
+
+# Sender overrides (always handle specific senders a certain way)
+sender_overrides:
+  # Example: Keep spouse's emails in inbox
+  # - email: "spouse@example.com"
+  #   action: "keep_in_inbox"
+  #   note: "Family - always priority"
+  []
+
+# Domain overrides
+domain_overrides: []
+
+# Never-file list (emails matching these stay in inbox)
+never_file:
+  # Example patterns:
+  # - pattern: "from:*@gmail.com"
+  #   note: "Personal emails need manual review"
+  # - pattern: "from:*@family-domain.com"
+  #   note: "Family emails stay in inbox"
+  []
+
+# Always-delete list (learned from Trash patterns)
+always_delete:
+  # Example:
+  # - pattern: "subject:\"Unsubscribe confirmation\""
+  #   category: "transactional"
+  #   note: "Already unsubscribed"
+  []
+
+# Digest preferences (for /inbox-triage:digest)
+digest:
+  highlight_categories:
+    - security_alerts
+    - payment_failures
+    - action_required
+  summarize_categories:
+    - receipts
+    - shipping_updates
+  skip_categories:
+    - marketing_promo
+
+# Filing preferences
+filing:
+  manual_only_folders:
+    - "Inbox"
+  style: nested  # or "flat"
+
+# Last updated timestamp
+last_updated: null
