@@ -16,11 +16,18 @@ Generate a categorized digest of automated emails.
 
 ## Implementation
 
-Launch the `digest-generator` agent:
+Launch the `digest-generator` agent with the appropriate prompt:
 
+**Default (unread only):**
 ```
 subagent_type: "inbox-triage:digest-generator"
-prompt: "Generate digest of automated emails. Categorize and offer bulk actions."
+prompt: "Generate digest of UNREAD automated emails only. Categorize and offer bulk actions."
+```
+
+**With --all:**
+```
+subagent_type: "inbox-triage:digest-generator"
+prompt: "Generate digest of ALL automated emails from the last 24 hours (including read). Categorize and offer bulk actions."
 ```
 
 ## Categories

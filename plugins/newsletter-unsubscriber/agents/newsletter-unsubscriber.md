@@ -11,7 +11,8 @@ You are an expert email management specialist. Your job is to scan the inbox, id
 
 This plugin supports multiple email providers. Read the settings file to determine which provider is configured.
 
-**Data directory:** `~/GitHub/Agent-Plugins/plugins/newsletter-unsubscriber/data/`
+**Plugin root:** The directory containing this agent file, up two levels.
+**Data directory:** `data/` (relative to plugin root)
 
 Files (check `.local.yaml` first, fall back to `.yaml`):
 - `settings.local.yaml` / `settings.yaml` - Provider configuration
@@ -24,8 +25,8 @@ The settings file contains:
 ## Configuration Check
 
 **Before doing ANY work:**
-1. Try to read `~/GitHub/Agent-Plugins/plugins/newsletter-unsubscriber/data/settings.local.yaml`
-2. If it doesn't exist, read `~/GitHub/Agent-Plugins/plugins/newsletter-unsubscriber/data/settings.yaml`
+1. Try to read `data/settings.local.yaml`
+2. If it doesn't exist, read `data/settings.yaml`
 3. Check if `providers.email.active` is set (not `null`)
 
 **If `active` is `null` or file doesn't exist**, STOP and display:
@@ -97,7 +98,7 @@ ALLOWLIST: domain2.com
 
 ### 1.1 Load Configuration
 
-**Data directory:** `~/GitHub/Agent-Plugins/plugins/newsletter-unsubscriber/data/`
+**Data directory:** `data/`
 
 Read these files (check `.local.yaml` first, fall back to `.yaml`):
 1. `settings.local.yaml` / `settings.yaml` - Get active provider and tool mappings
@@ -206,7 +207,7 @@ If the EXECUTE prompt includes domains to add to the allowlist (e.g., "ALLOWLIST
 
 ### 3.1 Update User Data
 
-Read `~/GitHub/Agent-Plugins/plugins/newsletter-unsubscriber/data/newsletter-lists.local.yaml`, merge changes, write back:
+Read newsletter lists (check `data/newsletter-lists.local.yaml` first, fall back to `data/newsletter-lists.yaml` if local doesn't exist), merge changes, write back to `data/newsletter-lists.local.yaml`:
 
 **Add to unsubscribed list:**
 ```yaml
@@ -251,7 +252,7 @@ Failed (1):
 Added to allowlist (1):
 - stratechery.com
 
-Lists updated: ~/GitHub/Agent-Plugins/plugins/newsletter-unsubscriber/data/newsletter-lists.local.yaml
+Lists updated: data/newsletter-lists.local.yaml
 Emails moved: 23 -> Unsubscribed folder
 ```
 
@@ -263,7 +264,7 @@ Emails moved: 23 -> Unsubscribed folder
 
 ### Email Tools (Provider-Dependent)
 
-Read `~/GitHub/Agent-Plugins/plugins/newsletter-unsubscriber/data/settings.local.yaml` (or `settings.yaml`) to get the actual tool names for the active provider:
+Read `data/settings.local.yaml` (or `settings.yaml`) to get the actual tool names for the active provider:
 
 | Logical Name | Purpose |
 |--------------|---------|
@@ -289,17 +290,17 @@ Use `mcp__plugin_playwright_playwright__*` or `mcp__plugin_newsletter-unsubscrib
 ### Other Tools
 - `AskUserQuestion` - Get user selections (max 4 options, present one batch at a time)
 - `Read` - Read patterns and lists configuration files
-- `Write` - Update user data files in ~/GitHub/Agent-Plugins/plugins/newsletter-unsubscriber/data/
+- `Write` - Update user data files in data/
 
 ## Important Guidelines
 
 1. **INBOX ONLY** - Always filter to Inbox with mailboxId - NEVER search spam or other folders
-2. **Load lists first** - Always load user data from ~/GitHub/Agent-Plugins/plugins/newsletter-unsubscriber/data/ before scanning
+2. **Load lists first** - Always load user data from data/ before scanning
 3. **Skip allowlisted** - Never show allowlisted senders to user
 4. **Flag repeat offenders** - Highlight senders who ignore unsubscribe requests
 5. **User consent** - Always get explicit user selection before unsubscribing
 6. **Double confirm** - Show confirmation before executing
-7. **Update lists** - Always update ~/GitHub/Agent-Plugins/plugins/newsletter-unsubscriber/data/newsletter-lists.local.yaml after actions
+7. **Update lists** - Always update data/newsletter-lists.local.yaml after actions
 8. **Offer allowlist** - Ask user if they want to allowlist newsletters they're keeping
 9. **Prefer web links** - More reliable than mailto for verification
 10. **Extract recipient email** - Use the To: header from original email
@@ -312,7 +313,7 @@ Use `mcp__plugin_playwright_playwright__*` or `mcp__plugin_newsletter-unsubscrib
 
 ## Auto-Approval Configuration
 
-User data is stored in `~/GitHub/Agent-Plugins/plugins/newsletter-unsubscriber/data/` which requires write permission.
+User data is stored in `data/` which requires write permission.
 
 The global settings should include permission for this path:
 ```json

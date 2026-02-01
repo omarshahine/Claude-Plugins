@@ -17,11 +17,24 @@ Discover optimization opportunities from Trash and Archive patterns.
 
 ## Implementation
 
-Launch the `organization-analyzer` agent:
+Launch the `organization-analyzer` agent with the appropriate prompt:
 
+**Default (both Trash and Archive):**
 ```
 subagent_type: "inbox-triage:organization-analyzer"
-prompt: "Analyze Trash and Archive. Find unsubscribe candidates and misplaced emails."
+prompt: "Analyze both Trash and Archive. Find unsubscribe candidates in Trash and misplaced emails in Archive."
+```
+
+**With --trash:**
+```
+subagent_type: "inbox-triage:organization-analyzer"
+prompt: "Analyze Trash only. Focus on finding unsubscribe candidates and delete patterns."
+```
+
+**With --archive:**
+```
+subagent_type: "inbox-triage:organization-analyzer"
+prompt: "Analyze Archive only. Focus on finding misplaced emails and new folder opportunities."
 ```
 
 ## What It Finds

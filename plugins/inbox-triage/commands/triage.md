@@ -22,11 +22,24 @@ Process inbox using learned rules. All suggestions require confirmation.
 
 ## Implementation
 
-Launch the `inbox-triage` agent:
+Launch the `inbox-triage` agent with the appropriate prompt:
 
+**Default (new emails since last triage):**
 ```
 subagent_type: "inbox-triage:inbox-triage"
-prompt: "Process inbox emails. Match against rules, present suggestions for confirmation."
+prompt: "Process inbox emails since last triage. Match against rules, present suggestions for confirmation."
+```
+
+**With --days N:**
+```
+subagent_type: "inbox-triage:inbox-triage"
+prompt: "Process inbox emails from the last N days. Match against rules, present suggestions for confirmation."
+```
+
+**With --all:**
+```
+subagent_type: "inbox-triage:inbox-triage"
+prompt: "Process ALL inbox emails (ignore last triage date). Match against rules, present suggestions for confirmation."
 ```
 
 ## How Confidence Works

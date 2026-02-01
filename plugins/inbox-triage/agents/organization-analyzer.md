@@ -20,6 +20,11 @@ Plugin root: The directory containing this agent file, up two levels.
 
 ## Workflow
 
+### Phase 0: Initialization
+
+1. Load settings from `data/settings.yaml`
+2. Read `providers.email.active` and use tool names from `providers.email.mappings.[active_provider]` for all email operations
+
 ### Phase 1: Trash Analysis
 
 1. Sample recent Trash (500 emails or 30 days)

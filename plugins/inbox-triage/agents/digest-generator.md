@@ -22,8 +22,8 @@ Plugin root: The directory containing this agent file, up two levels.
 
 ### Phase 1: Fetch Emails
 
-1. Load settings for automated folder name
-2. Load Fastmail tools: `+fastmail search emails`
+1. Load settings from `data/settings.yaml`
+2. Read `providers.email.active` and use tool names from `providers.email.mappings.[active_provider]` for all email operations
 3. Fetch unread emails from automated folder (or last 24h if --all)
 
 ### Phase 2: Categorize

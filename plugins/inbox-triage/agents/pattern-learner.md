@@ -69,10 +69,13 @@ Group by confidence level and let user select which to keep.
 
 Save confirmed rules to `data/filing-rules.yaml` with:
 - domain/email pattern
-- target_folder
+- target_folder (human-readable name)
+- target_folder_id (folder ID from Phase 1 - required for bulk_move operations)
 - confidence score
 - match_count
 - source: "bootstrap"
+
+**Important**: Always include `target_folder_id` - this is required for reliable email moves, especially with nested folder structures where folder names may not be unique.
 
 Update `data/triage-state.yaml` bootstrap state.
 
