@@ -56,8 +56,22 @@ Also load these pattern files from sibling plugins:
 Read `settings.yaml` to get:
 - `providers.email.active` - Active email provider (fastmail, gmail, outlook)
 - `providers.email.mappings.[provider]` - Tool name mappings
+- `integrations` - Which integrations are enabled (parcel, reminders, newsletter, filing)
 
 Use ToolSearch with `+<provider>` (e.g., `+fastmail`) to load the MCP tools.
+
+## Integration Settings
+
+Read `integrations` section from `settings.yaml` to determine available features:
+
+| Integration | Setting | When Enabled | When Disabled |
+|-------------|---------|--------------|---------------|
+| **Parcel** | `integrations.parcel.enabled` | Show "Add to Parcel" for packages → collect in batch | Standard 6 options only |
+| **Reminders** | `integrations.reminders.enabled` | Auto-suggest Reminder for action items | No auto-detection |
+| **Newsletter** | `integrations.newsletter.enabled` | Show "Unsubscribe" option → collect in batch | Standard delete only |
+| **Filing** | `integrations.filing.enabled` | Always on (core feature) | N/A |
+
+**CRITICAL**: Only show special options (Add to Parcel, Unsubscribe) if the corresponding integration is enabled.
 
 ## User Actions (6 Options)
 
@@ -221,13 +235,19 @@ Check `delete_patterns.subject_patterns` and `delete_patterns.domain_patterns`:
 - Mention the category (ci_failure, newsletter, etc.)
 
 ### 3. Package Detection (shipping-patterns.json)
+**Only if `integrations.parcel.enabled: true`**
+
 Check `subjectPatterns.shipped`, `subjectPatterns.onTheWay`, `senderPatterns.carriers`:
 - If match: "Package from [sender] - add to Parcel and archive to Orders?"
 - Offer as special option before standard 6
+- **When user selects**: Collect in `batches.parcel` (NOT executed inline)
 
 ### 4. Newsletter Detection (newsletter-patterns.json)
+**Only if `integrations.newsletter.enabled: true`**
+
 Check `rfcHeaders`, `newsletterServiceDomains`, `bulkSenderPatterns`:
-- If match: Suggest batch delete or unsubscribe option
+- If match: Suggest "Delete + Unsubscribe" option
+- **When user selects unsubscribe**: Collect in `batches.unsubscribe` (NOT executed inline)
 
 ### 5. Never-File Check (user-preferences.yaml)
 Check `never_file` patterns and `sender_overrides`:
@@ -287,26 +307,66 @@ statistics:
   emails_deleted: 0
   emails_kept: 0
   replies_drafted: 0
+  packages_queued: 2
+  newsletters_queued: 1
+  reminders_queued: 1
 
-pending_actions: []  # For batch execution if needed
+# Batches collected during interview - delegated to sub-agents at session end
+batches:
+  # Package tracking batch - sent to inbox-to-parcel sub-agent
+  parcel:
+    - emailId: "email-id-1"
+      trackingNumber: "1Z999AA10123456784"
+      carrier: "ups"
+      sender: "Amazon"
+    - emailId: "email-id-2"
+      trackingNumber: "794644790138"
+      carrier: "fedex"
+      sender: "Best Buy"
+
+  # Newsletter unsubscribe batch - sent to newsletter-unsubscriber sub-agent
+  unsubscribe:
+    - emailIds:
+        - "email-id-3"
+      domain: "uncrate.com"
+      unsubscribeUrl: "https://uncrate.com/unsubscribe?id=xxx"
+
+  # Reminder batch - sent to inbox-to-reminder sub-agent
+  reminder:
+    - emailId: "email-id-4"
+      title: "Review Chase statement"
+      dueDate: "tomorrow 9am"
+      list: "Budget & Finances"
+      notes: "From: Chase Bank"
+
+  # Direct actions (no sub-agent needed)
+  archive:
+    - emailId: "email-id-5"
+      folderId: "folder-123"
+      folderName: "Financial"
+  delete:
+    - "email-id-6"
+    - "email-id-7"
 ```
 
 On resume (--resume flag):
 1. Read interview-state.yaml
 2. Skip already processed email IDs
 3. Continue from last_email_index
+4. Preserve existing batch data for final delegation
 
 ## Workflow
 
 ### Initialization
 1. **Find data directory**: Glob for `settings.yaml`
-2. **Load settings**: Get email provider config
+2. **Load settings**: Get email provider config AND integration settings
 3. **Load tools**: ToolSearch with +[provider]
 4. **Load data files**: filing-rules.yaml, delete-patterns.yaml, user-preferences.yaml
-5. **Load patterns**: shipping-patterns.json, newsletter-patterns.json
-6. **Check for resume**: If --resume and interview-state.yaml exists with session, offer to continue
+5. **Load patterns**: shipping-patterns.json, newsletter-patterns.json (if integrations enabled)
+6. **Initialize batches**: Create empty batch arrays in memory
+7. **Check for resume**: If --resume and interview-state.yaml exists with session, offer to continue (load existing batches)
 
-### Email Processing Loop
+### Email Processing Loop (Interview Phase)
 1. **Get mailboxes**: Find Inbox ID
 2. **Fetch emails**: Use advanced_search with mailboxId=Inbox
 3. **Group by threadId**:
@@ -320,28 +380,126 @@ On resume (--resume flag):
    d. Present voice-friendly question with summary and smart suggestion
    e. Parse user response
    f. Execute follow-up questions as needed
-   g. Execute action on ALL messages in the thread (archive all, delete all, etc.)
-   h. Update interview-state.yaml with all processed email IDs
+   g. **Collect into batch OR execute directly**:
+      - Package → Add to `batches.parcel` (defer)
+      - Newsletter unsubscribe → Add to `batches.unsubscribe` (defer)
+      - Reminder → Add to `batches.reminder` (defer) OR execute inline (user preference)
+      - Archive → Execute inline with move_email
+      - Delete → Execute inline with delete_email
+      - Keep/Reply → Execute inline
+   h. Update interview-state.yaml with processed email IDs AND batches
    i. Move to next thread
-4. **On completion**:
-   a. Show summary statistics
-   b. Clear session state: Set `session: null` in interview-state.yaml
-   c. Move current session to `last_session` for reference
-   d. This prevents next invocation from incorrectly offering resume
+
+### Execution Phase (End of Session)
+**CRITICAL**: After all emails processed OR user says "stop"/"done", delegate batches to sub-agents:
+
+```
+Session complete! Processing batches...
+```
+
+1. **Process parcel batch** (if not empty):
+   ```
+   Use Task tool with:
+   - subagent_type: "inbox-to-parcel:inbox-to-parcel"
+   - prompt: "Process in batch mode: [JSON array of parcel items]"
+
+   If Task fails: Note error, keep batch in session state for retry
+   ```
+
+2. **Process unsubscribe batch** (if not empty):
+   ```
+   Use Task tool with:
+   - subagent_type: "newsletter-unsubscriber:newsletter-unsubscriber"
+   - prompt: "UNSUBSCRIBE: [JSON array of unsubscribe items]"
+
+   If Task fails: Note error, keep batch in session state for retry
+   ```
+
+3. **Process reminder batch** (if not empty):
+   ```
+   Use Task tool with:
+   - subagent_type: "inbox-to-reminder:inbox-to-reminder"
+   - prompt: "Create reminders: [JSON array of reminder items]"
+
+   If Task fails: Note error, keep batch in session state for retry
+   ```
+
+4. **Show final summary**:
+```
+📦 Parcel: X packages added
+📧 Newsletters: Y unsubscribed
+📝 Reminders: Z created
+📁 Filed: A emails archived
+🗑️ Deleted: B emails
+✓ All batches processed!
+```
+
+5. **Clear session state** (ONLY if all batches succeeded):
+   - If ALL batch delegations succeeded: Set `session: null` in interview-state.yaml
+   - If ANY batch failed: Keep session state intact with remaining batches
+   - Warn user: "Some batches failed. Session preserved. Run with --resume to retry."
+
+6. **Move to `last_session`** for reference (only if session cleared)
 
 ### Action Execution
 
-**Reminder** (Apple PIM):
+**CRITICAL: Batch Collection vs Inline Execution**
+
+| Action | Mode | Details |
+|--------|------|---------|
+| **Add to Parcel** | Batch | Collect in `batches.parcel`, delegate at end |
+| **Unsubscribe** | Batch | Collect in `batches.unsubscribe`, delegate at end |
+| **Reminder** | Batch | Collect in `batches.reminder`, delegate at end |
+| **Calendar** | Inline | Execute immediately with Apple PIM |
+| **Archive** | Inline | Execute immediately with move_email |
+| **Delete** | Inline | Execute immediately with delete_email |
+| **Keep** | Inline | No action OR flag_email if requested |
+| **Reply** | Inline | Execute immediately with reply_to_email |
+
+### Batch Collection Actions
+
+**Add to Parcel** (Deferred):
 ```
-Use mcp__apple-pim__reminder_create with:
-- title: Email subject or extracted task
-- list: User-selected list name
-- due: User-specified date (natural language or ISO)
-- notes: Email sender, date, and relevant excerpt
-- priority: 0 (none) unless user specifies
+Collect in batches.parcel array:
+{
+  emailId: "xxx",
+  trackingNumber: "[extracted or null if needs fetch]",
+  carrier: "[carrier code or null]",
+  sender: "[sender name]"
+}
+Confirm to user: "Package queued (will add to Parcel and archive to Orders at end)."
+NOTE: Do NOT archive the email inline - the sub-agent handles archiving to Orders.
 ```
 
-**Calendar** (Apple PIM):
+**Unsubscribe** (Deferred):
+```
+Collect in batches.unsubscribe array:
+{
+  emailIds: ["xxx"],  # Array format to match newsletter-unsubscriber schema
+  domain: "[sender domain]",
+  unsubscribeUrl: "[extracted url]"
+}
+Confirm: "Queued for unsubscribe (will unsubscribe and delete at end)."
+NOTE: Do NOT delete the email inline - the sub-agent handles deletion after unsubscribe.
+```
+
+**Reminder** (Deferred):
+```
+Collect in batches.reminder array:
+{
+  emailId: "xxx",
+  title: "[email subject or extracted task]",
+  dueDate: "[user-specified]",
+  list: "[user-selected list]",
+  notes: "[email context]"
+}
+Confirm: "Reminder queued (will create at end)."
+Ask what to do with email: 1. Keep  2. Archive  3. Delete
+```
+
+### Inline Execution Actions
+
+**Calendar** (Apple PIM) - Executed immediately:
 ```
 Use mcp__apple-pim__calendar_create with:
 - title: Email subject or event name
@@ -420,20 +578,25 @@ Draft saved. What should I do with the original email?
 3. **Voice-friendly**: Keep questions short, use numbered options
 4. **Smart suggestions**: Use existing data files for intelligent defaults
 5. **Confirm before actions**: Execute only after user chooses
-6. **Track progress**: Update interview-state.yaml after each email
-7. **Handle interrupts**: Save state so user can resume later
+6. **Track progress**: Update interview-state.yaml after each email (including batches)
+7. **Handle interrupts**: Save state AND batches so user can resume later
 8. **Never-file handling**: Show never-file emails but don't suggest Archive (user decides)
-9. **Show progress**: "Email X of Y" in each question
-10. **End gracefully**: Show summary when done or user says "stop"
-11. **VERIFY EXECUTION**: ALWAYS actually call the tool (move_email, delete_email, etc.) - never just say an action was done without calling the tool
+9. **Show progress**: "Thread X of Y" in each question
+10. **End gracefully**: Process batches and show summary when done or user says "stop"
+11. **VERIFY EXECUTION**: ALWAYS actually call the tool (move_email, delete_email, etc.) for inline actions
 12. **Post-action cleanup**: After Reminder, Calendar, or Reply, always ask what to do with the original email (keep/archive/delete)
 13. **Use existing labels**: If email already has a folder label from server rules, archive to that folder without asking
 14. **Proper threading**: For Reply, use inReplyTo with the original messageId header (not emailId) to maintain thread
+15. **Batch before inline**: Collect Package/Newsletter/Reminder in batches; execute Archive/Delete/Keep/Reply inline
+16. **Delegate at end**: Use Task tool to launch sub-agents for batch processing at session end
+17. **Check integrations**: Only show special options if corresponding integration is enabled in settings.yaml
+18. **Save batches on interrupt**: If user says "stop" mid-session, save batches to interview-state.yaml for resume
 
 ## Error Handling
 
 - **No inbox emails**: Report "Inbox is empty!" and exit
-- **Tool failure**: Note error, offer to skip or retry
+- **Tool failure (interview phase)**: Note error, offer to skip or retry
+- **Batch delegation failure (execution phase)**: Preserve session state with failed batches, warn user to retry with --resume
 - **Invalid user input**: Re-prompt with "Please say a number 1-6"
 - **Session interrupted**: State is saved, can resume with --resume
 
@@ -441,21 +604,31 @@ Draft saved. What should I do with the original email?
 
 ```
 Starting inbox interview... Found 15 emails in Inbox.
+Integrations enabled: Parcel, Reminders, Newsletter
 
----
-Email 1 of 15 from Chase Bank:
-"Your statement is ready"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📧 Thread 1 of 12 (1 message)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-This looks like a financial alert.
-1. Reminder   2. Calendar   3. Archive
-4. Delete     5. Keep       6. Reply
+From:    Chase Bank <alerts@example.com>
+Subject: Your statement is ready
+Date:    Jan 15, 2025 9:30 AM
+
+Summary:
+Your January statement is available. Balance due $1,234.56 by Feb 1st.
+
+This looks like a financial alert with payment deadline.
+
+┌───────────────────────────────────────┐
+│  1. Reminder    2. Calendar    3. Archive  │
+│  4. Delete      5. Keep        6. Reply    │
+└───────────────────────────────────────┘
 
 Say a number or action name.
 > 1
 
 When should this reminder be due?
-Say something like "tomorrow" or "next Monday"
-> tomorrow
+> January 28
 
 Which reminder list?
 1. Reminders (default)
@@ -464,48 +637,95 @@ Which reminder list?
 4. Family
 > 2
 
-Created reminder "Review Chase statement" in Budget & Finances for tomorrow.
+Reminder queued: "Pay Chase statement $1,234.56" → Budget & Finances (Jan 28)
+What should I do with the email?
+1. Keep  2. Archive to Financial  3. Delete
+> 2
 
----
-Email 2 of 15 from Amazon:
-"Your package has shipped"
+Archived to Financial.
 
-This looks like a package shipment.
-1. Add to Parcel & Archive to Orders (Recommended)
-2. Reminder   3. Calendar   4. Archive
-5. Delete     6. Keep       7. Reply
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📧 Thread 2 of 12 (1 message)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+From:    Best Buy <orders@example.com>
+Subject: Your order has shipped!
+Date:    Jan 15, 2025 2:15 PM
+
+Summary:
+Your TV shipped via FedEx. Tracking: 794644790138. Expected Jan 18.
+
+📦 This looks like a package shipment.
+
+┌───────────────────────────────────────────────────┐
+│  1. Add to Parcel (Recommended)                        │
+│  2. Reminder    3. Calendar    4. Archive              │
+│  5. Delete      6. Keep        7. Reply                │
+└───────────────────────────────────────────────────┘
 
 Say a number or action name.
 > 1
 
-Added to Parcel and archived to Orders.
+Package queued: FedEx 794644790138 (Best Buy)
+(Will add to Parcel and archive to Orders at end)
 
----
-Email 3 of 15 from Uncrate:
-"Daily Picks"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📧 Thread 3 of 12 (1 message)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-This looks like a newsletter. Matches delete pattern: "marketing_promo"
-1. Delete (Recommended)
-2. Delete and always delete from this sender
-3. Reminder   4. Calendar   5. Archive
-6. Keep       7. Reply
-
-Say a number or action name.
-> 2
-
-Deleted. Added uncrate.com to always-delete list.
-
----
-[... continues ...]
-
----
-Session complete!
+From:    Uncrate <newsletter@example.com>
+Subject: Daily Picks
+Date:    Jan 15, 2025 8:00 AM
 
 Summary:
-- Reminders created: 3
-- Calendar events: 1
-- Emails archived: 8
-- Emails deleted: 2
-- Kept in inbox: 1
-- Replies drafted: 0
+Marketing newsletter with product recommendations.
+
+📧 This looks like a newsletter.
+
+┌───────────────────────────────────────────────────┐
+│  1. Delete + Unsubscribe (Recommended)                 │
+│  2. Delete only                                        │
+│  3. Reminder    4. Calendar    5. Archive              │
+│  6. Keep        7. Reply                               │
+└───────────────────────────────────────────────────┘
+
+Say a number or action name.
+> 1
+
+Queued for unsubscribe: uncrate.com
+(Will unsubscribe and delete at end)
+
+[... continues for remaining threads ...]
+
+> done
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Session complete! Processing batches...
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 Parcel: 3 packages to add
+   → Launching inbox-to-parcel...
+   → Added 3 packages, archived to Orders ✓
+
+📧 Newsletters: 2 to unsubscribe
+   → Launching newsletter-unsubscriber...
+   → Unsubscribed from 2 newsletters ✓
+
+📝 Reminders: 4 to create
+   → Launching inbox-to-reminder...
+   → Created 4 reminders ✓
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Final Summary
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 Packages added: 3
+📧 Unsubscribed: 2
+📝 Reminders created: 4
+📅 Events created: 1
+📁 Emails archived: 8
+🗑️ Emails deleted: 3
+📌 Kept in inbox: 1
+
+✓ All batches processed!
 ```
