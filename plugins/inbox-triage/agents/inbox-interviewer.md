@@ -72,19 +72,51 @@ For each email, present these numbered options:
 | 5 | **Keep** | Keep in inbox (optionally flag) |
 | 6 | **Reply** | Draft a reply |
 
+## Thread Grouping
+
+**CRITICAL**: Group emails by `threadId` and present each thread ONCE:
+1. Fetch emails and group by threadId
+2. For each thread, show only the most recent message
+3. Count threads, not individual messages (e.g., "Thread 3 of 8")
+4. When user takes action, apply to ALL messages in the thread
+
 ## Voice-Friendly Question Format
 
 ### Primary Question
-```
-Email X of Y from [Sender]:
-"[Subject]"
 
-[Smart suggestion if applicable]
-1. Reminder   2. Calendar   3. Archive
-4. Delete     5. Keep       6. Reply
+Use this exact format with markdown formatting for visual appeal:
 
-Say a number or action name.
 ```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📧 **Thread X of Y** (Z messages in thread)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**From:** [Sender Name] <[email]>
+**Subject:** [Subject line]
+**Date:** [Received date/time]
+
+**Latest message:**
+> [2-3 sentence executive summary of the most recent reply]
+> [Focus on: what they're asking, what action is needed, key info]
+
+[Smart suggestion line if applicable]
+
+┌─────────────────────────────────────────┐
+│  **1** Reminder   **2** Calendar   **3** Archive  │
+│  **4** Delete     **5** Keep       **6** Reply    │
+└─────────────────────────────────────────┘
+
+Say a number (1-6) or action name.
+```
+
+**Executive Summary Guidelines:**
+- Read the most recent message in the thread
+- Summarize in 2-3 sentences: what it says, what action (if any) is needed
+- For replies, focus on the NEW information, not the quoted history
+- Examples:
+  - "Alex confirms the refund has been processed and will appear in a few days."
+  - "NetJets asking if you want to proceed with Feb 13 booking - needs response within 8 hours."
+  - "Marketing email about spring wine release ending Sunday."
 
 ### Follow-up Questions by Action
 
@@ -277,14 +309,20 @@ On resume (--resume flag):
 ### Email Processing Loop
 1. **Get mailboxes**: Find Inbox ID
 2. **Fetch emails**: Use advanced_search with mailboxId=Inbox
-3. **For each email**:
-   a. Run smart pre-processing
-   b. Present voice-friendly question with smart suggestion
-   c. Parse user response
-   d. Execute follow-up questions as needed
-   e. Execute action (create reminder, archive, etc.)
-   f. Update interview-state.yaml
-   g. Move to next email
+3. **Group by threadId**:
+   - Group all emails by their threadId
+   - For each thread, identify the most recent message
+   - Count threads (not messages) for progress display
+4. **For each thread** (not each email):
+   a. Get the most recent message in the thread
+   b. Read its content and create executive summary
+   c. Run smart pre-processing on the thread
+   d. Present voice-friendly question with summary and smart suggestion
+   e. Parse user response
+   f. Execute follow-up questions as needed
+   g. Execute action on ALL messages in the thread (archive all, delete all, etc.)
+   h. Update interview-state.yaml with all processed email IDs
+   i. Move to next thread
 4. **On completion**:
    a. Show summary statistics
    b. Clear session state: Set `session: null` in interview-state.yaml
