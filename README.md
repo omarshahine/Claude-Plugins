@@ -1,6 +1,6 @@
 # Agent-Plugins
 
-A personal plugin marketplace for Claude Code. Contains reusable plugins that can be shared across projects and machines.
+A personal plugin marketplace for Claude Code containing reusable plugins for email management, travel, personal information management, and productivity.
 
 ## Installation
 
@@ -10,454 +10,83 @@ Add this marketplace to Claude Code:
 /plugin marketplace add omarshahine/agent-plugins
 ```
 
-Then install plugins:
+Install the plugins you need:
 
 ```bash
-/plugin install travel-agent@omarshahine-agent-plugins
-/plugin install rename-agent@omarshahine-agent-plugins
-/plugin install apple-pim@omarshahine-agent-plugins
-/plugin install credit-card-benefits@omarshahine-agent-plugins
-/plugin install inbox-to-reminder@omarshahine-agent-plugins
-/plugin install newsletter-unsubscriber@omarshahine-agent-plugins
-/plugin install inbox-to-parcel@omarshahine-agent-plugins
-/plugin install inbox-triage@omarshahine-agent-plugins
+/plugin install inbox-triage@omarshahine-agent-plugins      # Email orchestrator
+/plugin install travel-agent@omarshahine-agent-plugins      # Flight research & tracking
+/plugin install apple-pim@omarshahine-agent-plugins         # Calendar, Reminders, Contacts
+/plugin install credit-card-benefits@omarshahine-agent-plugins  # Credit card benefit tracking
+/plugin install rename-agent@omarshahine-agent-plugins      # AI-powered file renaming
 ```
-
-## Available Plugins
-
-| Plugin | Description |
-|--------|-------------|
-| [travel-agent](#travel-agent) | Flight research and trip tracking (Google Flights, ITA Matrix, Flighty, Tripsy) |
-| [rename-agent](#rename-agent) | AI-powered file renaming with pattern-based naming |
-| [apple-pim](#apple-pim) | Native macOS Calendar, Reminders, and Contacts integration |
-| [credit-card-benefits](#credit-card-benefits) | Track and maximize premium credit card benefits and statement credits |
-| [inbox-triage](#inbox-triage) | **Email orchestrator** - Self-learning triage that delegates to specialized plugins |
-| [inbox-to-reminder](#inbox-to-reminder) | Scan inbox for action items and create Apple Reminders |
-| [newsletter-unsubscriber](#newsletter-unsubscriber) | Find and unsubscribe from unwanted newsletters |
-| [inbox-to-parcel](#inbox-to-parcel) | Process shipping emails and add tracking to Parcel app |
 
 ---
 
-## travel-agent
+## How It Works: The Plugin Ecosystem
 
-Reusable travel-related agents for flight research and trip tracking.
-
-### Agents Overview
-
-| Agent | Type | Model | Description |
-|-------|------|-------|-------------|
-| `google-flights` | Browser automation | sonnet | Search Google Flights for airfare pricing |
-| `ita-matrix` | Browser automation (headed) | sonnet | Advanced fare research with detailed pricing rules |
-| `flighty` | Local database query | haiku | Query Flighty app for flight tracking data |
-| `tripsy` | Local database query | haiku | Query Tripsy app for trip planning data |
-
-### google-flights
-
-**Purpose:** Search Google Flights for airfare pricing estimates using Playwright browser automation.
-
-**Best for:**
-- Estimating airfare costs for trip budgeting
-- Comparing prices across different dates
-- Finding routing options for complex itineraries
-- Quick price comparisons with visual results
-
-**How it works:**
-1. Constructs Google Flights URLs with encoded search parameters (faster than UI navigation)
-2. Uses headless Playwright to navigate and extract results
-3. Supports multi-city, round-trip, and one-way searches
-4. All cabin classes: Economy, Premium Economy, Business, First
-
-**Example use:**
-```
-Search business class flights from Seattle to Hong Kong for December 2026
-```
-
-**Requirements:**
-- `fast-flights` Python library:
-  ```bash
-  pip install fast-flights
-  ```
-
-### ita-matrix
-
-**Purpose:** Search ITA Matrix for detailed fare information, routing rules, and pricing breakdowns.
-
-**Best for:**
-- Fare class and booking code research
-- Understanding complex routing rules
-- Detailed price breakdowns with taxes/fees
-- Multi-city itineraries with specific constraints
-- Finding the cheapest fare basis codes
-
-**How it works:**
-1. Builds JSON search payload and encodes it for URL
-2. Uses **headed** Playwright (ITA blocks headless browsers)
-3. Requires manual trigger workaround (click "Modify search" then "Search")
-4. Searches take 2-5 minutes (this is normal)
-5. Extracts detailed fare information from results
-
-**Example use:**
-```
-Search ITA Matrix for Seattle to Tokyo round-trip in business class, November 2026
-```
-
-**Requirements:**
-- Playwright MCP plugin (headed - required, ITA blocks headless browsers):
-  ```
-  /plugin install playwright@claude-plugins-official
-  ```
-
-**Note:** ITA Matrix is research-only and doesn't book flights. Use the fare information to book directly with airlines or OTAs.
-
-### flighty
-
-**Purpose:** Query the Flighty app's local database for detailed flight tracking information.
-
-**Best for:**
-- Checking your upcoming flights
-- Finding seat assignments and aircraft types
-- Looking up confirmation codes
-- Viewing terminal and gate information
-- Flight statistics and history
-
-**How it works:**
-1. Runs a Python script that queries Flighty's local SQLite database
-2. Returns structured JSON with rich flight data
-3. Presents results as formatted markdown tables
-
-**Available commands:**
-| Command | Description |
-|---------|-------------|
-| `list [limit]` | List upcoming flights |
-| `next` | Get next upcoming flight |
-| `date YYYY-MM-DD` | Flights on a specific date |
-| `pnr CODE` | Search by confirmation code |
-| `stats` | Flight statistics |
-| `recent [limit]` | Past flights |
-
-**Example use:**
-```
-What's my next flight?
-Show me my flight statistics
-```
-
-**Requirements:**
-- Flighty app installed on macOS
-- Database location: `~/Library/Containers/com.flightyapp.flighty/Data/Documents/MainFlightyDatabase.db`
-
-### tripsy
-
-**Purpose:** Query the Tripsy app's local database for trip planning information.
-
-**Best for:**
-- Viewing upcoming trips and itineraries
-- Checking hotel reservations
-- Reviewing planned activities
-- Getting trip overviews with all components
-
-**How it works:**
-1. Runs a Python script that queries Tripsy's local SQLite database
-2. Returns structured JSON with trip, flight, hotel, and activity data
-3. Presents results as formatted markdown tables
-
-**Available commands:**
-| Command | Description |
-|---------|-------------|
-| `list [limit]` | List upcoming trips |
-| `trip "Name"` | Get full trip details (flights, hotels, activities) |
-| `flights [limit]` | Upcoming flights across all trips |
-| `hotels [limit]` | Upcoming hotel stays |
-
-**Example use:**
-```
-What trips do I have coming up?
-Show me the details for my Japan trip
-```
-
-**Requirements:**
-- Tripsy app installed on macOS
-- Database location: `~/Library/Group Containers/group.app.tripsy.ios/Tripsy.sqlite`
-
----
-
-## rename-agent
-
-AI-powered file renaming for Claude Code. Analyzes documents (PDFs, images, text files), classifies them, and applies consistent naming patterns.
-
-**Features:**
-- Document analysis (PDFs, images, text files)
-- Smart classification (15+ document types)
-- Pattern-based naming with tokens
-- Pattern learning for reuse
-- Batch processing
-
-**Example use:**
-```
-/rename-agent:rename ~/Downloads/tax-docs
-/rename-agent:rename ~/Documents/receipts --pattern "{Date:YYYY-MM-DD} - {Merchant}"
-```
-
-Or just ask:
-```
-Rename the tax documents in my Downloads folder
-Help me organize these receipts
-```
-
-**Pattern tokens:** `{Date:YYYY-MM-DD}`, `{Year}`, `{Merchant}`, `{Amount}`, `{Institution}`, `{Form Type}`, `{Last 4 Digits}`, `{Description}`
-
-**Document types:** Receipt, Bill, Tax Document, Bank Statement, Invoice, Contract, Medical, Insurance, Investment, Payslip, Identity, Correspondence, Manual, Photo, General
-
-**Requirements:**
-- Python 3.10+
-- `ANTHROPIC_API_KEY` environment variable
-- Install CLI:
-  ```bash
-  pip install claude-rename-agent
-  ```
-
-**Source:** https://github.com/omarshahine/claude-rename-agent
-
----
-
-## apple-pim
-
-Native macOS integration for Calendar, Reminders, and Contacts using EventKit and Contacts frameworks.
-
-### Features
-
-- **Calendar Management**: Full CRUD operations for calendar events
-- **Reminder Management**: Manage reminders with priorities, due dates, and completion tracking
-- **Contact Management**: Search, view, and manage contacts with full details
-- **Flexible Date Ranges**: Use `lastDays`/`nextDays` or explicit `from`/`to` dates
-- **Natural Language**: Accepts dates like "tomorrow", "next Tuesday", "in 2 hours"
-- **MCP Integration**: Runs as an MCP server for direct tool access
-
-### Components
-
-| Component | Purpose |
-|-----------|---------|
-| `pim-assistant` agent | Natural language assistant for PIM operations |
-| `apple-pim` skill | EventKit/Contacts framework knowledge |
-| Slash commands | `/apple-pim:calendars`, `/apple-pim:reminders`, `/apple-pim:contacts` |
-| MCP server | Native Swift CLIs wrapped in Node.js MCP |
-
-### Installation
-
-1. Install the plugin:
-   ```bash
-   /plugin install apple-pim@omarshahine-agent-plugins
-   ```
-
-2. Run the setup script to build Swift CLIs and install dependencies:
-   ```bash
-   ~/.claude/plugins/cache/omarshahine-agent-plugins/apple-pim/setup.sh
-   ```
-
-3. Restart Claude Code to load the MCP server.
-
-### Usage
-
-**Via slash commands:**
-```
-/apple-pim:calendars events
-/apple-pim:calendars create "Team Meeting" --start "tomorrow 2pm" --duration 60
-/apple-pim:reminders items --list "Shopping"
-/apple-pim:reminders create "Buy milk" --due "tomorrow"
-/apple-pim:contacts search "John"
-```
-
-**Via natural language (uses pim-assistant agent):**
-```
-Schedule a meeting with the team for next Tuesday at 2pm
-Remind me to call the dentist tomorrow
-What's on my calendar this week?
-Find John's phone number
-```
-
-**Via MCP tools directly:**
-```
-mcp__apple-pim__calendar_events(lastDays=7, nextDays=14)
-mcp__apple-pim__reminder_create(title="Buy groceries", due="tomorrow 5pm", list="Shopping")
-mcp__apple-pim__contact_search(query="John")
-```
-
-### Slash Commands
-
-| Command | Description |
-|---------|-------------|
-| `/apple-pim:calendars` | Manage calendar events (list, events, search, create, update, delete) |
-| `/apple-pim:reminders` | Manage reminders (lists, items, search, create, complete, update, delete) |
-| `/apple-pim:contacts` | Manage contacts (groups, list, search, get, create, update, delete) |
-
-### Available MCP Tools
-
-**Calendar:**
-| Tool | Description | Key Parameters |
-|------|-------------|----------------|
-| `calendar_list` | List all calendars | - |
-| `calendar_events` | List events in date range | `calendar`, `from`/`to` OR `lastDays`/`nextDays`, `limit` |
-| `calendar_get` | Get single event by ID | `id` |
-| `calendar_search` | Search events | `query`, `calendar`, `from`, `to`, `limit` |
-| `calendar_create` | Create new event | `title`, `start`, `end`/`duration`, `calendar`, `location`, `notes`, `allDay`, `alarm` |
-| `calendar_update` | Update existing event | `id`, `title`, `start`, `end`, `location`, `notes` |
-| `calendar_delete` | Delete event | `id` |
-
-**Reminders:**
-| Tool | Description | Key Parameters |
-|------|-------------|----------------|
-| `reminder_lists` | List all reminder lists | - |
-| `reminder_items` | List reminders | `list`, `completed`, `limit` |
-| `reminder_get` | Get single reminder by ID | `id` |
-| `reminder_search` | Search reminders | `query`, `list`, `completed`, `limit` |
-| `reminder_create` | Create new reminder | `title`, `list`, `due`, `notes`, `priority` (0/1/5/9), `alarm` |
-| `reminder_complete` | Mark complete/incomplete | `id`, `undo` |
-| `reminder_update` | Update reminder | `id`, `title`, `due`, `notes`, `priority` |
-| `reminder_delete` | Delete reminder | `id` |
-
-**Contacts:**
-| Tool | Description | Key Parameters |
-|------|-------------|----------------|
-| `contact_groups` | List contact groups | - |
-| `contact_list` | List contacts | `group`, `limit` |
-| `contact_search` | Search contacts | `query`, `limit` |
-| `contact_get` | Get full contact details | `id` |
-| `contact_create` | Create new contact | `name`/`firstName`+`lastName`, `email`, `phone`, `organization`, `jobTitle`, `notes` |
-| `contact_update` | Update contact | `id`, `firstName`, `lastName`, `email`, `phone`, `organization`, `jobTitle`, `notes` |
-| `contact_delete` | Delete contact | `id` |
-
-### Date Range Examples
+These plugins are designed to work together. At the center is **inbox-triage**, which acts as an orchestrator for email management, automatically delegating to specialized sub-plugins.
 
 ```
-# Explicit dates
-calendar_events(from="2024-01-15", to="2024-01-22")
-
-# Relative days (7 days ago to 14 days from now)
-calendar_events(lastDays=7, nextDays=14)
-
-# Natural language
-calendar_events(from="today", to="next week")
+┌─────────────────────────────────────────────────────────────────────┐
+│                         inbox-triage                                │
+│                    (Email Orchestrator)                             │
+│                                                                     │
+│  Learns your patterns • Suggests filing • Routes to sub-plugins    │
+└─────────────────────────┬───────────────────────────────────────────┘
+                          │
+          ┌───────────────┼───────────────┐
+          │               │               │
+          ▼               ▼               ▼
+    ┌───────────┐   ┌───────────┐   ┌───────────┐
+    │ inbox-to- │   │newsletter-│   │ inbox-to- │
+    │  parcel   │   │unsubscriber│  │ reminder  │
+    └─────┬─────┘   └─────┬─────┘   └─────┬─────┘
+          │               │               │
+          ▼               ▼               ▼
+    ┌───────────┐   ┌───────────┐   ┌───────────┐
+    │  Parcel   │   │ Playwright │   │ apple-pim │
+    │   App     │   │ (unsubscribe)│ │(Reminders)│
+    └───────────┘   └───────────┘   └───────────┘
 ```
 
-### Requirements
+**When you run `/inbox-triage:interview`, the orchestrator:**
+1. Fetches emails from your inbox
+2. Classifies each one (package, newsletter, financial, action item, etc.)
+3. Suggests actions based on learned patterns
+4. Routes to specialized handlers when you choose:
+   - "Add to Parcel" → `inbox-to-parcel` extracts tracking, adds to Parcel app
+   - "Unsubscribe" → `newsletter-unsubscriber` handles the unsubscribe flow
+   - "Create reminder" → `inbox-to-reminder` creates Apple Reminder via `apple-pim`
 
-- macOS 14+ (Sonoma) recommended
-- Xcode Command Line Tools (for Swift compilation)
-- Node.js 18+
-- Grant Calendar, Reminders, and Contacts access when prompted
-
-### Permissions
-
-On first use, macOS will prompt for access to Calendar, Reminders, and Contacts. Grant access in System Settings > Privacy & Security.
-
----
-
-## credit-card-benefits
-
-Track and maximize your premium credit card benefits with anniversary-aware checklists, multiple data source support, and automatic transaction matching.
-
-### Supported Cards
-
-| Card | Annual Fee | Reset Type |
-|------|------------|------------|
-| American Express Platinum | $895 | Calendar Year / Monthly |
-| Capital One Venture X | $395 | Account Anniversary |
-| Chase Sapphire Reserve | $795 | Mixed (Anniversary + Calendar) |
-| Bank of America Alaska Airlines Atmos Summit | $395 | Account Anniversary |
-| Delta SkyMiles Reserve | $650 | Mixed (Monthly + Anniversary) |
-
-### Quick Start
-
-```bash
-# 1. Install the plugin
-/plugin install credit-card-benefits@omarshahine-agent-plugins
-
-# 2. Configure your cards and data source
-/credit-card-benefits:configure
-
-# 3. Initial sync pulls 12 months of history to find anniversaries
-/credit-card-benefits:sync --full
-
-# 4. Check your benefit status
-/credit-card-benefits:status
-```
-
-### Data Sources
-
-The plugin supports multiple ways to track your transactions:
-
-| Source | Best For | Setup |
-|--------|----------|-------|
-| **YNAB MCP** | YNAB users with MCP server | Auto-detected |
-| **YNAB API** | YNAB users | Requires API token |
-| **CSV Import** | Any card | Download from card website |
-| **Manual** | Simple tracking | No external data |
-
-### Commands
-
-| Command | Description |
-|---------|-------------|
-| `/credit-card-benefits:configure` | Interactive setup for cards and data sources |
-| `/credit-card-benefits:sync` | Sync transactions (incremental or full 12-month) |
-| `/credit-card-benefits:status` | View all benefits and unused credits |
-| `/credit-card-benefits:import` | Import transactions from CSV files |
-| `/credit-card-benefits:remind` | Show benefits expiring soon |
-| `/credit-card-benefits:use` | Manually record benefit usage |
-| `/credit-card-benefits:info` | Show detailed card benefit information |
-| `/credit-card-benefits:update` | Research and apply benefit changes from web |
-
-### Key Features
-
-- **Anniversary Detection**: Uses annual fee posting date as the most reliable anniversary indicator
-- **Multiple Reset Types**: Calendar year, anniversary, monthly, quarterly, semi-annual
-- **Benefit Research**: `/update` command searches official and trusted sources for benefit changes
-- **Incremental Sync**: After initial setup, only fetches new transactions
-- **YAML Checklist**: Human-readable format with comments for easy manual editing
-
-### Natural Language
-
-The `benefits-tracker` agent can be invoked naturally:
-
-```
-What Amex credits do I still need to use?
-Show me my unused Chase Sapphire benefits
-What benefits are expiring this month?
-Check for any new credit card benefits
-```
-
-### Benefits by Reset Period
-
-**Monthly (Use Every Month!):**
-- Amex: Uber Cash ($15), Entertainment ($25), Equinox ($25)
-- Delta: Resy ($20), Rideshare ($10)
-
-**Quarterly:**
-- Amex: Resy ($100), Lululemon ($75)
-
-**Semi-Annual:**
-- Amex: Hotel ($300), Saks ($50)
-- Chase: The Edit ($250), Exclusive Tables ($150)
-
-**Annual:**
-- Amex: Airline Fee ($200), CLEAR ($209)
-- Venture X: Travel ($300), 10K Miles
-- Chase: Travel ($300)
-- Delta: Delta Stays ($200), Companion Cert
-- Alaska: 8 Lounge Passes, Companion Fare
+**Standalone plugins** (travel-agent, credit-card-benefits, rename-agent) work independently for their specific domains.
 
 ---
 
 ## inbox-triage
 
-**The email orchestrator.** Self-learning email triage that classifies your inbox and delegates to specialized plugins for packages, newsletters, and action items.
+**The email orchestrator.** Self-learning email triage that classifies your inbox, suggests actions based on your patterns, and delegates to specialized plugins.
 
-### Features
+### Why inbox-triage?
 
-- **Questions-First Interview**: Collect ALL decisions up front, execute in bulk at the end
-- **Decision Learning**: Records your choices vs suggestions, improves accuracy over time
-- **Visual HTML Batch**: Browser-based interface for reviewing all emails at once
-- **Pattern Learning**: Discovers filing patterns from your existing folder organization
-- **Smart Classification**: Categorizes emails (packages, newsletters, financial, action items)
-- **Sub-agent Delegation**: Automatically routes to parcel, newsletter, or reminder plugins
+- **Questions-first flow**: Collect ALL decisions up front, execute in bulk at the end (faster)
+- **Learns your patterns**: Records your choices vs suggestions, improves accuracy over time
+- **Routes intelligently**: Detects packages, newsletters, and action items—sends them to the right handler
+- **Multiple modes**: Interview mode (voice-friendly), batch mode (visual HTML), digest mode (summaries)
+
+### Quick Start
+
+```bash
+# 1. Configure your email provider
+/inbox-triage:setup
+
+# 2. Learn patterns from existing folders
+/inbox-triage:learn
+
+# 3. Triage your inbox
+/inbox-triage:interview     # Interactive Q&A mode
+# OR
+/inbox-triage:batch         # Visual HTML batch mode
+```
 
 ### Triage Modes
 
@@ -465,12 +94,13 @@ Check for any new credit card benefits
 |------|----------|--------------|
 | `/inbox-triage:interview` | Mobile, voice, thorough review | One-by-one Q&A with structured options |
 | `/inbox-triage:batch` | Desktop, quick visual review | HTML interface, review all at once |
+| `/inbox-triage:digest` | Quick status | Summary of automated emails |
 
 ### Commands
 
 | Command | Description |
 |---------|-------------|
-| `/inbox-triage:setup` | Configure email provider |
+| `/inbox-triage:setup` | Configure email provider (Fastmail active) |
 | `/inbox-triage:learn` | Bootstrap rules from existing folders |
 | `/inbox-triage:interview` | Interactive questions-first triage |
 | `/inbox-triage:batch` | Visual HTML batch interface |
@@ -479,26 +109,7 @@ Check for any new credit card benefits
 | `/inbox-triage:digest` | Summarize automated emails |
 | `/inbox-triage:rules` | View/manage filing rules |
 | `/inbox-triage:optimize` | Deep folder analysis and suggestions |
-
-### Quick Start
-
-```bash
-# 1. Configure email provider
-/inbox-triage:setup
-
-# 2. Learn patterns from existing folders
-/inbox-triage:learn
-
-# 3. Choose your mode:
-
-# Interview mode (questions-first, learns from choices)
-/inbox-triage:interview
-
-# OR batch mode (visual HTML interface)
-/inbox-triage:batch
-# Review in browser, then:
-/inbox-triage:batch --process
-```
+| `/inbox-triage:analyze` | Find patterns in Trash/Archive |
 
 ### Interview Mode Flow
 
@@ -516,93 +127,297 @@ PHASE 3: LEARN (improve suggestions)
 → Update confidence scores
 ```
 
-### Custom Response Handling
-
-During interview, you can provide custom responses:
+### Custom Responses During Interview
 
 | You Say | What Happens |
 |---------|--------------|
 | "Need to create a rule" | Archives + creates reminder to make Fastmail rule |
 | "Flag for later" | Keeps in inbox + flags for follow-up |
-| "Read and summarize, then delete" | Summarizes content, deletes, shows summary at end |
-
-### Requirements
-
-- Email MCP server (Fastmail active; Gmail/Outlook future)
-- Existing folder structure to learn from
+| "Read and summarize" | Summarizes content, shows at end, then archives/deletes |
 
 ### Sub-Plugins (Automatic Delegation)
 
-When `inbox-triage` detects specific email types, it delegates to specialized plugins:
-
-```
-inbox-triage (orchestrator)
-├── inbox-to-parcel      → Package shipments with tracking numbers
-├── newsletter-unsubscriber → Marketing emails with unsubscribe option
-└── inbox-to-reminder    → Emails requiring action/follow-up
-```
+When inbox-triage detects specific email types, it routes to specialized handlers:
 
 #### inbox-to-parcel
 
-Process shipping notification emails and add tracking to Parcel app.
+Extracts tracking numbers from shipping emails and adds to Parcel app.
 
-- Extracts tracking numbers (UPS, FedEx, USPS, DHL, OnTrac)
-- Adds deliveries to Parcel app via API
+- Supports: UPS, FedEx, USPS, DHL, OnTrac, Amazon
 - Moves processed emails to Orders folder
-
-**Standalone:** `/inbox-to-parcel:track`
-
-**Requirements:** Email MCP + Parcel API MCP server
+- **Standalone**: `/inbox-to-parcel:track`
+- **Requires**: Email MCP + Parcel API MCP server
 
 #### newsletter-unsubscriber
 
-Find and unsubscribe from unwanted newsletters.
+Handles unwanted newsletter unsubscription.
 
 - Detects newsletters via RFC 2369 headers (List-Unsubscribe)
+- Executes via mailto or web forms (uses Playwright)
 - Maintains allowlist of wanted newsletters
-- Executes unsubscribes via mailto or web forms (Playwright)
-
-**Standalone:** `/newsletter-unsubscriber:unsubscribe`
-
-**Requirements:** Email MCP + Playwright plugin
+- **Standalone**: `/newsletter-unsubscriber:unsubscribe`
+- **Requires**: Email MCP + Playwright plugin
 
 #### inbox-to-reminder
 
-Scan inbox for action items and create Apple Reminders.
+Creates Apple Reminders from emails requiring action.
 
 - Identifies bills, deadlines, follow-ups, meeting requests
 - Creates reminders with appropriate due dates
-- Organizes into correct reminder lists
+- Routes to correct reminder list
+- **Standalone**: `/inbox-to-reminder:scan`
+- **Requires**: Email MCP + `apple-pim` plugin
 
-**Standalone:** `/inbox-to-reminder:scan`
+### Requirements
 
-**Requirements:** Email MCP + `apple-pim` plugin
+- Email MCP server (Fastmail active; Gmail/Outlook planned)
+- Existing folder structure to learn from
 
 ---
 
-## Usage
+## travel-agent
 
-After installation, use agents via the Task tool:
+Flight research and trip tracking using multiple data sources.
+
+### Agents
+
+| Agent | Model | Description |
+|-------|-------|-------------|
+| `google-flights` | sonnet | Search Google Flights for airfare pricing |
+| `ita-matrix` | sonnet | Advanced fare research with detailed pricing rules |
+| `flighty` | haiku | Query Flighty app for flight tracking |
+| `tripsy` | haiku | Query Tripsy app for trip planning |
+
+### google-flights
+
+Search Google Flights for airfare estimates.
+
+**Best for:** Quick price comparisons, date flexibility research, routing options
+
+**Example:**
+```
+Search business class flights from Seattle to Hong Kong for December 2026
+```
+
+**Requires:** `pip install fast-flights`
+
+### ita-matrix
+
+Search ITA Matrix for detailed fare information.
+
+**Best for:** Fare class research, pricing breakdowns, complex routing rules
+
+**Note:** Uses headed browser (ITA blocks headless). Searches take 2-5 minutes.
+
+**Requires:** `/plugin install playwright@claude-plugins-official`
+
+### flighty
+
+Query Flighty app's local database for flight tracking.
+
+**Commands:**
+| Command | Description |
+|---------|-------------|
+| `list [limit]` | Upcoming flights |
+| `next` | Next upcoming flight |
+| `date YYYY-MM-DD` | Flights on a date |
+| `pnr CODE` | Search by confirmation code |
+| `stats` | Flight statistics |
+| `recent [limit]` | Past flights |
+
+**Requires:** Flighty app on macOS
+
+### tripsy
+
+Query Tripsy app's local database for trip information.
+
+**Commands:**
+| Command | Description |
+|---------|-------------|
+| `list [limit]` | Upcoming trips |
+| `trip "Name"` | Full trip details |
+| `flights [limit]` | Flights across all trips |
+| `hotels [limit]` | Hotel stays |
+
+**Requires:** Tripsy app on macOS
+
+---
+
+## apple-pim
+
+Native macOS integration for Calendar, Reminders, and Contacts.
+
+### Features
+
+- Full CRUD operations for events, reminders, and contacts
+- Natural language dates ("tomorrow 2pm", "next Tuesday")
+- MCP server for direct tool access
+- Used by `inbox-to-reminder` for creating reminders from emails
+
+### Installation
+
+```bash
+/plugin install apple-pim@omarshahine-agent-plugins
+
+# Build Swift CLIs and install dependencies
+~/.claude/plugins/cache/omarshahine-agent-plugins/apple-pim/setup.sh
+```
+
+Restart Claude Code to load the MCP server.
+
+### Usage
+
+**Slash commands:**
+```
+/apple-pim:calendars events
+/apple-pim:calendars create "Team Meeting" --start "tomorrow 2pm" --duration 60
+/apple-pim:reminders items --list "Shopping"
+/apple-pim:reminders create "Buy milk" --due "tomorrow"
+/apple-pim:contacts search "John"
+```
+
+**Natural language (via pim-assistant agent):**
+```
+Schedule a meeting with the team for next Tuesday at 2pm
+Remind me to call the dentist tomorrow
+What's on my calendar this week?
+Find John's phone number
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `/apple-pim:calendars` | Manage calendar events |
+| `/apple-pim:reminders` | Manage reminders |
+| `/apple-pim:contacts` | Manage contacts |
+
+### Requirements
+
+- macOS 14+ (Sonoma) recommended
+- Xcode Command Line Tools
+- Node.js 18+
+- Grant Calendar, Reminders, and Contacts access when prompted
+
+---
+
+## credit-card-benefits
+
+Track and maximize premium credit card benefits with anniversary-aware checklists.
+
+### Supported Cards
+
+| Card | Annual Fee | Key Benefits |
+|------|------------|--------------|
+| Amex Platinum | $895 | Monthly Uber/streaming, quarterly dining, annual airline |
+| Venture X | $395 | Annual travel credit, anniversary miles |
+| Chase Sapphire Reserve | $795 | Travel credit, DoorDash, Instacart |
+| Delta SkyMiles Reserve | $650 | Companion cert, Delta Stays, monthly credits |
+| Alaska Airlines Atmos Summit | $395 | Companion fare, lounge passes |
+
+### Quick Start
+
+```bash
+/plugin install credit-card-benefits@omarshahine-agent-plugins
+
+/credit-card-benefits:configure    # Set up cards and data source
+/credit-card-benefits:sync --full  # Pull 12 months to find anniversaries
+/credit-card-benefits:status       # Check your benefits
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `/credit-card-benefits:configure` | Set up cards and data sources |
+| `/credit-card-benefits:sync` | Sync transactions |
+| `/credit-card-benefits:status` | View all benefits |
+| `/credit-card-benefits:remind` | Benefits expiring soon |
+| `/credit-card-benefits:use` | Record benefit usage |
+| `/credit-card-benefits:info` | Card benefit details |
+
+### Data Sources
+
+| Source | Best For |
+|--------|----------|
+| YNAB MCP | YNAB users with MCP server |
+| YNAB API | YNAB users (requires token) |
+| CSV Import | Any card |
+| Manual | Simple tracking |
+
+### Natural Language
 
 ```
-Task(subagent_type="travel-agent:google-flights", prompt="Search business class SEA to HKG Dec 2026")
-Task(subagent_type="travel-agent:flighty", prompt="List upcoming flights")
-Task(subagent_type="travel-agent:ita-matrix", prompt="Search SEA-NRT round-trip business Nov 2026")
-Task(subagent_type="travel-agent:tripsy", prompt="Show my upcoming trips")
-Task(subagent_type="apple-pim:pim-assistant", prompt="What's on my calendar this week?")
-Task(subagent_type="credit-card-benefits:benefits-tracker", prompt="What credits are expiring this month?")
-Task(subagent_type="inbox-triage:inbox-interviewer", prompt="Interview my inbox")
-Task(subagent_type="inbox-to-parcel:inbox-to-parcel", prompt="Process shipping emails")
-Task(subagent_type="newsletter-unsubscriber:newsletter-unsubscriber", prompt="Scan inbox for newsletters")
-Task(subagent_type="inbox-to-reminder:inbox-to-reminder", prompt="Scan inbox for action items")
+What Amex credits do I still need to use?
+Show me my unused Chase Sapphire benefits
+What benefits are expiring this month?
 ```
+
+---
+
+## rename-agent
+
+AI-powered file renaming with pattern-based naming.
+
+### Features
+
+- Analyzes PDFs, images, and text files
+- Smart classification (15+ document types)
+- Pattern learning for consistent naming
+- Batch processing
+
+### Usage
+
+```
+/rename-agent:rename ~/Downloads/tax-docs
+/rename-agent:rename ~/Documents/receipts --pattern "{Date:YYYY-MM-DD} - {Merchant}"
+```
+
+Or natural language:
+```
+Rename the tax documents in my Downloads folder
+Help me organize these receipts
+```
+
+### Pattern Tokens
+
+`{Date:YYYY-MM-DD}`, `{Year}`, `{Merchant}`, `{Amount}`, `{Institution}`, `{Form Type}`, `{Last 4 Digits}`, `{Description}`
+
+### Document Types
+
+Receipt, Bill, Tax Document, Bank Statement, Invoice, Contract, Medical, Insurance, Investment, Payslip, Identity, Correspondence, Manual, Photo, General
+
+### Requirements
+
+- Python 3.10+
+- `ANTHROPIC_API_KEY` environment variable
+- Install: `pip install claude-rename-agent`
+
+**Source:** https://github.com/omarshahine/claude-rename-agent
+
+---
+
+## Plugin Reference
+
+| Plugin | Description | Key Commands |
+|--------|-------------|--------------|
+| **inbox-triage** | Email orchestrator with learning | `/inbox-triage:interview`, `/inbox-triage:batch` |
+| inbox-to-parcel | Package tracking from emails | `/inbox-to-parcel:track` |
+| newsletter-unsubscriber | Newsletter management | `/newsletter-unsubscriber:unsubscribe` |
+| inbox-to-reminder | Action items to reminders | `/inbox-to-reminder:scan` |
+| travel-agent | Flight research & tracking | Natural language queries |
+| apple-pim | Calendar, Reminders, Contacts | `/apple-pim:calendars`, `/apple-pim:reminders` |
+| credit-card-benefits | Benefit tracking | `/credit-card-benefits:status` |
+| rename-agent | File renaming | `/rename-agent:rename` |
+
+---
 
 ## Creating New Plugins
 
-1. Create a new directory under `plugins/`
-2. Add `.claude-plugin/plugin.json` with metadata
-3. Add agents, skills, or commands as needed
-4. Register the plugin in `.claude-plugin/marketplace.json`
+1. Create directory: `plugins/my-plugin/`
+2. Add manifest: `plugins/my-plugin/.claude-plugin/plugin.json`
+3. Add agents, skills, or commands
+4. Register in `.claude-plugin/marketplace.json`
 5. Update this README
 
 ### Plugin Structure
@@ -624,23 +439,20 @@ plugins/
 
 ### Marketplace Configuration
 
-The marketplace is defined in `.claude-plugin/marketplace.json`. Add new plugins to the `plugins` array:
+Add to `.claude-plugin/marketplace.json`:
 
 ```json
 {
-  "name": "omarshahine-agent-plugins",
-  "plugins": [
-    {
-      "name": "my-plugin",
-      "source": "./plugins/my-plugin",
-      "description": "Description of my plugin",
-      "version": "1.0.0",
-      "keywords": ["keyword1", "keyword2"],
-      "category": "productivity"
-    }
-  ]
+  "name": "my-plugin",
+  "source": "./plugins/my-plugin",
+  "description": "Description of my plugin",
+  "version": "1.0.0",
+  "keywords": ["keyword1", "keyword2"],
+  "category": "productivity"
 }
 ```
+
+---
 
 ## License
 
