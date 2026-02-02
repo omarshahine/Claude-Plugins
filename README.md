@@ -20,6 +20,7 @@ Then install plugins:
 /plugin install inbox-to-reminder@omarshahine-agent-plugins
 /plugin install newsletter-unsubscriber@omarshahine-agent-plugins
 /plugin install inbox-to-parcel@omarshahine-agent-plugins
+/plugin install inbox-triage@omarshahine-agent-plugins
 ```
 
 ## Available Plugins
@@ -30,6 +31,7 @@ Then install plugins:
 | [rename-agent](#rename-agent) | AI-powered file renaming with pattern-based naming |
 | [apple-pim](#apple-pim) | Native macOS Calendar, Reminders, and Contacts integration |
 | [credit-card-benefits](#credit-card-benefits) | Track and maximize premium credit card benefits and statement credits |
+| [inbox-triage](#inbox-triage) | **Email orchestrator** - Self-learning triage that delegates to specialized plugins |
 | [inbox-to-reminder](#inbox-to-reminder) | Scan inbox for action items and create Apple Reminders |
 | [newsletter-unsubscriber](#newsletter-unsubscriber) | Find and unsubscribe from unwanted newsletters |
 | [inbox-to-parcel](#inbox-to-parcel) | Process shipping emails and add tracking to Parcel app |
@@ -444,84 +446,137 @@ Check for any new credit card benefits
 
 ---
 
-## inbox-to-reminder
+## inbox-triage
 
-Scan your email inbox for action items and create reminders in Apple Reminders.
+**The email orchestrator.** Self-learning email triage that classifies your inbox and delegates to specialized plugins for packages, newsletters, and action items.
 
 ### Features
 
-- Scans inbox for emails containing action items (bills, tasks, deadlines)
-- Identifies different types: bills/payments, meetings, follow-ups, deadlines
-- Creates reminders with appropriate due dates and context
-- Organizes reminders into the correct lists
-- Supports multiple email providers (Fastmail, Gmail, Outlook)
-- Customizable for your household (partner name, family list)
+- **Questions-First Interview**: Collect ALL decisions up front, execute in bulk at the end
+- **Decision Learning**: Records your choices vs suggestions, improves accuracy over time
+- **Visual HTML Batch**: Browser-based interface for reviewing all emails at once
+- **Pattern Learning**: Discovers filing patterns from your existing folder organization
+- **Smart Classification**: Categorizes emails (packages, newsletters, financial, action items)
+- **Sub-agent Delegation**: Automatically routes to parcel, newsletter, or reminder plugins
+
+### Triage Modes
+
+| Mode | Best For | How It Works |
+|------|----------|--------------|
+| `/inbox-triage:interview` | Mobile, voice, thorough review | One-by-one Q&A with structured options |
+| `/inbox-triage:batch` | Desktop, quick visual review | HTML interface, review all at once |
 
 ### Commands
 
 | Command | Description |
 |---------|-------------|
-| `/inbox-to-reminder:setup` | Configure email provider and customizations |
-| `/inbox-to-reminder:scan` | Scan inbox for action items |
+| `/inbox-triage:setup` | Configure email provider |
+| `/inbox-triage:learn` | Bootstrap rules from existing folders |
+| `/inbox-triage:interview` | Interactive questions-first triage |
+| `/inbox-triage:batch` | Visual HTML batch interface |
+| `/inbox-triage:batch --process` | Execute batch decisions |
+| `/inbox-triage:triage` | Process inbox with confirmation |
+| `/inbox-triage:digest` | Summarize automated emails |
+| `/inbox-triage:rules` | View/manage filing rules |
+| `/inbox-triage:optimize` | Deep folder analysis and suggestions |
+
+### Quick Start
+
+```bash
+# 1. Configure email provider
+/inbox-triage:setup
+
+# 2. Learn patterns from existing folders
+/inbox-triage:learn
+
+# 3. Choose your mode:
+
+# Interview mode (questions-first, learns from choices)
+/inbox-triage:interview
+
+# OR batch mode (visual HTML interface)
+/inbox-triage:batch
+# Review in browser, then:
+/inbox-triage:batch --process
+```
+
+### Interview Mode Flow
+
+```
+PHASE 1: COLLECT (rapid Q&A)
+→ Answer questions for each email
+→ No waiting between emails
+
+PHASE 2: EXECUTE (bulk processing)
+→ All actions run at once
+→ Single API call per folder
+
+PHASE 3: LEARN (improve suggestions)
+→ Record decisions vs suggestions
+→ Update confidence scores
+```
+
+### Custom Response Handling
+
+During interview, you can provide custom responses:
+
+| You Say | What Happens |
+|---------|--------------|
+| "Need to create a rule" | Archives + creates reminder to make Fastmail rule |
+| "Flag for later" | Keeps in inbox + flags for follow-up |
+| "Read and summarize, then delete" | Summarizes content, deletes, shows summary at end |
 
 ### Requirements
 
-- Email MCP server (Fastmail, Gmail, or Outlook)
-- `apple-pim` plugin for Apple Reminders
+- Email MCP server (Fastmail active; Gmail/Outlook future)
+- Existing folder structure to learn from
 
----
+### Sub-Plugins (Automatic Delegation)
 
-## newsletter-unsubscriber
+When `inbox-triage` detects specific email types, it delegates to specialized plugins:
 
-Scan your inbox for newsletters and help you unsubscribe from unwanted ones.
+```
+inbox-triage (orchestrator)
+├── inbox-to-parcel      → Package shipments with tracking numbers
+├── newsletter-unsubscriber → Marketing emails with unsubscribe option
+└── inbox-to-reminder    → Emails requiring action/follow-up
+```
 
-### Features
-
-- Detects newsletters using RFC 2369 email headers (List-Unsubscribe)
-- Maintains an allowlist of newsletters you want to keep
-- Tracks previously unsubscribed senders to flag repeat offenders
-- Executes unsubscribes via mailto or web forms (Playwright)
-- Organizes processed emails to a dedicated folder
-
-### Commands
-
-| Command | Description |
-|---------|-------------|
-| `/newsletter-unsubscriber:setup` | Configure email provider |
-| `/newsletter-unsubscriber:unsubscribe` | Scan and unsubscribe from newsletters |
-
-### Requirements
-
-- Email MCP server (Fastmail, Gmail, or Outlook)
-- Playwright plugin (bundled) for web-based unsubscribes
-
----
-
-## inbox-to-parcel
+#### inbox-to-parcel
 
 Process shipping notification emails and add tracking to Parcel app.
 
-### Features
-
-- Scans inbox for shipment notification emails
-- Extracts tracking numbers and carrier information
+- Extracts tracking numbers (UPS, FedEx, USPS, DHL, OnTrac)
 - Adds deliveries to Parcel app via API
-- Moves processed emails to the Orders folder
-- Handles Amazon emails specially (auto-sync to Parcel)
-- Supports UPS, FedEx, USPS, DHL, OnTrac, and more
+- Moves processed emails to Orders folder
 
-### Commands
+**Standalone:** `/inbox-to-parcel:track`
 
-| Command | Description |
-|---------|-------------|
-| `/inbox-to-parcel:setup` | Configure email and Parcel providers |
-| `/inbox-to-parcel:track` | Process shipping emails |
+**Requirements:** Email MCP + Parcel API MCP server
 
-### Requirements
+#### newsletter-unsubscriber
 
-- Email MCP server (Fastmail, Gmail, or Outlook)
-- Parcel API MCP server (`npx -y @smithery/cli@latest install @NOVA-3951/parcel-api-mcp --client claude`)
-- Playwright plugin (bundled) for web-based tracking extraction
+Find and unsubscribe from unwanted newsletters.
+
+- Detects newsletters via RFC 2369 headers (List-Unsubscribe)
+- Maintains allowlist of wanted newsletters
+- Executes unsubscribes via mailto or web forms (Playwright)
+
+**Standalone:** `/newsletter-unsubscriber:unsubscribe`
+
+**Requirements:** Email MCP + Playwright plugin
+
+#### inbox-to-reminder
+
+Scan inbox for action items and create Apple Reminders.
+
+- Identifies bills, deadlines, follow-ups, meeting requests
+- Creates reminders with appropriate due dates
+- Organizes into correct reminder lists
+
+**Standalone:** `/inbox-to-reminder:scan`
+
+**Requirements:** Email MCP + `apple-pim` plugin
 
 ---
 
@@ -536,9 +591,10 @@ Task(subagent_type="travel-agent:ita-matrix", prompt="Search SEA-NRT round-trip 
 Task(subagent_type="travel-agent:tripsy", prompt="Show my upcoming trips")
 Task(subagent_type="apple-pim:pim-assistant", prompt="What's on my calendar this week?")
 Task(subagent_type="credit-card-benefits:benefits-tracker", prompt="What credits are expiring this month?")
-Task(subagent_type="inbox-to-reminder:inbox-to-reminder", prompt="Scan inbox for action items")
-Task(subagent_type="newsletter-unsubscriber:newsletter-unsubscriber", prompt="Scan inbox for newsletters")
+Task(subagent_type="inbox-triage:inbox-interviewer", prompt="Interview my inbox")
 Task(subagent_type="inbox-to-parcel:inbox-to-parcel", prompt="Process shipping emails")
+Task(subagent_type="newsletter-unsubscriber:newsletter-unsubscriber", prompt="Scan inbox for newsletters")
+Task(subagent_type="inbox-to-reminder:inbox-to-reminder", prompt="Scan inbox for action items")
 ```
 
 ## Creating New Plugins
