@@ -20,6 +20,19 @@ sender_overrides:
 # Domain overrides
 domain_overrides: []
 
+# Pending Fastmail rules (identified during triage, waiting to be created)
+# When user says "we need to create a rule for this", track here
+# A reminder is also created for follow-up
+pending_fastmail_rules:
+  # Example:
+  # - sender: "alerts@bank.com"
+  #   subject_contains: "statement"
+  #   target_folder: "💳 Financial Alerts"
+  #   target_folder_id: "P3_bn"
+  #   identified: "2026-02-02"
+  #   note: "Bank statement notifications"
+  []
+
 # Never-file list (emails matching these stay in inbox)
 never_file:
   # Example patterns:

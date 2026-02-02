@@ -1,16 +1,16 @@
 # inbox-triage
 
-Self-learning email triage with pattern recognition and automated email digests.
+Self-learning email triage with questions-first interview flow, decision learning, visual HTML batch interface, and pattern recognition.
 
 ## Features
 
+- **Questions-First Interview**: Fast Q&A - all questions up front, bulk execution at end
+- **Decision Learning**: Records what you chose vs suggestions, improves over time
+- **Visual Batch Triage**: HTML interface for reviewing all inbox emails at once
 - **Pattern Learning**: Discovers filing patterns from existing folder organization
-- **Smart Triage**: Matches emails against learned rules with confidence scoring
-- **Always Confirm**: Never auto-files - all moves require user confirmation
-- **Active Learning**: Improves based on your decisions
+- **Smart Classification**: Categorizes emails (packages, newsletters, financial, action items)
+- **Batch Orchestration**: Delegates to specialized sub-agents (parcel, newsletter, reminder)
 - **Automated Digest**: Summarizes automated emails with priority categorization
-- **Organization Analysis**: Analyzes Trash/Archive for optimization opportunities
-- **Folder Optimization**: Deep scan folders to suggest subfolders, merges, and rule updates
 
 ## Commands
 
@@ -18,6 +18,9 @@ Self-learning email triage with pattern recognition and automated email digests.
 |---------|-------------|
 | `/inbox-triage:setup` | Configure email provider |
 | `/inbox-triage:learn` | Bootstrap rules from existing folders |
+| `/inbox-triage:batch` | Visual HTML batch triage interface |
+| `/inbox-triage:batch --process` | Process submitted batch decisions |
+| `/inbox-triage:interview` | Voice-friendly one-by-one triage |
 | `/inbox-triage:triage` | Process inbox with confirmation |
 | `/inbox-triage:digest` | Summarize automated emails |
 | `/inbox-triage:analyze` | Find Trash/Archive patterns |
@@ -34,9 +37,65 @@ Self-learning email triage with pattern recognition and automated email digests.
 # 2. Learn patterns from existing folders
 /inbox-triage:learn
 
-# 3. Process your inbox
-/inbox-triage:triage
+# 3. Choose your triage mode:
+
+# Option A: Visual HTML batch (desktop, quick review)
+/inbox-triage:batch
+# Review in browser, click Submit All, then:
+/inbox-triage:batch --process
+
+# Option B: Voice interview (mobile, thorough)
+/inbox-triage:interview
 ```
+
+## Triage Modes
+
+### Batch Mode (Visual HTML)
+
+Best for desktop users who want to quickly review all emails at once.
+
+1. Run `/inbox-triage:batch` to generate HTML interface
+2. Browser opens with emails grouped by category
+3. Review suggested actions, modify as needed
+4. Click "Submit All" to download decisions
+5. Run `/inbox-triage:batch --process` to execute
+
+**Email Categories:**
+- Top of Mind - Action items needing response
+- Deliveries - Package shipments
+- Newsletters - Marketing emails
+- Financial - Banking alerts
+- Archive Ready - High-confidence filing matches
+- Delete Candidates - Likely deletable
+- FYI - Everything else
+
+### Interview Mode (Questions-First)
+
+Fast voice-friendly mode with three phases:
+
+```
+PHASE 1: COLLECT (rapid Q&A)
+→ Answer questions for each email
+→ No waiting between emails
+
+PHASE 2: EXECUTE (bulk processing)
+→ All actions run at once
+→ Single API call per folder
+
+PHASE 3: LEARN (improve suggestions)
+→ Record decisions vs suggestions
+→ Update confidence scores
+```
+
+1. Run `/inbox-triage:interview`
+2. Answer questions for each thread (fast - no execution between)
+3. Confirm execution when all collected
+4. System learns from your choices
+
+**Voice Commands:**
+- "archive", "delete", "reminder", "keep"
+- "parcel" (for packages), "unsubscribe" (for newsletters)
+- "stop" or "done" to end collection and execute
 
 ## How It Works
 
@@ -56,13 +115,27 @@ Self-learning email triage with pattern recognition and automated email digests.
 | 70-89% | Good match - some variation |
 | <70% | Not suggested - unreliable |
 
-### Active Learning
+### Decision Learning
 
-| Action | Effect |
-|--------|--------|
-| Confirm | +5% confidence |
-| Reject | -15% confidence |
-| Correct | New rule created |
+After each interview session, the system learns from your choices:
+
+```
+Suggestion accuracy: 12/15 (80%)
+
+Confidence updates:
+  ↑ chase.com → Financial (+5%)
+  ↓ newsletters.example.com (-15%)
+
+New pattern detected:
+  → bestbuy.com → Orders (add rule? y/n)
+```
+
+| User Action | Effect |
+|-------------|--------|
+| Accept suggestion | +5% confidence (max 99%) |
+| Reject suggestion | -15% confidence (min 10%) |
+| Same domain → folder 3+ times | New rule proposed |
+| Rule < 50% acceptance | Flagged for review |
 
 ### Folder Optimization
 

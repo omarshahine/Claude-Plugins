@@ -71,9 +71,9 @@
     {
       "name": "inbox-triage",
       "source": "./plugins/inbox-triage",
-      "description": "Self-learning email triage with pattern recognition, automated digests, and voice-friendly interview mode with batch orchestration",
-      "version": "1.5.0",
-      "keywords": ["email", "triage", "inbox", "filing", "patterns", "learning", "interview", "voice", "orchestrator"],
+      "description": "Self-learning email triage with questions-first interview flow, decision learning, visual HTML batch interface, and pattern recognition",
+      "version": "1.7.0",
+      "keywords": ["email", "triage", "inbox", "filing", "patterns", "learning", "interview", "voice", "orchestrator", "batch", "html", "visual", "questions-first"],
       "category": "productivity"
     }
   ]
