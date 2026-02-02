@@ -27,14 +27,17 @@ When the prompt contains `Create reminders:` followed by a JSON array, operate i
 
 **Batch Mode Workflow:**
 1. Parse the JSON array from the prompt
-2. For each item in the batch:
+2. **Deduplication check**: Use `reminder_search` to find existing reminders with matching titles
+   - For each item, search for reminders with the same title in the target list
+   - If a matching reminder exists, skip creating and note as "Already exists"
+3. For each item NOT already existing:
    a. Create reminder using `reminder_create` with:
       - `title`: From batch item
       - `list`: From batch item (or "Reminders" if not specified)
       - `due`: From batch item `dueDate`
       - `notes`: From batch item (optionally fetch email content with `get_email` for additional context)
       - `priority`: 0 (default, unless specified in batch item)
-3. Return a summary in this format:
+4. Return a summary in this format:
 ```
 📝 Reminders Batch Complete
 
@@ -42,7 +45,10 @@ Created: X reminders
 - [title] → [list] (due: [date])
 - [title] → [list] (due: [date])
 
-Failed: Y (if any)
+Already exists: Y skipped
+- [title] (in [list])
+
+Failed: Z (if any)
 - [title]: [error reason]
 ```
 

@@ -39,6 +39,5 @@ venv/
 # Claude Code
 .claude/cache/
 
-# inbox-triage user data (keep examples, ignore actual data)
-/plugins/inbox-triage/data/*
-!/plugins/inbox-triage/data/*.example.yaml
+# Plugin data folders are symlinked to private repo (~/GitHub/Claude/*-data)
+/plugins/*/data

@@ -610,7 +610,7 @@ Integrations enabled: Parcel, Reminders, Newsletter
 📧 Thread 1 of 12 (1 message)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-From:    Chase Bank <alerts@chase.com>
+From:    Chase Bank <alerts@example.com>
 Subject: Your statement is ready
 Date:    Jan 15, 2025 9:30 AM
 
@@ -648,7 +648,7 @@ Archived to Financial.
 📧 Thread 2 of 12 (1 message)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-From:    Best Buy <orders@bestbuy.com>
+From:    Best Buy <orders@example.com>
 Subject: Your order has shipped!
 Date:    Jan 15, 2025 2:15 PM
 
@@ -673,7 +673,7 @@ Package queued: FedEx 794644790138 (Best Buy)
 📧 Thread 3 of 12 (1 message)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-From:    Uncrate <newsletter@uncrate.com>
+From:    Uncrate <newsletter@example.com>
 Subject: Daily Picks
 Date:    Jan 15, 2025 8:00 AM
 
