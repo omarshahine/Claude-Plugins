@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inbox Batch Triage</title>
+  <style>
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-card: #0f3460;
+      --bg-hover: #1a4a7d;
+      --text-primary: #eaeaea;
+      --text-secondary: #a0a0a0;
+      --text-muted: #6b7280;
+      --accent-blue: #4a9eff;
+      --accent-green: #10b981;
+      --accent-yellow: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-purple: #8b5cf6;
+      --border-color: #2d3748;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .header h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .stats {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.625rem 1.25rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #3b82f6;
+    }
+
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-hover);
+    }
+
+    .btn-success {
+      background: var(--accent-green);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #059669;
+    }
+
+    /* Category Sections */
+    .category {
+      margin-bottom: 2rem;
+      background: var(--bg-secondary);
+      border-radius: 0.75rem;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+
+    .category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      background: var(--bg-card);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .category-header:hover {
+      background: var(--bg-hover);
+    }
+
+    .category-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .category-icon {
+      font-size: 1.25rem;
+    }
+
+    .category-count {
+      background: var(--bg-primary);
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .category-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .category-content {
+      padding: 1rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .category-content.collapsed {
+      display: none;
+    }
+
+    /* Email Cards */
+    .email-card {
+      background: var(--bg-card);
+      border-radius: 0.5rem;
+      padding: 1.25rem;
+      border: 1px solid var(--border-color);
+      transition: all 0.2s;
+    }
+
+    .email-card:hover {
+      border-color: var(--accent-blue);
+    }
+
+    .email-card.selected {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
+
+    .email-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    .email-from {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .email-address {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .email-date {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .email-subject {
+      font-size: 0.9375rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .email-preview {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .email-suggestion {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--accent-yellow);
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      background: rgba(245, 158, 11, 0.1);
+      border-radius: 0.375rem;
+    }
+
+    .email-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+
+    .action-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+
+    .action-group label {
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    select, input[type="text"], input[type="date"] {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      font-size: 0.8125rem;
+      min-width: 140px;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .steering-input {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .steering-input input {
+      width: 100%;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.25rem 0.625rem;
+      border-radius: 9999px;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    .badge-blue { background: rgba(74, 158, 255, 0.2); color: var(--accent-blue); }
+    .badge-green { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
+    .badge-yellow { background: rgba(245, 158, 11, 0.2); color: var(--accent-yellow); }
+    .badge-red { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
+    .badge-purple { background: rgba(139, 92, 246, 0.2); color: var(--accent-purple); }
+
+    /* Footer */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .bulk-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-secondary);
+    }
+
+    /* Success Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.hidden {
+      display: none;
+    }
+
+    .modal {
+      background: var(--bg-secondary);
+      border-radius: 0.75rem;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      border: 1px solid var(--border-color);
+    }
+
+    .modal h2 {
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .modal p {
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    .modal code {
+      display: block;
+      background: var(--bg-primary);
+      padding: 1rem;
+      border-radius: 0.375rem;
+      font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+      word-break: break-all;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+    }
+
+    /* Confidence indicator */
+    .confidence {
+      font-size: 0.6875rem;
+      color: var(--text-muted);
+    }
+
+    .confidence-high { color: var(--accent-green); }
+    .confidence-medium { color: var(--accent-yellow); }
+    .confidence-low { color: var(--accent-red); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+
+      .email-actions {
+        flex-direction: column;
+      }
+
+      .action-group {
+        width: 100%;
+      }
+
+      select, input {
+        width: 100%;
+      }
+
+      .steering-input {
+        min-width: 100%;
+      }
+
+      .footer {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .bulk-actions {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Inbox Batch Triage</h1>
+      <div class="header-actions">
+        <span class="stats" id="stats">Loading...</span>
+        <button class="btn btn-success" onclick="submitAll()">Submit All</button>
+      </div>
+    </header>
+
+    <main id="categories">
+      <div class="empty-state">Loading emails...</div>
+    </main>
+
+    <footer class="footer">
+      <div class="bulk-actions">
+        <button class="btn btn-secondary" onclick="selectAllAction('archive')">Archive All FYI</button>
+        <button class="btn btn-secondary" onclick="selectAllAction('delete')">Delete All Newsletters</button>
+        <button class="btn btn-secondary" onclick="resetAll()">Reset All</button>
+      </div>
+      <button class="btn btn-success" onclick="submitAll()">Submit All</button>
+    </footer>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="modal-overlay hidden" id="successModal">
+    <div class="modal">
+      <h2>Decisions Saved</h2>
+      <p>Your triage decisions have been downloaded. Run this command in Claude Code to process them:</p>
+      <code>/inbox-triage:batch --process</code>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // This will be replaced by the generator agent with actual data
+    const TRIAGE_DATA = {
+      generated: "{{GENERATED_DATE}}",
+      sessionId: "{{SESSION_ID}}",
+      config: {
+        folders: [
+          // { id: "folder-123", name: "Financial", path: "Financial" }
+        ],
+        reminderLists: ["Reminders", "Budget & Finances", "Travel", "Family"]
+      },
+      categories: {
+        topOfMind: { title: "Top of Mind", icon: "\ud83d\udccc", emails: [] },
+        deliveries: { title: "Deliveries", icon: "\ud83d\udce6", emails: [] },
+        newsletters: { title: "Newsletters", icon: "\ud83d\udcf0", emails: [] },
+        financial: { title: "Financial", icon: "\ud83d\udcb0", emails: [] },
+        archiveReady: { title: "Archive Ready", icon: "\ud83d\udcc1", emails: [] },
+        deleteReady: { title: "Delete Candidates", icon: "\ud83d\uddd1\ufe0f", emails: [] },
+        fyi: { title: "FYI", icon: "\u2139\ufe0f", emails: [] }
+      }
+    };
+
+    // Track user decisions
+    const decisions = {};
+
+    // Action options based on category
+    const actionOptions = {
+      topOfMind: [
+        { value: 'reminder', label: 'Create Reminder', recommended: true },
+        { value: 'calendar', label: 'Create Calendar Event' },
+        { value: 'archive', label: 'Archive' },
+        { value: 'delete', label: 'Delete' },
+        { value: 'keep', label: 'Keep in Inbox' },
+        { value: 'reply', label: 'Reply' }
+      ],
+      deliveries: [
+        { value: 'addToParcel', label: 'Add to Parcel', recommended: true },
+        { value: 'archive', label: 'Archive to Orders' },
+        { value: 'reminder', label: 'Create Reminder' },
+        { value: 'keep', label: 'Keep in Inbox' },
+        { value: 'delete', label: 'Delete' }
+      ],
+      newsletters: [
+        { value: 'unsubscribe', label: 'Delete + Unsubscribe', recommended: true },
+        { value: 'delete', label: 'Delete Only' },
+        { value: 'archive', label: 'Archive' },
+        { value: 'keep', label: 'Keep in Inbox' }
+      ],
+      financial: [
+        { value: 'archive', label: 'Archive to Financial', recommended: true },
+        { value: 'reminder', label: 'Create Reminder' },
+        { value: 'calendar', label: 'Create Calendar Event' },
+        { value: 'keep', label: 'Keep in Inbox' },
+        { value: 'delete', label: 'Delete' }
+      ],
+      archiveReady: [
+        { value: 'archive', label: 'Archive', recommended: true },
+        { value: 'delete', label: 'Delete' },
+        { value: 'keep', label: 'Keep in Inbox' },
+        { value: 'reminder', label: 'Create Reminder' }
+      ],
+      deleteReady: [
+        { value: 'delete', label: 'Delete', recommended: true },
+        { value: 'archive', label: 'Archive' },
+        { value: 'keep', label: 'Keep in Inbox' }
+      ],
+      fyi: [
+        { value: 'archive', label: 'Archive', recommended: true },
+        { value: 'delete', label: 'Delete' },
+        { value: 'keep', label: 'Keep in Inbox' },
+        { value: 'reminder', label: 'Create Reminder' }
+      ]
+    };
+
+    // Initialize the page
+    function init() {
+      renderCategories();
+      updateStats();
+    }
+
+    // Render all categories
+    function renderCategories() {
+      const container = document.getElementById('categories');
+      container.innerHTML = '';
+
+      const categoryOrder = ['topOfMind', 'deliveries', 'newsletters', 'financial', 'archiveReady', 'deleteReady', 'fyi'];
+      let totalEmails = 0;
+
+      categoryOrder.forEach(categoryKey => {
+        const category = TRIAGE_DATA.categories[categoryKey];
+        if (category && category.emails && category.emails.length > 0) {
+          totalEmails += category.emails.length;
+          container.appendChild(renderCategory(categoryKey, category));
+        }
+      });
+
+      if (totalEmails === 0) {
+        container.innerHTML = '<div class="empty-state">No emails to triage. Your inbox is clean!</div>';
+      }
+    }
+
+    // Render a single category
+    function renderCategory(categoryKey, category) {
+      const section = document.createElement('section');
+      section.className = 'category';
+      section.dataset.category = categoryKey;
+
+      const badgeClass = getBadgeClass(categoryKey);
+
+      section.innerHTML = `
+        <div class="category-header" onclick="toggleCategory('${categoryKey}')">
+          <div class="category-title">
+            <span class="category-icon">${category.icon}</span>
+            <span>${category.title}</span>
+            <span class="category-count">${category.emails.length}</span>
+          </div>
+          <div class="category-actions">
+            <button class="btn btn-secondary" onclick="event.stopPropagation(); selectAllInCategory('${categoryKey}', getDefaultAction('${categoryKey}'))">
+              Select All Default
+            </button>
+          </div>
+        </div>
+        <div class="category-content" id="content-${categoryKey}">
+          ${category.emails.map(email => renderEmailCard(email, categoryKey)).join('')}
+        </div>
+      `;
+
+      return section;
+    }
+
+    // Render a single email card
+    function renderEmailCard(email, categoryKey) {
+      const options = actionOptions[categoryKey] || actionOptions.fyi;
+      const defaultAction = email.suggestion?.action || getDefaultAction(categoryKey);
+
+      // Initialize decision
+      if (!decisions[email.id]) {
+        decisions[email.id] = {
+          emailId: email.id,
+          action: defaultAction,
+          params: {},
+          steering: ''
+        };
+
+        // Set default params based on suggestion
+        if (email.suggestion) {
+          if (email.suggestion.folder) {
+            decisions[email.id].params.folderId = email.suggestion.folderId;
+            decisions[email.id].params.folderName = email.suggestion.folder;
+          }
+          if (email.packageInfo) {
+            decisions[email.id].params.trackingNumber = email.packageInfo.trackingNumber;
+            decisions[email.id].params.carrier = email.packageInfo.carrier;
+          }
+          if (email.newsletterInfo) {
+            decisions[email.id].params.unsubscribeUrl = email.newsletterInfo.unsubscribeUrl;
+            decisions[email.id].params.domain = email.newsletterInfo.domain;
+          }
+        }
+      }
+
+      const suggestionHtml = email.classification?.reasons?.length > 0
+        ? `<div class="email-suggestion">\ud83d\udca1 ${email.classification.reasons[0]}</div>`
+        : '';
+
+      const confidenceClass = getConfidenceClass(email.classification?.confidence);
+      const confidenceHtml = email.classification?.confidence
+        ? `<span class="confidence ${confidenceClass}">${Math.round(email.classification.confidence * 100)}% match</span>`
+        : '';
+
+      return `
+        <article class="email-card" id="card-${email.id}" data-email-id="${email.id}">
+          <div class="email-header">
+            <div>
+              <div class="email-from">${escapeHtml(email.from?.name || email.from?.email || 'Unknown')}</div>
+              <div class="email-address">&lt;${escapeHtml(email.from?.email || '')}&gt;</div>
+            </div>
+            <div class="email-date">${formatDate(email.receivedAt)}</div>
+          </div>
+          <div class="email-subject">${escapeHtml(email.subject || '(No subject)')}</div>
+          <div class="email-preview">${escapeHtml(email.preview || '')}</div>
+          ${suggestionHtml}
+          <div class="email-actions">
+            <div class="action-group">
+              <label>Action</label>
+              <select onchange="updateAction('${email.id}', this.value)">
+                ${options.map(opt => `
+                  <option value="${opt.value}" ${opt.value === defaultAction ? 'selected' : ''}>
+                    ${opt.label}${opt.recommended ? ' (Recommended)' : ''}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+            <div class="action-group" id="folder-group-${email.id}" style="display: ${needsFolderSelect(defaultAction) ? 'flex' : 'none'}">
+              <label>Folder</label>
+              <select onchange="updateFolder('${email.id}', this.value, this.options[this.selectedIndex].text)">
+                ${renderFolderOptions(email)}
+              </select>
+            </div>
+            <div class="action-group" id="reminder-group-${email.id}" style="display: ${defaultAction === 'reminder' ? 'flex' : 'none'}">
+              <label>Due Date</label>
+              <input type="date" value="${getTomorrowDate()}" onchange="updateReminderDate('${email.id}', this.value)">
+            </div>
+            <div class="action-group steering-input">
+              <label>Notes/Instructions ${confidenceHtml}</label>
+              <input type="text" placeholder="Add notes or steering text..."
+                     value="${escapeHtml(decisions[email.id]?.steering || '')}"
+                     onchange="updateSteering('${email.id}', this.value)">
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    // Render folder dropdown options
+    function renderFolderOptions(email) {
+      const folders = TRIAGE_DATA.config.folders || [];
+      const suggestedFolderId = email.suggestion?.folderId;
+
+      let options = '<option value="">Select folder...</option>';
+      folders.forEach(folder => {
+        const selected = folder.id === suggestedFolderId ? 'selected' : '';
+        options += `<option value="${folder.id}" ${selected}>${escapeHtml(folder.name)}</option>`;
+      });
+
+      return options;
+    }
+
+    // Update action for an email
+    function updateAction(emailId, action) {
+      decisions[emailId].action = action;
+
+      // Show/hide folder select
+      const folderGroup = document.getElementById(`folder-group-${emailId}`);
+      if (folderGroup) {
+        folderGroup.style.display = needsFolderSelect(action) ? 'flex' : 'none';
+      }
+
+      // Show/hide reminder date
+      const reminderGroup = document.getElementById(`reminder-group-${emailId}`);
+      if (reminderGroup) {
+        reminderGroup.style.display = action === 'reminder' ? 'flex' : 'none';
+      }
+
+      updateStats();
+    }
+
+    // Update folder for an email
+    function updateFolder(emailId, folderId, folderName) {
+      decisions[emailId].params.folderId = folderId;
+      decisions[emailId].params.folderName = folderName;
+    }
+
+    // Update reminder date
+    function updateReminderDate(emailId, date) {
+      decisions[emailId].params.dueDate = date;
+    }
+
+    // Update steering text
+    function updateSteering(emailId, text) {
+      decisions[emailId].steering = text;
+    }
+
+    // Select all in a category with a specific action
+    function selectAllInCategory(categoryKey, action) {
+      const category = TRIAGE_DATA.categories[categoryKey];
+      if (!category) return;
+
+      category.emails.forEach(email => {
+        decisions[email.id].action = action;
+
+        // Update the select element
+        const card = document.getElementById(`card-${email.id}`);
+        if (card) {
+          const select = card.querySelector('select');
+          if (select) select.value = action;
+
+          const folderGroup = document.getElementById(`folder-group-${email.id}`);
+          if (folderGroup) {
+            folderGroup.style.display = needsFolderSelect(action) ? 'flex' : 'none';
+          }
+
+          const reminderGroup = document.getElementById(`reminder-group-${email.id}`);
+          if (reminderGroup) {
+            reminderGroup.style.display = action === 'reminder' ? 'flex' : 'none';
+          }
+        }
+      });
+
+      updateStats();
+    }
+
+    // Bulk actions
+    function selectAllAction(action) {
+      // For archive all FYI
+      if (action === 'archive') {
+        selectAllInCategory('fyi', 'archive');
+        selectAllInCategory('archiveReady', 'archive');
+      }
+      // For delete all newsletters
+      if (action === 'delete') {
+        selectAllInCategory('newsletters', 'unsubscribe');
+        selectAllInCategory('deleteReady', 'delete');
+      }
+      updateStats();
+    }
+
+    // Reset all to defaults
+    function resetAll() {
+      Object.keys(TRIAGE_DATA.categories).forEach(categoryKey => {
+        const category = TRIAGE_DATA.categories[categoryKey];
+        if (category && category.emails) {
+          category.emails.forEach(email => {
+            const defaultAction = email.suggestion?.action || getDefaultAction(categoryKey);
+            decisions[email.id] = {
+              emailId: email.id,
+              action: defaultAction,
+              params: {},
+              steering: ''
+            };
+          });
+        }
+      });
+      renderCategories();
+      updateStats();
+    }
+
+    // Submit all decisions
+    function submitAll() {
+      const output = {
+        sessionId: TRIAGE_DATA.sessionId,
+        submittedAt: new Date().toISOString(),
+        decisions: Object.values(decisions).filter(d => d.action !== 'keep' || d.steering)
+      };
+
+      // Download as JSON
+      const blob = new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `inbox-triage-decisions-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // Show success modal
+      document.getElementById('successModal').classList.remove('hidden');
+    }
+
+    // Close modal
+    function closeModal() {
+      document.getElementById('successModal').classList.add('hidden');
+    }
+
+    // Toggle category collapse
+    function toggleCategory(categoryKey) {
+      const content = document.getElementById(`content-${categoryKey}`);
+      if (content) {
+        content.classList.toggle('collapsed');
+      }
+    }
+
+    // Update stats display
+    function updateStats() {
+      const stats = {
+        total: 0,
+        archive: 0,
+        delete: 0,
+        reminder: 0,
+        keep: 0,
+        parcel: 0,
+        unsubscribe: 0,
+        calendar: 0,
+        reply: 0
+      };
+
+      Object.values(decisions).forEach(d => {
+        stats.total++;
+        if (d.action === 'archive') stats.archive++;
+        else if (d.action === 'delete') stats.delete++;
+        else if (d.action === 'reminder') stats.reminder++;
+        else if (d.action === 'keep') stats.keep++;
+        else if (d.action === 'addToParcel') stats.parcel++;
+        else if (d.action === 'unsubscribe') stats.unsubscribe++;
+        else if (d.action === 'calendar') stats.calendar++;
+        else if (d.action === 'reply') stats.reply++;
+      });
+
+      const parts = [];
+      if (stats.archive > 0) parts.push(`${stats.archive} archive`);
+      if (stats.delete > 0) parts.push(`${stats.delete} delete`);
+      if (stats.unsubscribe > 0) parts.push(`${stats.unsubscribe} unsubscribe`);
+      if (stats.parcel > 0) parts.push(`${stats.parcel} parcel`);
+      if (stats.reminder > 0) parts.push(`${stats.reminder} reminder`);
+      if (stats.calendar > 0) parts.push(`${stats.calendar} calendar`);
+      if (stats.keep > 0) parts.push(`${stats.keep} keep`);
+
+      document.getElementById('stats').textContent = `${stats.total} emails: ${parts.join(', ') || 'none selected'}`;
+    }
+
+    // Helper functions
+    function getDefaultAction(categoryKey) {
+      const defaults = {
+        topOfMind: 'reminder',
+        deliveries: 'addToParcel',
+        newsletters: 'unsubscribe',
+        financial: 'archive',
+        archiveReady: 'archive',
+        deleteReady: 'delete',
+        fyi: 'archive'
+      };
+      return defaults[categoryKey] || 'archive';
+    }
+
+    function needsFolderSelect(action) {
+      return action === 'archive';
+    }
+
+    function getBadgeClass(categoryKey) {
+      const classes = {
+        topOfMind: 'badge-red',
+        deliveries: 'badge-blue',
+        newsletters: 'badge-purple',
+        financial: 'badge-green',
+        archiveReady: 'badge-blue',
+        deleteReady: 'badge-red',
+        fyi: 'badge-yellow'
+      };
+      return classes[categoryKey] || 'badge-blue';
+    }
+
+    function getConfidenceClass(confidence) {
+      if (!confidence) return '';
+      if (confidence >= 0.85) return 'confidence-high';
+      if (confidence >= 0.70) return 'confidence-medium';
+      return 'confidence-low';
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) {
+        return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      } else if (diffDays === 1) {
+        return 'Yesterday';
+      } else if (diffDays < 7) {
+        return date.toLocaleDateString([], { weekday: 'short' });
+      } else {
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      }
+    }
+
+    function getTomorrowDate() {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow.toISOString().split('T')[0];
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
