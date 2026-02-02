@@ -84,27 +84,27 @@ For each email, present these numbered options:
 
 ### Primary Question
 
-Use this exact format with markdown formatting for visual appeal:
+Use this exact format (plain text, no markdown - it doesn't render in terminal):
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📧 **Thread X of Y** (Z messages in thread)
+📧 Thread X of Y (Z messages)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**From:** [Sender Name] <[email]>
-**Subject:** [Subject line]
-**Date:** [Received date/time]
+From:    [Sender Name] <[email]>
+Subject: [Subject line]
+Date:    [Received date/time]
 
-**Latest message:**
-> [2-3 sentence executive summary of the most recent reply]
-> [Focus on: what they're asking, what action is needed, key info]
+Summary:
+[2-3 sentence executive summary of the most recent reply]
+[Focus on: what they're asking, what action is needed, key info]
 
 [Smart suggestion line if applicable]
 
-┌─────────────────────────────────────────┐
-│  **1** Reminder   **2** Calendar   **3** Archive  │
-│  **4** Delete     **5** Keep       **6** Reply    │
-└─────────────────────────────────────────┘
+┌───────────────────────────────────────┐
+│  1. Reminder    2. Calendar    3. Archive  │
+│  4. Delete      5. Keep        6. Reply    │
+└───────────────────────────────────────┘
 
 Say a number (1-6) or action name.
 ```
