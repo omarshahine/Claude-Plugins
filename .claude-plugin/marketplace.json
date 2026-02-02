@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Personal plugin marketplace for Claude Code",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "pluginRoot": "./plugins"
   },
   "plugins": [
@@ -47,33 +47,33 @@
     {
       "name": "inbox-to-reminder",
       "source": "./plugins/inbox-to-reminder",
-      "description": "Scan email inbox for action items and create reminders in Apple Reminders",
-      "version": "1.0.0",
-      "keywords": ["email", "reminders", "tasks", "bills", "deadlines"],
+      "description": "Scan email inbox for action items and create reminders in Apple Reminders (supports batch mode)",
+      "version": "1.1.0",
+      "keywords": ["email", "reminders", "tasks", "bills", "deadlines", "batch"],
       "category": "productivity"
     },
     {
       "name": "newsletter-unsubscriber",
       "source": "./plugins/newsletter-unsubscriber",
-      "description": "Scan inbox for newsletters and help unsubscribe from unwanted ones",
-      "version": "1.0.3",
-      "keywords": ["email", "newsletters", "unsubscribe", "cleanup"],
+      "description": "Scan inbox for newsletters and help unsubscribe from unwanted ones (supports batch mode)",
+      "version": "1.1.0",
+      "keywords": ["email", "newsletters", "unsubscribe", "cleanup", "batch"],
       "category": "productivity"
     },
     {
       "name": "inbox-to-parcel",
       "source": "./plugins/inbox-to-parcel",
-      "description": "Process shipping emails and add tracking to Parcel app",
-      "version": "1.0.0",
-      "keywords": ["email", "packages", "tracking", "parcel", "shipping"],
+      "description": "Process shipping emails and add tracking to Parcel app (supports batch mode)",
+      "version": "1.1.0",
+      "keywords": ["email", "packages", "tracking", "parcel", "shipping", "batch"],
       "category": "productivity"
     },
     {
       "name": "inbox-triage",
       "source": "./plugins/inbox-triage",
-      "description": "Self-learning email triage with pattern recognition, automated digests, and voice-friendly interview mode",
-      "version": "1.4.1",
-      "keywords": ["email", "triage", "inbox", "filing", "patterns", "learning", "interview", "voice"],
+      "description": "Self-learning email triage with pattern recognition, automated digests, and voice-friendly interview mode with batch orchestration",
+      "version": "1.5.0",
+      "keywords": ["email", "triage", "inbox", "filing", "patterns", "learning", "interview", "voice", "orchestrator"],
       "category": "productivity"
     }
   ]
