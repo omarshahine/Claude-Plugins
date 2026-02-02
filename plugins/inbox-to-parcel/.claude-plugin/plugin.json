@@ -1,7 +1,7 @@
 {
   "name": "inbox-to-parcel",
-  "version": "1.0.0",
-  "description": "Process shipping emails and add tracking to Parcel app",
+  "version": "1.1.0",
+  "description": "Process shipping emails and add tracking to Parcel app (supports batch mode)",
   "author": {
     "name": "Omar Shahine"
   },

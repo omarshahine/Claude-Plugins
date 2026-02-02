@@ -75,22 +75,34 @@ When prompt says "scan" without specific selections:
 - domain.com - order confirmation (no List-Unsubscribe header)
 ```
 
-### MODE 2: EXECUTE
-When prompt includes specific selections like "unsubscribe from X, Y" or "add Z to allowlist":
-1. Execute the requested unsubscribes via web form or mailto (using provided URLs)
-2. Add specified domains to allowlist
-3. Update newsletter-lists.local.yaml
-4. Move processed emails to Unsubscribed folder (using provided email IDs)
-5. Return summary of actions taken
+### MODE 2: EXECUTE (Batch Mode)
+When prompt includes `UNSUBSCRIBE:` followed by specific selections, operate in batch unsubscribe mode.
 
-**Expected input format for EXECUTE mode:**
-The prompt should include unsubscribe URLs and email IDs for each selected newsletter:
+**Batch Input Format (from inbox-interviewer):**
+```json
+[
+  {"domain": "example.com", "unsubscribeUrl": "https://...", "emailIds": ["id1", "id2"]},
+  {"domain": "news-site.com", "unsubscribeUrl": "https://...", "emailIds": ["id3"]}
+]
+```
+
+Or in text format:
 ```
 UNSUBSCRIBE: domain.com (url: https://..., emailIds: [id1, id2])
 ALLOWLIST: domain2.com
 ```
 
-**The parent agent handles AskUserQuestion for user selections between modes.**
+**Batch Mode Workflow:**
+1. Parse the batch data (JSON array or text format)
+2. Execute unsubscribes via web form or mailto (using provided URLs)
+3. Add any specified domains to allowlist
+4. Update newsletter-lists.local.yaml
+5. Move processed emails to Unsubscribed folder (using provided email IDs)
+6. Return summary of actions taken
+
+**Do NOT ask the user any questions in batch mode - just process and report.**
+
+**The parent agent (inbox-interviewer) handles user selections and batches them here.**
 
 ---
 
