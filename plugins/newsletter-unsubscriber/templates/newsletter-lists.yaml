@@ -1,0 +1,20 @@
+# Newsletter Management Lists
+# Managed by the newsletter-unsubscriber agent
+
+# Newsletters you want to keep receiving - these are skipped during scans
+# Format: sender domain or email pattern
+allowlist:
+  # Add domains here that you want to keep receiving
+  # Example:
+  # - stratechery.com        # Tech newsletter
+  # - github.com             # GitHub notifications
+
+# Newsletters you've unsubscribed from - used to detect repeat offenders
+# This is automatically populated by the agent when you unsubscribe
+# Format:
+#   - domain: example.com
+#     email: newsletter@example.com
+#     name: "Example Newsletter"
+#     unsubscribed_date: "2026-01-01"
+#     method: web  # or mailto
+unsubscribed: []

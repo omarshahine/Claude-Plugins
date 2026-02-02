@@ -1,0 +1,61 @@
+# inbox-to-reminder Provider Configuration
+# Configure which email and reminder providers to use
+
+providers:
+  email:
+    # Active email provider: fastmail, gmail, outlook, apple-mail
+    # Run /inbox-to-reminder:setup to configure
+    active: null
+
+    # Provider-specific tool mappings
+    mappings:
+      fastmail:
+        list_mailboxes: mcp__fastmail__list_mailboxes
+        get_recent_emails: mcp__fastmail__get_recent_emails
+        search_emails: mcp__fastmail__search_emails
+        advanced_search: mcp__fastmail__advanced_search
+        get_email: mcp__fastmail__get_email
+      gmail:
+        list_mailboxes: mcp__gmail__list_labels
+        get_recent_emails: mcp__gmail__list_messages
+        search_emails: mcp__gmail__search_messages
+        advanced_search: mcp__gmail__search_messages
+        get_email: mcp__gmail__get_message
+      outlook:
+        list_mailboxes: mcp__outlook__list_folders
+        get_recent_emails: mcp__outlook__list_messages
+        search_emails: mcp__outlook__search_messages
+        advanced_search: mcp__outlook__search_messages
+        get_email: mcp__outlook__get_message
+
+  reminders:
+    # Active reminder provider: apple-pim
+    active: apple-pim
+
+    # Provider-specific tool mappings
+    mappings:
+      apple-pim:
+        reminder_lists: mcp__apple-pim__reminder_lists
+        reminder_create: mcp__apple-pim__reminder_create
+        reminder_items: mcp__apple-pim__reminder_items
+        reminder_search: mcp__apple-pim__reminder_search
+
+# Customizations (set during setup)
+# These personalize the agent's behavior for your household
+customizations:
+  # Your name (for personalized reminders)
+  user_name: null
+
+  # Partner name (for filtering "emails from my partner")
+  partner_name: null
+
+  # Family reminder list name (your Apple Reminders list for family tasks)
+  # Examples: "Family", "Home", "Household"
+  family_list_name: "Family"
+
+  # Additional family member names (for filtering)
+  # Example: ["Alex", "Jordan", "Sam"]
+  family_members: []
+
+# Last setup: (updated by /inbox-to-reminder:setup)
+setup_date: null
