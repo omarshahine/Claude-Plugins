@@ -27,26 +27,23 @@ Install the plugins you need:
 These plugins are designed to work together. At the center is **inbox-triage**, which acts as an orchestrator for email management, automatically delegating to specialized sub-plugins.
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         inbox-triage                                │
-│                    (Email Orchestrator)                             │
-│                                                                     │
-│  Learns your patterns • Suggests filing • Routes to sub-plugins    │
-└─────────────────────────┬───────────────────────────────────────────┘
-                          │
-          ┌───────────────┼───────────────┐
-          │               │               │
-          ▼               ▼               ▼
-    ┌───────────┐   ┌───────────┐   ┌───────────┐
-    │ inbox-to- │   │newsletter-│   │ inbox-to- │
-    │  parcel   │   │unsubscriber│  │ reminder  │
-    └─────┬─────┘   └─────┬─────┘   └─────┬─────┘
-          │               │               │
-          ▼               ▼               ▼
-    ┌───────────┐   ┌───────────┐   ┌───────────┐
-    │  Parcel   │   │ Playwright │   │ apple-pim │
-    │   App     │   │ (unsubscribe)│ │(Reminders)│
-    └───────────┘   └───────────┘   └───────────┘
+                    +------------------------+
+                    |     inbox-triage       |
+                    |  (Email Orchestrator)  |
+                    +------------------------+
+                              |
+            +-----------------+-----------------+
+            |                 |                 |
+            v                 v                 v
+    +---------------+ +---------------+ +---------------+
+    | inbox-to-     | | newsletter-   | | inbox-to-     |
+    | parcel        | | unsubscriber  | | reminder      |
+    +---------------+ +---------------+ +---------------+
+            |                 |                 |
+            v                 v                 v
+    +---------------+ +---------------+ +---------------+
+    | Parcel App    | | Playwright    | | apple-pim     |
+    +---------------+ +---------------+ +---------------+
 ```
 
 **When you run `/inbox-triage:interview`, the orchestrator:**
