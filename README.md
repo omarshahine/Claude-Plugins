@@ -10,12 +10,15 @@ Add this marketplace to Claude Code:
 /plugin marketplace add omarshahine/agent-plugins
 ```
 
-Install the plugins you need:
+Install the main orchestrator plugin:
 
 ```bash
-/plugin install inbox-triage@omarshahine-agent-plugins      # Email orchestrator
-/plugin install travel-agent@omarshahine-agent-plugins      # Flight research & tracking
+# Chief-of-Staff - the uber orchestrator for personal productivity
+/plugin install chief-of-staff@omarshahine-agent-plugins
+
+# Related plugins (optional, enhance COS capabilities)
 /plugin install apple-pim@omarshahine-agent-plugins         # Calendar, Reminders, Contacts
+/plugin install travel-agent@omarshahine-agent-plugins      # Flight research & tracking
 /plugin install credit-card-benefits@omarshahine-agent-plugins  # Credit card benefit tracking
 /plugin install rename-agent@omarshahine-agent-plugins      # AI-powered file renaming
 ```
@@ -24,104 +27,105 @@ Install the plugins you need:
 
 ## How It Works: The Plugin Ecosystem
 
-These plugins are designed to work together. At the center is **inbox-triage**, which acts as an orchestrator for email management, automatically delegating to specialized sub-plugins.
+**Chief-of-Staff** is the central orchestrator - "one plugin to rule them all" for personal productivity. It consolidates email triage, package tracking, reminder creation, and newsletter management into a single unified system.
 
 ```
-                    +------------------------+
-                    |     inbox-triage       |
-                    |  (Email Orchestrator)  |
-                    +------------------------+
-                              |
-            +-----------------+-----------------+
-            |                 |                 |
-            v                 v                 v
-    +---------------+ +---------------+ +---------------+
-    | inbox-to-     | | newsletter-   | | inbox-to-     |
-    | parcel        | | unsubscriber  | | reminder      |
-    +---------------+ +---------------+ +---------------+
-            |                 |                 |
-            v                 v                 v
-    +---------------+ +---------------+ +---------------+
-    | Parcel App    | | Playwright    | | apple-pim     |
-    +---------------+ +---------------+ +---------------+
++-----------------------------------------------------------------------+
+|                        CHIEF-OF-STAFF                                 |
+|                  "One Plugin to Rule Them All"                        |
+|                                                                       |
+|   Built-in Sub-Agents:              Related Plugins:                  |
+|   - inbox-interviewer               - apple-pim (Calendar/Reminders)  |
+|   - inbox-to-parcel                 - travel-agent (Flights/Trips)    |
+|   - inbox-to-reminder               - credit-card-benefits            |
+|   - newsletter-unsubscriber         - rename-agent                    |
+|   - digest-generator                                                  |
+|   - organization-analyzer                                             |
+|   - pattern-learner                                                   |
+|   - folder-optimizer                                                  |
++-----------------------------------------------------------------------+
 ```
 
-**When you run `/inbox-triage:interview`, the orchestrator:**
+**When you run `/chief-of-staff:triage`, the orchestrator:**
 1. Fetches emails from your inbox
 2. Classifies each one (package, newsletter, financial, action item, etc.)
 3. Suggests actions based on learned patterns
-4. Routes to specialized handlers when you choose:
-   - "Add to Parcel" → `inbox-to-parcel` extracts tracking, adds to Parcel app
-   - "Unsubscribe" → `newsletter-unsubscriber` handles the unsubscribe flow
-   - "Create reminder" → `inbox-to-reminder` creates Apple Reminder via `apple-pim`
+4. Routes to specialized sub-agents when you choose:
+   - "Add to Parcel" -> `inbox-to-parcel` extracts tracking, adds to Parcel app
+   - "Unsubscribe" -> `newsletter-unsubscriber` handles the unsubscribe flow
+   - "Create reminder" -> `inbox-to-reminder` creates Apple Reminder via `apple-pim`
 
-**Standalone plugins** (travel-agent, credit-card-benefits, rename-agent) work independently for their specific domains.
+**Standalone plugins** (travel-agent, credit-card-benefits, rename-agent, apple-pim) work independently for their specific domains but integrate seamlessly with Chief-of-Staff.
 
 ---
 
-## inbox-triage
+## chief-of-staff
 
-**The email orchestrator.** Self-learning email triage that classifies your inbox, suggests actions based on your patterns, and delegates to specialized plugins.
+**The email orchestrator.** Self-learning email triage that classifies your inbox, suggests actions based on your patterns, and delegates to specialized sub-agents.
 
-### Why inbox-triage?
+### Why Chief-of-Staff?
 
 - **Questions-first flow**: Collect ALL decisions up front, execute in bulk at the end (faster)
 - **Learns your patterns**: Records your choices vs suggestions, improves accuracy over time
-- **Routes intelligently**: Detects packages, newsletters, and action items—sends them to the right handler
+- **Routes intelligently**: Detects packages, newsletters, and action items - sends them to the right handler
 - **Multiple modes**: Interview mode (voice-friendly), batch mode (visual HTML), digest mode (summaries)
+- **Unified interface**: One plugin, many capabilities
 
 ### Quick Start
 
 ```bash
 # 1. Configure your email provider
-/inbox-triage:setup
+/chief-of-staff:setup
 
 # 2. Learn patterns from existing folders
-/inbox-triage:learn
+/chief-of-staff:learn
 
 # 3. Triage your inbox
-/inbox-triage:interview     # Interactive Q&A mode
+/chief-of-staff:triage     # Interactive Q&A mode
 # OR
-/inbox-triage:batch         # Visual HTML batch mode
+/chief-of-staff:batch      # Visual HTML batch mode
 ```
-
-### Triage Modes
-
-| Mode | Best For | How It Works |
-|------|----------|--------------|
-| `/inbox-triage:interview` | Mobile, voice, thorough review | One-by-one Q&A with structured options |
-| `/inbox-triage:batch` | Desktop, quick visual review | HTML interface, review all at once |
-| `/inbox-triage:digest` | Quick status | Summary of automated emails |
 
 ### Commands
 
 | Command | Description |
 |---------|-------------|
-| `/inbox-triage:setup` | Configure email provider (Fastmail active) |
-| `/inbox-triage:learn` | Bootstrap rules from existing folders |
-| `/inbox-triage:interview` | Interactive questions-first triage |
-| `/inbox-triage:batch` | Visual HTML batch interface |
-| `/inbox-triage:batch --process` | Execute batch decisions |
-| `/inbox-triage:triage` | Process inbox with confirmation |
-| `/inbox-triage:digest` | Summarize automated emails |
-| `/inbox-triage:rules` | View/manage filing rules |
-| `/inbox-triage:optimize` | Deep folder analysis and suggestions |
-| `/inbox-triage:analyze` | Find patterns in Trash/Archive |
+| `/chief-of-staff:setup` | Configure email provider (Fastmail active) |
+| `/chief-of-staff:daily` | Full daily orchestration routine |
+| `/chief-of-staff:status` | Quick dashboard of inbox status |
+| `/chief-of-staff:triage` | Interactive questions-first triage |
+| `/chief-of-staff:batch` | Visual HTML batch interface |
+| `/chief-of-staff:parcel` | Process shipping emails to Parcel app |
+| `/chief-of-staff:reminders` | Create reminders from action items |
+| `/chief-of-staff:unsubscribe` | Unsubscribe from newsletters |
+| `/chief-of-staff:digest` | Summarize automated emails |
+| `/chief-of-staff:learn` | Bootstrap or update filing rules |
+| `/chief-of-staff:analyze` | Find patterns in Trash/Archive |
+| `/chief-of-staff:optimize` | Deep folder analysis and suggestions |
+| `/chief-of-staff:rules` | View/manage filing rules |
+
+### Triage Modes
+
+| Mode | Best For | How It Works |
+|------|----------|--------------|
+| `/chief-of-staff:triage` | Mobile, voice, thorough review | One-by-one Q&A with structured options |
+| `/chief-of-staff:batch` | Desktop, quick visual review | HTML interface, review all at once |
+| `/chief-of-staff:digest` | Quick status | Summary of automated emails |
 
 ### Interview Mode Flow
 
 ```
 PHASE 1: COLLECT (rapid Q&A)
-→ Answer questions for each email
-→ No waiting between emails
+-> Answer questions for each email
+-> No waiting between emails
 
 PHASE 2: EXECUTE (bulk processing)
-→ All actions run at once
-→ Single API call per folder
+-> All actions run at once
+-> Single API call per folder
 
 PHASE 3: LEARN (improve suggestions)
-→ Record decisions vs suggestions
-→ Update confidence scores
+-> Record decisions vs suggestions
+-> Update confidence scores
 ```
 
 ### Custom Responses During Interview
@@ -132,9 +136,9 @@ PHASE 3: LEARN (improve suggestions)
 | "Flag for later" | Keeps in inbox + flags for follow-up |
 | "Read and summarize" | Summarizes content, shows at end, then archives/deletes |
 
-### Sub-Plugins (Automatic Delegation)
+### Built-in Sub-Agents
 
-When inbox-triage detects specific email types, it routes to specialized handlers:
+Chief-of-Staff includes these specialized agents that handle specific email types:
 
 #### inbox-to-parcel
 
@@ -142,7 +146,7 @@ Extracts tracking numbers from shipping emails and adds to Parcel app.
 
 - Supports: UPS, FedEx, USPS, DHL, OnTrac, Amazon
 - Moves processed emails to Orders folder
-- **Standalone**: `/inbox-to-parcel:track`
+- **Direct command**: `/chief-of-staff:parcel`
 - **Requires**: Email MCP + Parcel API MCP server
 
 #### newsletter-unsubscriber
@@ -152,7 +156,7 @@ Handles unwanted newsletter unsubscription.
 - Detects newsletters via RFC 2369 headers (List-Unsubscribe)
 - Executes via mailto or web forms (uses Playwright)
 - Maintains allowlist of wanted newsletters
-- **Standalone**: `/newsletter-unsubscriber:unsubscribe`
+- **Direct command**: `/chief-of-staff:unsubscribe`
 - **Requires**: Email MCP + Playwright plugin
 
 #### inbox-to-reminder
@@ -162,13 +166,36 @@ Creates Apple Reminders from emails requiring action.
 - Identifies bills, deadlines, follow-ups, meeting requests
 - Creates reminders with appropriate due dates
 - Routes to correct reminder list
-- **Standalone**: `/inbox-to-reminder:scan`
+- **Direct command**: `/chief-of-staff:reminders`
 - **Requires**: Email MCP + `apple-pim` plugin
+
+#### Other Sub-Agents
+
+| Agent | Purpose |
+|-------|---------|
+| `inbox-interviewer` | Interactive questions-first triage |
+| `digest-generator` | Summarize automated emails |
+| `organization-analyzer` | Analyze Trash/Archive patterns |
+| `pattern-learner` | Bootstrap filing rules from folders |
+| `folder-optimizer` | Suggest folder reorganization |
+| `decision-learner` | Learn from triage decisions |
+| `batch-html-generator` | Visual batch triage interface |
+| `batch-processor` | Execute batch triage decisions |
 
 ### Requirements
 
 - Email MCP server (Fastmail active; Gmail/Outlook planned)
 - Existing folder structure to learn from
+
+### Private Extensions
+
+Power users can extend Chief-of-Staff with private capabilities by creating a separate private plugin (e.g., `chief-of-staff-private`) that:
+
+1. Adds custom agents for proprietary workflows
+2. Includes a skill that teaches COS about the private agents
+3. Private agents can call COS sub-agents via Task tool
+
+See CLAUDE.md for the private extension pattern.
 
 ---
 
@@ -249,7 +276,7 @@ Native macOS integration for Calendar, Reminders, and Contacts.
 - Full CRUD operations for events, reminders, and contacts
 - Natural language dates ("tomorrow 2pm", "next Tuesday")
 - MCP server for direct tool access
-- Used by `inbox-to-reminder` for creating reminders from emails
+- Used by `chief-of-staff:reminders` for creating reminders from emails
 
 ### Installation
 
@@ -398,10 +425,7 @@ Receipt, Bill, Tax Document, Bank Statement, Invoice, Contract, Medical, Insuran
 
 | Plugin | Description | Key Commands |
 |--------|-------------|--------------|
-| **inbox-triage** | Email orchestrator with learning | `/inbox-triage:interview`, `/inbox-triage:batch` |
-| inbox-to-parcel | Package tracking from emails | `/inbox-to-parcel:track` |
-| newsletter-unsubscriber | Newsletter management | `/newsletter-unsubscriber:unsubscribe` |
-| inbox-to-reminder | Action items to reminders | `/inbox-to-reminder:scan` |
+| **chief-of-staff** | Email orchestrator with learning | `/chief-of-staff:triage`, `/chief-of-staff:daily` |
 | travel-agent | Flight research & tracking | Natural language queries |
 | apple-pim | Calendar, Reminders, Contacts | `/apple-pim:calendars`, `/apple-pim:reminders` |
 | credit-card-benefits | Benefit tracking | `/credit-card-benefits:status` |
@@ -448,6 +472,90 @@ Add to `.claude-plugin/marketplace.json`:
   "category": "productivity"
 }
 ```
+
+---
+
+## Migrating from Previous Plugins
+
+If you were using the standalone inbox plugins (inbox-triage, inbox-to-parcel, inbox-to-reminder, newsletter-unsubscriber), follow these steps to migrate to Chief-of-Staff.
+
+### Step 1: Backup Existing Data
+
+```bash
+# Find your old plugin data directories
+ls ~/.claude/plugins/cache/omarshahine-agent-plugins/inbox-triage/data/
+ls ~/.claude/plugins/cache/omarshahine-agent-plugins/inbox-to-parcel/data/
+ls ~/.claude/plugins/cache/omarshahine-agent-plugins/inbox-to-reminder/data/
+ls ~/.claude/plugins/cache/omarshahine-agent-plugins/newsletter-unsubscriber/data/
+
+# Backup important files (filing rules, settings, learned patterns)
+cp ~/.claude/plugins/cache/omarshahine-agent-plugins/inbox-triage/data/*.yaml ~/Desktop/inbox-backup/
+```
+
+### Step 2: Uninstall Old Plugins
+
+```bash
+/plugin uninstall inbox-triage@omarshahine-agent-plugins
+/plugin uninstall inbox-to-parcel@omarshahine-agent-plugins
+/plugin uninstall inbox-to-reminder@omarshahine-agent-plugins
+/plugin uninstall newsletter-unsubscriber@omarshahine-agent-plugins
+```
+
+### Step 3: Install Chief-of-Staff
+
+```bash
+/plugin install chief-of-staff@omarshahine-agent-plugins
+```
+
+### Step 4: Migrate Data
+
+Run the included migration script:
+
+```bash
+~/.claude/plugins/cache/omarshahine-agent-plugins/chief-of-staff/scripts/migrate-data.sh
+```
+
+Or manually copy your data files:
+
+```bash
+# Copy filing rules (most important - your learned patterns)
+cp ~/Desktop/inbox-backup/filing-rules.yaml \
+   ~/.claude/plugins/cache/omarshahine-agent-plugins/chief-of-staff/data/
+
+# Copy user preferences
+cp ~/Desktop/inbox-backup/user-preferences.yaml \
+   ~/.claude/plugins/cache/omarshahine-agent-plugins/chief-of-staff/data/
+
+# Copy settings (review and merge if needed)
+cp ~/Desktop/inbox-backup/settings.yaml \
+   ~/.claude/plugins/cache/omarshahine-agent-plugins/chief-of-staff/data/
+```
+
+### Step 5: Update Your Workflow
+
+| Old Command | New Command |
+|-------------|-------------|
+| `/inbox-triage:interview` | `/chief-of-staff:triage` |
+| `/inbox-triage:batch` | `/chief-of-staff:batch` |
+| `/inbox-triage:learn` | `/chief-of-staff:learn` |
+| `/inbox-triage:digest` | `/chief-of-staff:digest` |
+| `/inbox-triage:rules` | `/chief-of-staff:rules` |
+| `/inbox-triage:analyze` | `/chief-of-staff:analyze` |
+| `/inbox-triage:optimize` | `/chief-of-staff:optimize` |
+| `/inbox-to-parcel:track` | `/chief-of-staff:parcel` |
+| `/inbox-to-reminder:scan` | `/chief-of-staff:reminders` |
+| `/newsletter-unsubscriber:unsubscribe` | `/chief-of-staff:unsubscribe` |
+
+### Data File Mapping
+
+| Old Location | New Location |
+|--------------|--------------|
+| `inbox-triage/data/filing-rules.yaml` | `chief-of-staff/data/filing-rules.yaml` |
+| `inbox-triage/data/user-preferences.yaml` | `chief-of-staff/data/user-preferences.yaml` |
+| `inbox-triage/data/settings.yaml` | `chief-of-staff/data/settings.yaml` |
+| `inbox-triage/data/delete-patterns.yaml` | `chief-of-staff/data/delete-patterns.yaml` |
+| `inbox-to-parcel/data/settings.yaml` | Merged into `chief-of-staff/data/settings.yaml` |
+| `newsletter-unsubscriber/data/newsletter-lists.yaml` | `chief-of-staff/data/newsletter-lists.yaml` |
 
 ---
 

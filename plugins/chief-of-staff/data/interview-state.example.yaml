@@ -1,0 +1,51 @@
+# Chief-of-Staff Interview State
+# Tracks active triage session for resume capability
+
+# Active session (null when no session in progress)
+session: null
+  # mode: "collecting"  # collecting, executing, learning, completed
+  # session_id: "interview-2026-02-02-abc123"
+  # started: "2026-02-02T10:00:00Z"
+  # total_threads: 15
+  # collected_count: 8
+  # last_thread_index: 8
+
+# Collected decisions (during collection phase)
+collected_decisions:
+  # - emailId: "email-123"
+  #   threadId: "thread-456"
+  #   from:
+  #     name: "Chase Bank"
+  #     email: "alerts@chase.com"
+  #     domain: "chase.com"
+  #   subject: "Your statement is ready"
+  #
+  #   suggestion:
+  #     action: "archive"
+  #     folder: "Financial"
+  #     folderId: "folder-789"
+  #     confidence: 0.85
+  #     reason: "Domain match: chase.com -> Financial"
+  #
+  #   decision:
+  #     action: "archive"
+  #     accepted_suggestion: true
+  #     folder: "Financial"
+  #     folderId: "folder-789"
+  #     steering: null  # Optional steering text for reminders/replies
+  []
+
+# Last completed session (for reference)
+last_session:
+  # completed: "2026-02-02T10:30:00Z"
+  # session_id: "interview-2026-02-02-abc123"
+  # threads_processed: 15
+  # summary:
+  #   emails_archived: 8
+  #   emails_deleted: 4
+  #   reminders_created: 2
+  #   emails_kept: 1
+  # learning:
+  #   acceptance_rate: 0.83
+  #   new_patterns: 1
+  null
