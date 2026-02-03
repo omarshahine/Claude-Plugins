@@ -108,10 +108,16 @@ AskUserQuestion:
 11. Replace placeholders:
     - `{{NAME}}` -> Persona name (e.g., "Friday")
     - `{{NAME_LOWER}}` -> Lowercase persona name (e.g., "friday")
-    - `{{USER_NAME}}` -> User's name (e.g., "Omar"), or "the user" if null
+    - `{{USER_NAME}}` -> User's name (e.g., "Omar") if set
     - `{{USER_CLAUSE}}` -> " for [user_name]" if set, empty string if null
     - `{{GREETING_STYLE}}` -> Selected style
     - `{{GREETING_INSTRUCTIONS}}` -> Style-specific instructions
+
+**Special handling for email signature when user_name is null:**
+If user_name is null, replace the signature format line with:
+- `**Signature format:** \`{{NAME}} (AI assistant)\``
+
+This ensures consistency with batch-processor and inbox-interviewer agents.
 
 12. Greeting instructions by style:
     - **professional**: "Be formal and efficient. Use complete sentences. Avoid exclamation marks. Example: 'Good morning. Here's your current status.'"
