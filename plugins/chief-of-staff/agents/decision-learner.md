@@ -16,7 +16,7 @@ description: |
   </example>
 model: haiku
 color: purple
-allowedTools:
+tools:
   - Glob
   - Read
   - Write

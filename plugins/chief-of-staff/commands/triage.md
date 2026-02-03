@@ -86,22 +86,40 @@ Based on your filing rules and patterns:
 
 ## Implementation
 
-Launch the `inbox-interviewer` agent:
+**IMPORTANT: Run directly in main agent, NOT as a sub-agent.**
 
-**Default (new or resume):**
+Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The triage workflow requires AskUserQuestion for interactive email decisions, so it MUST run in the main agent context.
+
+**Workflow:**
+
+1. Load Fastmail MCP tools via ToolSearch (`+fastmail`)
+2. Fetch inbox emails with `get_recent_emails` or `list_emails`
+3. For each email, use `AskUserQuestion` to present options:
+   - Include email summary in the question text
+   - Provide 4 options: Archive, Delete, Keep, Reminder (or contextual alternatives)
+4. Collect all decisions in memory
+5. Execute bulk operations:
+   - `bulk_move` for archives (grouped by folder)
+   - `bulk_delete` for deletions
+   - Create reminders via `mcp__apple-pim__reminder_create`
+6. Report summary
+
+**Question format:**
 ```
-subagent_type: "chief-of-staff:inbox-interviewer"
-prompt: "Start an interactive inbox interview. Check for existing session in interview-state.yaml and offer to resume if found."
+AskUserQuestion:
+  questions:
+    - question: "Email X/Y: '[Subject]' from [Sender] - [Brief summary of content]"
+      header: "Email X/Y"
+      multiSelect: false
+      options:
+        - label: "[Recommended action]"
+          description: "[Why recommended]"
+        - label: "Archive"
+          description: "Move to a folder"
+        - label: "Delete"
+          description: "Delete this email"
+        - label: "Keep"
+          description: "Leave in inbox"
 ```
 
-**With --resume:**
-```
-subagent_type: "chief-of-staff:inbox-interviewer"
-prompt: "Resume the previous inbox interview session from interview-state.yaml. Continue from where you left off."
-```
-
-**With --fresh:**
-```
-subagent_type: "chief-of-staff:inbox-interviewer"
-prompt: "Start a fresh inbox interview session. Clear any existing interview-state.yaml and start from the beginning."
-```
+**Reference:** See `agents/inbox-interviewer.md` for detailed workflow, smart suggestions, and follow-up question patterns.
