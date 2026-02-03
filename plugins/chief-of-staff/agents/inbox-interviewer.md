@@ -521,11 +521,17 @@ First, load persona settings from `data/settings.yaml` to get the email signatur
 
 ```
 For each reply decision:
-  # Build reply body with signature
-  signature = "[persona.name] ([persona.user_name]'s AI assistant)"
-  # e.g., "Lobster 🦞 (Omar's AI assistant)"
-
-  fullBody = decision.replyParams.body + "\n\n" + signature
+  # Build reply body with signature (handle null values)
+  if persona.name is null:
+    # Persona not configured - skip signature
+    fullBody = decision.replyParams.body
+  elif persona.user_name is null:
+    signature = "[persona.name] (AI assistant)"
+    fullBody = decision.replyParams.body + "\n\n" + signature
+  else:
+    signature = "[persona.name] ([persona.user_name]'s AI assistant)"
+    # e.g., "Lobster 🦞 (Omar's AI assistant)"
+    fullBody = decision.replyParams.body + "\n\n" + signature
 
   Call mcp__fastmail__reply_to_email({
     emailId: decision.emailId,
@@ -535,8 +541,9 @@ For each reply decision:
 ```
 
 **Email Signature Format:**
-- With user name: `Friday (Omar's AI assistant)`
-- Without user name: `Friday (AI assistant)`
+- Both set: `Friday (Omar's AI assistant)`
+- Only name set: `Friday (AI assistant)`
+- Name is null: No signature (persona not configured)
 
 ### Execution Progress Display
 

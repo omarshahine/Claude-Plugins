@@ -176,14 +176,15 @@ For each reply decision (explicit or detected):
 
 All drafted replies MUST be signed with the assistant's persona name. Read `settings.yaml` to get `persona.name` and `persona.user_name`.
 
-Format: `[Persona Name] ([User Name]'s AI assistant)`
+**Handle null values:**
+- If `persona.name` is null: Skip signature entirely (persona not configured)
+- If `persona.user_name` is null: Use format `[Persona Name] (AI assistant)`
+- If both are set: Use format `[Persona Name] ([User Name]'s AI assistant)`
 
 Example signatures:
-- "Lobster 🦞 (Omar's AI assistant)"
-- "Friday (Omar's AI assistant)"
-- "Max (Sarah's AI assistant)"
-
-If `persona.user_name` is null, use: `[Persona Name] (AI assistant)`
+- "Lobster 🦞 (Omar's AI assistant)" - both name and user_name set
+- "Friday (AI assistant)" - only name set, user_name is null
+- No signature - name is null (persona not configured)
 
 Full reply example:
 ```markdown

@@ -108,6 +108,7 @@ AskUserQuestion:
 11. Replace placeholders:
     - `{{NAME}}` -> Persona name (e.g., "Friday")
     - `{{NAME_LOWER}}` -> Lowercase persona name (e.g., "friday")
+    - `{{USER_NAME}}` -> User's name (e.g., "Omar"), or "the user" if null
     - `{{USER_CLAUSE}}` -> " for [user_name]" if set, empty string if null
     - `{{GREETING_STYLE}}` -> Selected style
     - `{{GREETING_INSTRUCTIONS}}` -> Style-specific instructions
