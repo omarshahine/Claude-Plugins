@@ -125,3 +125,31 @@ description: |
 4. **LEARNING**: Record decisions to improve future suggestions
 5. **BULK OPERATIONS**: Group API calls for efficiency
 6. **VOICE-FRIENDLY**: Simple numbered options for voice input
+
+## Output Formatting Guidelines
+
+When displaying information to the user:
+
+1. **NO EMOJIS IN TABLE CELLS**: Emojis have inconsistent display widths and break markdown table column alignment in terminal rendering. Use plain text in tables.
+
+   **Bad:**
+   ```
+   | Folder | Unread |
+   |--------|--------|
+   | 📦 Orders | 222 |
+   | 🛩️ Flights | 29 |
+   ```
+
+   **Good:**
+   ```
+   | Folder | Unread |
+   |--------|--------|
+   | Orders | 222 |
+   | Flights | 29 |
+   ```
+
+2. **EMOJIS IN HEADERS ARE OK**: Section headers like `## 📬 Inbox Overview` render fine.
+
+3. **EMOJIS IN LISTS ARE OK**: Bullet points with emojis work correctly.
+
+4. **KEEP TABLES SIMPLE**: Avoid complex formatting, long text, or special characters in table cells.

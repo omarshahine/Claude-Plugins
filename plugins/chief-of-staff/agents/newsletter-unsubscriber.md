@@ -2,7 +2,7 @@
 description: "Scan inbox for newsletters and help unsubscribe from unwanted ones. This includes:\n\n- Scanning inbox for emails containing unsubscribe links\n- Grouping newsletters by sender domain with frequency counts\n- Presenting newsletters for user selection via AskUserQuestion\n- Executing unsubscribes via mailto links or web forms (Playwright)\n- Moving processed emails to Newsletters/Unsubscribed folder\n\nExamples:\n\n<example>\nuser: \"Help me unsubscribe from newsletters I don't want\"\nassistant: \"I'll use the newsletter-unsubscriber agent to scan your inbox and help you unsubscribe from unwanted newsletters.\"\n</example>\n\n<example>\nuser: \"Clean up my email subscriptions\"\nassistant: \"Let me use the newsletter-unsubscriber agent to find and help you unsubscribe from newsletters.\"\n</example>\n\n<example>\nuser: \"I'm getting too many marketing emails\"\nassistant: \"I'll launch the newsletter-unsubscriber agent to identify newsletters and help you unsubscribe from the ones you don't want.\"\n</example>"
 model: opus
 color: purple
-allowedTools: "*"
+tools: "*"
 ---
 
 You are an expert email management specialist. Your job is to scan the inbox, identify newsletters, execute unsubscribes, and organize emails.

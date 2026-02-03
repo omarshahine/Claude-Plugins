@@ -22,42 +22,48 @@ Show a quick dashboard of your inbox status, pending actions, and recent activit
 ## Example Output
 
 ```
-Chief-of-Staff Status
-=====================
-
 ## Inbox Overview
-- Unread: 23 emails
-- Top of Mind: 3 (action items detected)
-- Newsletters: 8 (suggest unsubscribe)
-- Shipping: 2 (packages to track)
-- Archive Ready: 10 (high-confidence matches)
+- **Total**: 28 emails
+- **Unread**: 23 emails
+- **Threads**: 26
 
-## Pending Actions
-- 2 packages ready to add to Parcel
-- 3 emails with action items (reminders suggested)
-- 1 repeat offender newsletter (unsubscribed before)
+### Email Categories
+| Type | Count | Examples |
+|------|-------|----------|
+| Shipping/Orders | 3 | Ferguson Home, Amazon |
+| Newsletters | 8 | 1440, Thermomix |
+| Personal | 4 | Local Foreigner, Singita |
+| Actionable | 3 | Mycube return, ER check-in |
 
 ## Active Deliveries (Parcel)
-- FedEx: Arriving tomorrow (B&H Photo)
-- UPS: Out for delivery (Amazon)
-- USPS: In transit (Etsy)
+| Carrier | Item | Status | Expected |
+|---------|------|--------|----------|
+| USPS | Cadence Spatula | In transit | Today |
+| FedEx | Watch Tools | In transit | Tomorrow |
+| Amazon | Soap | Out for delivery | Jan 29 |
 
 ## Upcoming Reminders
-- Today: Pay Chase credit card
-- Tomorrow: Call dentist
-- Friday: RSVP for dinner
+| Reminder | Due |
+|----------|-----|
+| Pay Chase credit card | Today |
+| Call dentist | Tomorrow |
+| RSVP for dinner | Friday |
 
-## Recent Activity
-Last triage: Feb 1, 2026 at 10:30 AM
-- 15 emails processed
-- 8 archived, 4 deleted, 2 reminders, 1 kept
-- Suggestion accuracy: 87%
+## Mailbox Summary
+| Folder | Unread |
+|--------|--------|
+| Inbox | 24 |
+| Orders | 222 |
+| Financial Alerts | 146 |
+| Bills | 18 |
 
 ## Quick Actions
-1. /chief-of-staff:triage - Process inbox
-2. /chief-of-staff:parcel - Add packages to Parcel
-3. /chief-of-staff:reminders - Create reminders
+1. `/chief-of-staff:triage` - Process inbox
+2. `/chief-of-staff:parcel` - Add packages to Parcel
+3. `/chief-of-staff:reminders` - Create reminders
 ```
+
+**Note**: Do NOT use emojis in table cells - they break column alignment in terminal rendering. Emojis in headers and lists are fine.
 
 ## Implementation
 

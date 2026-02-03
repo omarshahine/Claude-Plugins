@@ -16,7 +16,7 @@ description: |
   </example>
 model: sonnet
 color: blue
-allowedTools:
+tools:
   - Glob
   - Read
   - Write
