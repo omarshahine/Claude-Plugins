@@ -45,3 +45,7 @@ venv/
 !/plugins/*/data/.gitignore
 !/plugins/*/data/*.example.yaml
 !/plugins/*/data/*.example.json
+
+# Plugin MCP server build artifacts
+plugins/*/mcp-server/*/dist/
+plugins/*/mcp-server/*/node_modules/
