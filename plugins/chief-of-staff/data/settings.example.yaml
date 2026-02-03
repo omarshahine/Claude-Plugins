@@ -1,0 +1,64 @@
+# Chief-of-Staff Settings
+# Copy to settings.yaml and configure for your setup
+
+# Email provider configuration
+providers:
+  email:
+    active: fastmail  # Currently only fastmail is supported
+    mappings:
+      fastmail:
+        list_mailboxes: mcp__fastmail__list_mailboxes
+        list_emails: mcp__fastmail__list_emails
+        get_email: mcp__fastmail__get_email
+        search_emails: mcp__fastmail__search_emails
+        advanced_search: mcp__fastmail__advanced_search
+        move_email: mcp__fastmail__move_email
+        bulk_move: mcp__fastmail__bulk_move
+        bulk_delete: mcp__fastmail__bulk_delete
+        delete_email: mcp__fastmail__delete_email
+        flag_email: mcp__fastmail__flag_email
+        bulk_flag: mcp__fastmail__bulk_flag
+        send_email: mcp__fastmail__send_email
+        reply_to_email: mcp__fastmail__reply_to_email
+        get_thread: mcp__fastmail__get_thread
+
+  # Reminders provider (for inbox-to-reminder)
+  reminders:
+    active: apple-pim
+    mappings:
+      apple-pim:
+        reminder_lists: mcp__apple-pim__reminder_lists
+        reminder_items: mcp__apple-pim__reminder_items
+        reminder_create: mcp__apple-pim__reminder_create
+        reminder_complete: mcp__apple-pim__reminder_complete
+        reminder_search: mcp__apple-pim__reminder_search
+
+  # Package tracking (for inbox-to-parcel)
+  parcel:
+    active: parcel-api
+    mappings:
+      parcel-api:
+        get_deliveries: mcp__parcel-api-mcp__get_deliveries
+        add_delivery: mcp__parcel-api-mcp__add_delivery
+        get_supported_carriers: mcp__parcel-api-mcp__get_supported_carriers
+
+# Optional: folder settings
+folders:
+  inbox_id: null  # Will be auto-discovered
+  archive_id: null  # Will be auto-discovered
+  orders_folder_name: "Orders"
+  automated_folder_name: "Automated Emails"
+  unsubscribed_folder_name: "Unsubscribed"
+
+# Customizations
+customizations:
+  # Personal info for inbox-to-reminder
+  partner_name: null  # Set to partner's name for "emails from my partner" queries
+  family_list_name: "Family"  # Apple Reminders list for family tasks
+  family_members: []  # Additional family member names
+
+# Integration settings (which sub-agents are enabled)
+integrations:
+  parcel: true      # inbox-to-parcel
+  reminders: true   # inbox-to-reminder
+  newsletters: true # newsletter-unsubscriber

@@ -1,6 +1,0 @@
-{
-  "name": "inbox-triage",
-  "version": "1.7.0",
-  "description": "Self-learning email triage with questions-first interview flow, decision learning, visual HTML batch interface, and pattern recognition",
-  "license": "MIT"
-}
