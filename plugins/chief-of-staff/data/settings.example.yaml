@@ -1,6 +1,12 @@
 # Chief-of-Staff Settings
 # Copy to settings.yaml and configure for your setup
 
+# Persona configuration (for dynamic summon command)
+persona:
+  name: null              # e.g., "Friday", "Max", "Jarvis" - REQUIRED for summon command
+  user_name: null         # Your name for greetings - if null, skips personalized greeting
+  greeting_style: friendly # professional, friendly, casual
+
 # Email provider configuration
 providers:
   email:

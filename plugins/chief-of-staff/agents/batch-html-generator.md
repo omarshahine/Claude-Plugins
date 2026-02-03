@@ -67,13 +67,31 @@ Use ToolSearch with `+fastmail` to load the MCP tools:
 
 ```
 1. Glob for data directories
-2. Read settings.yaml (or .example if not found)
-3. Read filing-rules.yaml (or .example)
-4. Read delete-patterns.yaml (or .example)
-5. Read shipping-patterns.json
-6. Read newsletter-patterns.json
-7. Use ToolSearch to load Fastmail MCP tools
+2. Initialize data files if missing (see below)
+3. Read settings.yaml
+4. Read filing-rules.yaml
+5. Read delete-patterns.yaml
+6. Read shipping-patterns.json
+7. Read newsletter-patterns.json
+8. Use ToolSearch to load Fastmail MCP tools
 ```
+
+**Initialize Data Files (If Missing):**
+
+Before reading configuration, ensure data files exist:
+
+```
+For each config file (settings, filing-rules, delete-patterns):
+1. Check if .yaml file exists
+2. If missing AND .example.yaml exists:
+   a. Copy .example.yaml to .yaml
+   b. Log: "Initialized [filename] from example template"
+3. If both missing:
+   a. For optional files (filing-rules, delete-patterns): continue with empty rules
+   b. For required files (settings): report error and stop
+```
+
+This ensures first-time users have valid configuration files.
 
 ### 2. Fetch Emails
 
@@ -331,10 +349,50 @@ function hasActionItem(email) {
 
 ## Error Handling
 
-- **No inbox emails**: Report "Inbox is empty!" and create empty HTML
-- **Tool failure**: Note error and continue with available data
-- **Missing patterns**: Use empty arrays, classification still works
-- **Template not found**: Generate minimal inline HTML
+**CRITICAL: NEVER fall back to sample data. If real data cannot be fetched, STOP and report the error.**
+
+### MCP Connection Failures
+
+If Fastmail MCP tools fail to load or return errors:
+
+```
+STOP IMMEDIATELY and report:
+
+ERROR: Cannot connect to Fastmail MCP server.
+
+Please check:
+1. Run /mcp to verify Fastmail MCP is connected
+2. Re-authenticate if needed
+3. Try again after fixing MCP connection
+
+I cannot generate the batch triage interface without access to your inbox.
+```
+
+**DO NOT:**
+- Generate HTML with sample/placeholder data
+- Silently continue with empty results
+- Assume the user wants demo mode
+
+### No Inbox Emails
+
+If `advanced_search` returns empty results (but MCP is working):
+- Report "Inbox is empty - no emails to triage!"
+- Do NOT generate an empty HTML file
+
+### Missing Patterns/Rules Files
+
+Pattern files are optional - use empty arrays if not found:
+- `shipping-patterns.json` missing → Package detection disabled
+- `newsletter-patterns.json` missing → Newsletter detection disabled
+- `filing-rules.yaml` missing → No learned rules applied (manual classification only)
+
+Report which pattern files were missing so user knows classification is limited.
+
+### Template Not Found
+
+If `batch-triage.html` template is missing:
+- Report error with path searched
+- Do NOT generate minimal inline HTML (the template has critical JavaScript)
 
 ## Parameters
 
