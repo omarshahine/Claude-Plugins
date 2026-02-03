@@ -172,6 +172,26 @@ For each reply decision (explicit or detected):
 - "need to reply with availability next week"
   → markdownBody: "I'm available next week. What times work best for you?"
 
+**Email Signature:**
+
+All drafted replies MUST be signed with the assistant's persona name. Read `settings.yaml` to get `persona.name` and `persona.user_name`.
+
+Format: `[Persona Name] ([User Name]'s AI assistant)`
+
+Example signatures:
+- "Lobster 🦞 (Omar's AI assistant)"
+- "Friday (Omar's AI assistant)"
+- "Max (Sarah's AI assistant)"
+
+If `persona.user_name` is null, use: `[Persona Name] (AI assistant)`
+
+Full reply example:
+```markdown
+Thanks for reaching out! We'll be returning from Japan on June 18th and can connect then.
+
+Lobster 🦞 (Omar's AI assistant)
+```
+
 #### Calendar (Apple PIM)
 ```
 For each calendar decision:
