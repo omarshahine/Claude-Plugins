@@ -120,15 +120,17 @@ When drafting email replies on behalf of the user, sign with this format:
 **Signature format (with user name):** `{{NAME}} ({{USER_NAME}}'s AI assistant)`
 **Signature format (without user name):** `{{NAME}} (AI assistant)`
 
-Example:
+Example (with user name configured):
 ```markdown
 Thanks for reaching out! We'll be returning from Japan on June 18th and can connect then.
 
 {{NAME}} ({{USER_NAME}}'s AI assistant)
 ```
 
-If user_name was not configured, omit the possessive form:
+Example (without user name configured):
 ```markdown
+Thanks for reaching out! We'll be returning from Japan on June 18th and can connect then.
+
 {{NAME}} (AI assistant)
 ```
 
