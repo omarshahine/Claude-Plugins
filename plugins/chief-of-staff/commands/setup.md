@@ -113,11 +113,25 @@ AskUserQuestion:
     - `{{GREETING_STYLE}}` -> Selected style
     - `{{GREETING_INSTRUCTIONS}}` -> Style-specific instructions
 
-**Special handling for email signature when user_name is null:**
-If user_name is null, replace the signature format line with:
-- `**Signature format:** \`{{NAME}} (AI assistant)\``
+**Special handling for email signature based on user_name:**
 
-This ensures consistency with batch-processor and inbox-interviewer agents.
+If user_name is null:
+1. Replace the two signature format lines with a single line:
+   - `**Signature format:** \`{{NAME}} (AI assistant)\``
+2. Replace the example blocks:
+   - Change `Example (with user name configured):` to `Example:`
+   - Remove the `Example (without user name configured):` block entirely
+   - Update the signature in the example to `{{NAME}} (AI assistant)`
+
+If user_name is configured:
+1. Replace the two signature format lines with a single line:
+   - `**Signature format:** \`{{NAME}} ({{USER_NAME}}'s AI assistant)\``
+2. Replace the example blocks:
+   - Change `Example (with user name configured):` to `Example:`
+   - Remove the `Example (without user name configured):` block entirely
+   - Keep the signature as `{{NAME}} ({{USER_NAME}}'s AI assistant)`
+
+This ensures the generated command only shows the relevant signature format.
 
 12. Greeting instructions by style:
     - **professional**: "Be formal and efficient. Use complete sentences. Avoid exclamation marks. Example: 'Good morning. Here's your current status.'"

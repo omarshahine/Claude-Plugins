@@ -13,7 +13,7 @@ MCP server for interacting with the [Parcel](https://parcelapp.net/) delivery tr
 
 ### 2. Set Environment Variable
 
-Add to your shell profile (`~/.zshrc` or `~/.bashrc`):
+Add to your shell profile:
 
 ```bash
 export PARCEL_API_KEY="your-api-key-here"

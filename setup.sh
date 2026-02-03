@@ -29,7 +29,7 @@ for plugin_dir in "$PLUGINS_DIR"/*; do
                     continue
                 }
                 echo "  ✓ $mcp_name built successfully"
-                ((built_count++))
+                built_count=$((built_count + 1))
             fi
         done
     fi
@@ -46,7 +46,7 @@ echo ""
 echo "Setup complete!"
 echo ""
 echo "To use these plugins, add this marketplace to Claude Code:"
-echo "  /plugin marketplace add omarshahine-agent-plugins ~/GitHub/Agent-Plugins"
+echo "  /plugin marketplace add <marketplace-name> <path-to-repo>"
 echo ""
 echo "Then install plugins:"
-echo "  /plugin install chief-of-staff@omarshahine-agent-plugins"
+echo "  /plugin install chief-of-staff@<marketplace-name>"
