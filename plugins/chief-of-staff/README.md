@@ -11,21 +11,50 @@ The "one plugin to rule them all" for personal productivity. Chief-of-Staff is a
 ## Quick Start
 
 ```bash
-# 1. Configure your email provider
+# 1. Configure your email provider and persona
 /chief-of-staff:setup
 
-# 2. Learn patterns from existing folders (optional but recommended)
-/chief-of-staff:learn
+# 2. Summon your assistant by name!
+/friday              # or whatever name you chose
 
-# 3. Start triaging your inbox
+# 3. Or use specific commands
 /chief-of-staff:triage
 ```
+
+## Persona System
+
+Give your Chief-of-Staff a custom identity with a **persona**. During setup, you'll configure:
+
+- **Name**: Your assistant's name (e.g., "Friday", "Max", "Jarvis")
+- **Your Name**: For personalized greetings (optional)
+- **Greeting Style**: Professional, friendly, or casual
+
+### Dynamic Summon Command
+
+Once configured, a personalized command is created automatically:
+
+```bash
+/friday           # Quick assessment + suggestions
+/friday triage    # Jump to inbox triage
+/friday parcel    # Process packages
+/friday status    # Full dashboard
+```
+
+### Email Signatures
+
+When your assistant drafts replies, they're signed with:
+
+```
+Friday (Jane's AI assistant)
+```
+
+This clearly identifies AI-generated replies while maintaining professionalism.
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `/chief-of-staff:setup` | Configure email provider (Fastmail active) |
+| `/chief-of-staff:setup` | Configure persona, email provider, and integrations |
 | `/chief-of-staff:daily` | Full daily orchestration routine |
 | `/chief-of-staff:status` | Quick dashboard of inbox status |
 | `/chief-of-staff:triage` | Interactive questions-first triage |
@@ -76,7 +105,7 @@ All data is stored in `data/` (gitignored, with `.example.yaml` templates):
 
 | File | Purpose |
 |------|---------|
-| `settings.yaml` | Provider configuration (email, parcel, reminders) |
+| `settings.yaml` | Persona config, provider settings (email, parcel, reminders) |
 | `user-preferences.yaml` | Sender overrides, never-file lists |
 | `filing-rules.yaml` | Learned filing patterns with confidence |
 | `delete-patterns.yaml` | Patterns for delete suggestions |
