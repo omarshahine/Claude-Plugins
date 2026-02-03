@@ -103,20 +103,50 @@ Failed items saved for retry.
 
 ## Implementation
 
-**Generate Mode:**
+**CRITICAL**: This command MUST delegate to sub-agents via the Task tool. Do NOT attempt to perform actions directly in this command.
+
+**Generate Mode (default or --generate):**
 ```
-subagent_type: "chief-of-staff:batch-html-generator"
-prompt: "Generate the HTML batch triage interface. Look back [days] days, limit [N] emails."
+Use the Task tool with:
+  subagent_type: "chief-of-staff:batch-html-generator"
+  prompt: |
+    Generate the HTML batch triage interface.
+    Parameters:
+    - Look back: [days] days (default: 7)
+    - Limit: [N] emails (default: 100)
+
+    IMPORTANT: If Fastmail MCP fails, report the error immediately.
+    Do NOT generate sample data or placeholder HTML.
 ```
 
-**Process Mode:**
+**Process Mode (--process):**
 ```
-subagent_type: "chief-of-staff:batch-processor"
-prompt: "Process batch triage decisions from the downloaded JSON file."
+Use the Task tool with:
+  subagent_type: "chief-of-staff:batch-processor"
+  prompt: |
+    Process batch triage decisions from the downloaded JSON file.
+
+    Check these locations for the decisions file:
+    1. ~/Downloads/inbox-triage-decisions-*.json
+    2. Scratchpad directory
+
+    IMPORTANT:
+    - Check steering text for reply intent even if action is not "reply"
+    - Use reply_to_email with markdownBody for drafts
+    - Initialize data files from .example templates if missing
+    - Record all decisions to decision-history.yaml for learning
 ```
 
-**Retry Mode:**
+**Retry Mode (--retry):**
 ```
-subagent_type: "chief-of-staff:batch-processor"
-prompt: "Retry failed items from the previous batch. Read failures from batch-state.yaml."
+Use the Task tool with:
+  subagent_type: "chief-of-staff:batch-processor"
+  prompt: |
+    Retry failed items from the previous batch.
+    Read failures from batch-state.yaml and reprocess only those items.
 ```
+
+**Why Task tool is required:**
+- Sub-agents have specialized tools and prompts
+- Direct execution would miss important context (patterns, rules, MCP setup)
+- Learning system expects consistent agent behavior
