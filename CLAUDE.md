@@ -146,9 +146,11 @@ Plugins in this repo are automatically available when the marketplace is added:
 # Add marketplace (one time)
 /plugin marketplace add omarshahine/Agent-Plugins
 
-# Reinstall plugin after changes
+# Install plugin (first time only - plugins auto-update when configured)
 /plugin install chief-of-staff@omarshahine-agent-plugins
 ```
+
+**Note:** Plugins auto-update when `autoUpdates: true` is set in plugin settings. Manual reinstall is only needed if auto-updates are disabled or to force an immediate update.
 
 ### Testing Agents
 
@@ -413,7 +415,7 @@ Users must grant Calendar, Reminders, and Contacts access in System Settings > P
 ### Sub-agent not found
 - Verify agent file exists in `agents/` directory
 - Check `subagent_type` uses correct prefix (e.g., `chief-of-staff:inbox-to-parcel`)
-- Reinstall plugin after adding new agents
+- Bump plugin version to trigger auto-update
 
 ## Versioning
 
@@ -421,7 +423,4 @@ Bump version in:
 1. `plugins/<plugin>/.claude-plugin/plugin.json`
 2. `.claude-plugin/marketplace.json`
 
-After version bump, users should reinstall:
-```bash
-/plugin install <plugin>@omarshahine-agent-plugins
-```
+After version bump, plugins auto-update on next Claude Code session (if auto-updates enabled).
