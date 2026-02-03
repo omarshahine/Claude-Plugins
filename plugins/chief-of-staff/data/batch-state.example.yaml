@@ -1,0 +1,48 @@
+# Chief-of-Staff Batch Triage State
+# Tracks HTML batch triage sessions
+
+# Current/last session
+session:
+  # sessionId: "batch-2026-02-02-abc123"
+  # status: "generated"  # generated, submitted, processing, completed, partial
+  # generatedAt: "2026-02-02T10:00:00Z"
+  # submittedAt: null
+  # processedAt: null
+  # htmlPath: "/path/to/inbox-triage-batch-2026-02-02.html"
+  # decisionsFile: null
+  null
+
+# Results from last processed batch
+results:
+  # total: 32
+  # successful: 30
+  # failed: 2
+  # byAction:
+  #   archive: { attempted: 10, successful: 10 }
+  #   delete: { attempted: 4, successful: 4 }
+  #   parcel: { attempted: 5, successful: 5 }
+  #   unsubscribe: { attempted: 8, successful: 6, failed: 2 }
+  #   reminder: { attempted: 3, successful: 3 }
+  #   calendar: { attempted: 1, successful: 1 }
+  #   keep: { attempted: 1, successful: 1 }
+  null
+
+# Failed items (for retry)
+failures:
+  # - emailId: "email-xxx"
+  #   action: "unsubscribe"
+  #   error: "CAPTCHA detected"
+  #   url: "https://example.com/unsubscribe?token=xxx"
+  # - emailId: "email-yyy"
+  #   action: "unsubscribe"
+  #   error: "Login required"
+  []
+
+# Session history (last 10 sessions)
+history:
+  # - date: "2026-02-02"
+  #   sessionId: "batch-2026-02-02-abc123"
+  #   total: 32
+  #   successful: 30
+  #   failed: 2
+  []

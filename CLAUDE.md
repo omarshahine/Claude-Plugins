@@ -1,6 +1,6 @@
 # Agent-Plugins Development Guide
 
-This repository is a Claude Code plugin marketplace (`omarshahine-agent-plugins`) containing reusable plugins for travel, file organization, and personal information management.
+This repository is a Claude Code plugin marketplace (`omarshahine-agent-plugins`) containing reusable plugins for email management, travel, file organization, and personal information management.
 
 ## Repository Structure
 
@@ -9,6 +9,16 @@ Agent-Plugins/
 ├── .claude-plugin/
 │   └── marketplace.json       # Marketplace definition (plugins registry)
 ├── plugins/
+│   ├── chief-of-staff/        # THE MAIN ORCHESTRATOR PLUGIN
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   ├── agents/            # 12 sub-agents (inbox-interviewer, inbox-to-parcel, etc.)
+│   │   ├── commands/          # 13 slash commands (triage, parcel, reminders, etc.)
+│   │   ├── skills/
+│   │   │   └── chief-of-staff/
+│   │   │       └── SKILL.md   # Core orchestrator knowledge
+│   │   ├── data/              # User data (gitignored) with .example templates
+│   │   └── templates/         # Pattern files (shipping, newsletter, batch HTML)
 │   ├── travel-agent/          # Flight research and trip tracking
 │   │   ├── .claude-plugin/
 │   │   │   └── plugin.json
@@ -19,16 +29,22 @@ Agent-Plugins/
 │   │   │   └── plugin.json
 │   │   ├── skills/
 │   │   └── commands/
-│   └── apple-pim/             # macOS Calendar, Reminders, Contacts
+│   ├── apple-pim/             # macOS Calendar, Reminders, Contacts
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   ├── .mcp.json          # MCP server configuration
+│   │   ├── agents/            # pim-assistant
+│   │   ├── commands/          # calendars, reminders, contacts slash commands
+│   │   ├── skills/
+│   │   ├── swift/             # Native Swift CLIs
+│   │   ├── mcp-server/        # Node.js MCP server
+│   │   └── setup.sh           # Build script
+│   └── credit-card-benefits/  # Credit card benefit tracking
 │       ├── .claude-plugin/
 │       │   └── plugin.json
-│       ├── .mcp.json          # MCP server configuration
-│       ├── agents/            # pim-assistant
-│       ├── commands/          # calendars, reminders, contacts slash commands
-│       ├── skills/
-│       ├── swift/             # Native Swift CLIs (calendar-cli, reminder-cli, contacts-cli)
-│       ├── mcp-server/        # Node.js MCP server wrapping Swift CLIs
-│       └── setup.sh           # Build script for Swift + Node deps
+│       ├── agents/
+│       ├── commands/
+│       └── data/
 ├── README.md                  # User-facing documentation
 └── CLAUDE.md                  # This file (development instructions)
 ```
@@ -131,13 +147,14 @@ Plugins in this repo are automatically available when the marketplace is added:
 /plugin marketplace add omarshahine/Agent-Plugins
 
 # Reinstall plugin after changes
-/plugin install travel-agent@omarshahine-agent-plugins
+/plugin install chief-of-staff@omarshahine-agent-plugins
 ```
 
 ### Testing Agents
 
 Use the Task tool to test agents:
 ```
+Task(subagent_type="chief-of-staff:inbox-interviewer", prompt="Triage my inbox")
 Task(subagent_type="travel-agent:flighty", prompt="List upcoming flights")
 ```
 
@@ -154,6 +171,110 @@ For apple-pim, ensure setup script has been run:
 ```
 
 ## Plugin-Specific Notes
+
+### chief-of-staff (Main Orchestrator)
+
+Chief-of-Staff is the "uber orchestrator" - the main plugin that consolidates email management, package tracking, reminder creation, and newsletter management.
+
+**Architecture:**
+```
+chief-of-staff/
+├── agents/
+│   ├── inbox-interviewer.md       # Main interactive triage (questions-first)
+│   ├── inbox-to-parcel.md         # Package tracking from shipping emails
+│   ├── inbox-to-reminder.md       # Create reminders from action items
+│   ├── newsletter-unsubscriber.md # Handle newsletter unsubscription
+│   ├── digest-generator.md        # Summarize automated emails
+│   ├── organization-analyzer.md   # Analyze Trash/Archive patterns
+│   ├── pattern-learner.md         # Bootstrap filing rules from folders
+│   ├── inbox-triage.md            # Apply learned rules to inbox
+│   ├── folder-optimizer.md        # Suggest folder reorganization
+│   ├── decision-learner.md        # Learn from triage decisions
+│   ├── batch-html-generator.md    # Visual batch triage interface
+│   └── batch-processor.md         # Execute batch triage decisions
+├── commands/
+│   ├── setup.md                   # Configure email provider
+│   ├── daily.md                   # Full daily orchestration
+│   ├── status.md                  # Quick dashboard
+│   ├── triage.md                  # Interactive interview mode
+│   ├── batch.md                   # Visual HTML batch mode
+│   ├── parcel.md                  # Process shipping emails
+│   ├── reminders.md               # Create reminders from emails
+│   ├── unsubscribe.md             # Unsubscribe from newsletters
+│   ├── digest.md                  # Summarize automated emails
+│   ├── learn.md                   # Bootstrap filing rules
+│   ├── analyze.md                 # Analyze Trash/Archive
+│   ├── optimize.md                # Suggest folder improvements
+│   └── rules.md                   # View/manage filing rules
+├── skills/chief-of-staff/SKILL.md # Core knowledge
+├── data/                          # User data (gitignored)
+│   ├── .gitignore
+│   ├── settings.example.yaml
+│   ├── user-preferences.example.yaml
+│   ├── filing-rules.example.yaml
+│   ├── delete-patterns.example.yaml
+│   ├── decision-history.example.yaml
+│   ├── interview-state.example.yaml
+│   ├── batch-state.example.yaml
+│   └── newsletter-lists.example.yaml
+└── templates/
+    ├── shipping-patterns.json     # Carrier detection, tracking regex
+    ├── newsletter-patterns.json   # RFC headers, bulk sender patterns
+    └── batch-triage.html          # HTML batch interface template
+```
+
+**Key Concepts:**
+
+1. **Questions-First Workflow**: COLLECT → EXECUTE → LEARN
+   - COLLECT: Ask questions for each email (no API calls)
+   - EXECUTE: Run all actions in bulk (efficient)
+   - LEARN: Record decisions, update confidence
+
+2. **Sub-Agent Delegation**: Commands delegate to agents via Task tool
+   ```
+   subagent_type: "chief-of-staff:inbox-to-parcel"
+   ```
+
+3. **Data Files**: All user data in `data/` folder (gitignored)
+   - Copy `.example.yaml` files to create actual configs
+   - `settings.yaml` - Email provider, paths
+   - `filing-rules.yaml` - Learned patterns with confidence
+   - `user-preferences.yaml` - Sender overrides, never-file lists
+
+4. **MCP Dependencies**:
+   - Fastmail MCP (required) - Email access
+   - Parcel API MCP (optional) - Package tracking
+   - Apple PIM MCP (optional) - Reminders
+   - Playwright plugin (optional) - Newsletter unsubscribe web forms
+
+**Adding Sub-Agents:**
+
+1. Create agent file in `agents/`
+2. Use `chief-of-staff:` prefix in Task tool calls
+3. Reference data files with `chief-of-staff/*/data/` paths
+4. Update SKILL.md with new agent info
+
+**Private Extensions:**
+
+Users can extend COS with private agents by creating a separate plugin (e.g., `chief-of-staff-private`):
+
+```markdown
+# skills/private-capabilities/SKILL.md
+---
+description: |
+  Private agents available to Chief-of-Staff:
+  - filing-cabinet-organizer: Manage Filing Cabinet documents
+  - netjets-invoice-downloader: Download NetJets invoices
+---
+
+# Private Chief-of-Staff Capabilities
+
+## Filing Cabinet
+Use `chief-of-staff-private:filing-cabinet-organizer` for document organization.
+
+## NetJets
+Use `chief-of-staff-private:netjets-invoice-downloader` for invoice management.
+```
 
 ### travel-agent
 
@@ -256,6 +377,17 @@ cd plugins/apple-pim
 **Permissions:**
 Users must grant Calendar, Reminders, and Contacts access in System Settings > Privacy & Security.
 
+### credit-card-benefits
+
+**Architecture:**
+- Tracks benefits across multiple premium credit cards
+- Anniversary-aware - resets benefits based on card member anniversary
+- Integrates with YNAB for transaction matching
+
+**Data files:**
+- `data/checklist.yaml` - Benefit usage tracking
+- `data/settings.yaml` - Card configurations, data sources
+
 ## Common Issues
 
 ### Plugin not loading
@@ -277,6 +409,11 @@ Users must grant Calendar, Reminders, and Contacts access in System Settings > P
 - Check description has clear trigger examples
 - Verify tools list includes required tools
 - Test manually via Task tool
+
+### Sub-agent not found
+- Verify agent file exists in `agents/` directory
+- Check `subagent_type` uses correct prefix (e.g., `chief-of-staff:inbox-to-parcel`)
+- Reinstall plugin after adding new agents
 
 ## Versioning
 

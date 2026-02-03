@@ -1,0 +1,57 @@
+# Chief-of-Staff Delete Patterns
+# Patterns for emails that should be suggested for deletion
+
+metadata:
+  last_analyzed: null
+  patterns_count: 0
+
+# Delete patterns by category
+delete_patterns:
+  # Domain-based patterns
+  domain_patterns:
+    # - domain: "newsletter.example.com"
+    #   confidence: 0.85
+    #   match_count: 23
+    #   category: "newsletter"
+    #   note: "Marketing newsletter - user consistently deletes"
+    []
+
+  # Subject patterns
+  subject_patterns:
+    # - pattern: "^Your weekly digest"
+    #   confidence: 0.80
+    #   match_count: 12
+    #   category: "digest"
+    []
+
+  # Sender email patterns
+  sender_patterns:
+    # - email: "noreply@marketing.example.com"
+    #   confidence: 0.90
+    #   match_count: 45
+    #   category: "marketing"
+    []
+
+# Pattern categories (for reporting)
+categories:
+  newsletter:
+    description: "Marketing newsletters and digests"
+    action: "delete_or_unsubscribe"
+  marketing:
+    description: "Promotional and marketing emails"
+    action: "delete"
+  transactional:
+    description: "One-time transactional (confirmations, etc.)"
+    action: "delete_after_read"
+  social:
+    description: "Social media notifications"
+    action: "delete"
+  digest:
+    description: "Daily/weekly digests"
+    action: "delete"
+
+# Thresholds
+thresholds:
+  suggest_delete: 0.80      # Minimum confidence to suggest deletion
+  auto_delete: 0.95         # Minimum confidence for auto-delete (if enabled)
+  repeat_offender: 3        # After N ignored unsubscribes, flag as repeat

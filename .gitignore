@@ -39,5 +39,9 @@ venv/
 # Claude Code
 .claude/cache/
 
-# Plugin data folders are symlinked to private repo (~/GitHub/Claude/*-data)
-/plugins/*/data
+# Plugin data folders contain user-specific files (symlinked to private repo)
+# But we want to track .example.yaml templates and .gitignore
+/plugins/*/data/*
+!/plugins/*/data/.gitignore
+!/plugins/*/data/*.example.yaml
+!/plugins/*/data/*.example.json
