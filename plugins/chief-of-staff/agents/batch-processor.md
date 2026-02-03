@@ -72,7 +72,8 @@ Read the JSON file and validate structure:
       emailId: "email-abc123",
       action: "archive|delete|keep|reminder|calendar|reply|addToParcel|unsubscribe",
       params: { ... },
-      steering: "optional notes"
+      steering: "optional notes",
+      replyDraft: "optional full reply text drafted in batch UI"
     }
   ]
 }
@@ -154,10 +155,11 @@ If reply intent detected AND action is NOT reply, ADD a reply action for this em
 
 ```
 For each reply decision (explicit or detected):
-1. Use steering text as reply content
-   - If steering is a directive like "draft a reply that we return June 18th"
-     → Generate appropriate reply text: "We return from Japan on June 18th."
-   - If steering is already reply content → Use as-is
+1. Determine reply content (priority order):
+   a. If decision.replyDraft exists → Use it directly (user typed the reply in batch UI)
+   b. If steering is a directive like "draft a reply that we return June 18th"
+      → Generate appropriate reply text: "We return from Japan on June 18th."
+   c. If steering is already reply content → Use as-is
 2. Call reply_to_email with:
    - emailId: the original email ID
    - markdownBody: the reply content (supports **bold**, *italic*, lists, etc.)
@@ -165,6 +167,11 @@ For each reply decision (explicit or detected):
 3. Track success/failure
 4. Report draft creation in summary
 ```
+
+**Reply content sources (in priority order):**
+1. `decision.replyDraft` - User drafted the reply in the batch HTML interface
+2. `decision.steering` as directive - Convert "draft a reply that X" to reply text
+3. `decision.steering` as content - Use steering text directly if it's already reply content
 
 **Example steering → reply conversion:**
 - "draft a reply that we return from Japan on June 18th"

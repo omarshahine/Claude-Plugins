@@ -6,20 +6,27 @@
   <title>Inbox Batch Triage</title>
   <style>
     :root {
-      --bg-primary: #1a1a2e;
-      --bg-secondary: #16213e;
-      --bg-card: #0f3460;
-      --bg-hover: #1a4a7d;
-      --text-primary: #eaeaea;
-      --text-secondary: #a0a0a0;
-      --text-muted: #6b7280;
-      --accent-blue: #4a9eff;
-      --accent-green: #10b981;
-      --accent-yellow: #f59e0b;
-      --accent-red: #ef4444;
-      --accent-purple: #8b5cf6;
-      --border-color: #2d3748;
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-card: #21262d;
+      --bg-hover: #30363d;
+      --bg-input: #0d1117;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+      --accent-blue: #58a6ff;
+      --accent-green: #3fb950;
+      --accent-yellow: #d29922;
+      --accent-orange: #db6d28;
+      --accent-red: #f85149;
+      --accent-purple: #a371f7;
+      --border-color: #30363d;
+      --border-subtle: #21262d;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
     }
 
     * {
@@ -29,17 +36,27 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
       background: var(--bg-primary);
       color: var(--text-primary);
-      line-height: 1.6;
+      line-height: 1.5;
       min-height: 100vh;
     }
 
+    /* Sticky Header */
+    .header-wrapper {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      backdrop-filter: blur(12px);
+    }
+
     .container {
-      max-width: 1200px;
+      max-width: 1000px;
       margin: 0 auto;
-      padding: 2rem;
+      padding: 0 1.5rem;
     }
 
     /* Header */
@@ -47,89 +64,151 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 0;
+      gap: 1rem;
     }
 
     .header h1 {
-      font-size: 1.75rem;
+      font-size: 1.25rem;
       font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     .header-actions {
       display: flex;
-      gap: 1rem;
+      gap: 0.75rem;
       align-items: center;
     }
 
-    .stats {
-      font-size: 0.875rem;
+    /* Progress Bar */
+    .progress-wrapper {
+      padding: 0.75rem 0 1rem;
+    }
+
+    .progress-stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      font-size: 0.8125rem;
+    }
+
+    .progress-label {
       color: var(--text-secondary);
     }
 
+    .progress-counts {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .progress-count {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      color: var(--text-muted);
+    }
+
+    .progress-count .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .dot-archive { background: var(--accent-blue); }
+    .dot-delete { background: var(--accent-red); }
+    .dot-reminder { background: var(--accent-yellow); }
+    .dot-parcel { background: var(--accent-purple); }
+    .dot-reply { background: var(--accent-green); }
+    .dot-keep { background: var(--text-muted); }
+
+    .progress-bar {
+      height: 6px;
+      background: var(--bg-card);
+      border-radius: 3px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .progress-segment {
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+
+    .segment-archive { background: var(--accent-blue); }
+    .segment-delete { background: var(--accent-red); }
+    .segment-reminder { background: var(--accent-yellow); }
+    .segment-parcel { background: var(--accent-purple); }
+    .segment-unsubscribe { background: var(--accent-orange); }
+    .segment-reply { background: var(--accent-green); }
+    .segment-keep { background: var(--text-muted); }
+
     /* Buttons */
     .btn {
-      padding: 0.625rem 1.25rem;
-      border-radius: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-md);
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s;
-      border: none;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
     }
 
     .btn-primary {
-      background: var(--accent-blue);
-      color: white;
+      background: var(--accent-green);
+      color: #fff;
+      border-color: var(--accent-green);
     }
 
     .btn-primary:hover {
-      background: #3b82f6;
+      background: #2ea043;
+      border-color: #2ea043;
     }
 
     .btn-secondary {
-      background: var(--bg-secondary);
+      background: var(--bg-card);
       color: var(--text-primary);
-      border: 1px solid var(--border-color);
+      border-color: var(--border-color);
     }
 
     .btn-secondary:hover {
       background: var(--bg-hover);
+      border-color: var(--text-muted);
     }
 
-    .btn-success {
-      background: var(--accent-green);
-      color: white;
+    .btn-sm {
+      padding: 0.25rem 0.625rem;
+      font-size: 0.75rem;
     }
 
-    .btn-success:hover {
-      background: #059669;
+    /* Main Content */
+    main {
+      padding: 1.5rem 0 3rem;
     }
 
     /* Category Sections */
     .category {
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
       background: var(--bg-secondary);
-      border-radius: 0.75rem;
-      overflow: hidden;
+      border-radius: var(--radius-lg);
       border: 1px solid var(--border-color);
+      overflow: hidden;
     }
 
     .category-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem 1.25rem;
+      padding: 0.875rem 1rem;
       background: var(--bg-card);
       cursor: pointer;
       user-select: none;
+      transition: background 0.15s ease;
     }
 
     .category-header:hover {
@@ -139,21 +218,23 @@
     .category-title {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      font-size: 1rem;
+      gap: 0.625rem;
+      font-size: 0.9375rem;
       font-weight: 600;
     }
 
     .category-icon {
-      font-size: 1.25rem;
+      font-size: 1.125rem;
     }
 
     .category-count {
       background: var(--bg-primary);
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
+      padding: 0.125rem 0.5rem;
+      border-radius: 10px;
       font-size: 0.75rem;
+      font-weight: 500;
       color: var(--text-secondary);
+      margin-left: 0.25rem;
     }
 
     .category-actions {
@@ -162,42 +243,49 @@
     }
 
     .category-content {
-      padding: 1rem;
+      padding: 0.75rem;
       display: grid;
-      gap: 1rem;
+      gap: 0.625rem;
+      transition: all 0.2s ease;
     }
 
     .category-content.collapsed {
       display: none;
     }
 
-    /* Email Cards */
+    /* Email Cards - Compact Design */
     .email-card {
       background: var(--bg-card);
-      border-radius: 0.5rem;
-      padding: 1.25rem;
-      border: 1px solid var(--border-color);
-      transition: all 0.2s;
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      border: 1px solid var(--border-subtle);
+      transition: all 0.15s ease;
     }
 
     .email-card:hover {
-      border-color: var(--accent-blue);
+      border-color: var(--border-color);
+      box-shadow: var(--shadow-sm);
     }
 
-    .email-card.selected {
-      border-color: var(--accent-green);
-      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-    }
+    .email-card.action-archive { border-left: 3px solid var(--accent-blue); }
+    .email-card.action-delete { border-left: 3px solid var(--accent-red); }
+    .email-card.action-reminder { border-left: 3px solid var(--accent-yellow); }
+    .email-card.action-addToParcel { border-left: 3px solid var(--accent-purple); }
+    .email-card.action-unsubscribe { border-left: 3px solid var(--accent-orange); }
+    .email-card.action-reply { border-left: 3px solid var(--accent-green); }
+    .email-card.action-keep { border-left: 3px solid var(--text-muted); }
 
-    .email-header {
+    .email-top {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 0.75rem;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
     }
 
     .email-from {
       font-weight: 600;
+      font-size: 0.9375rem;
       color: var(--text-primary);
     }
 
@@ -210,19 +298,20 @@
       font-size: 0.75rem;
       color: var(--text-secondary);
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .email-subject {
-      font-size: 0.9375rem;
-      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
       color: var(--text-primary);
+      margin-bottom: 0.375rem;
+      font-weight: 500;
     }
 
     .email-preview {
       font-size: 0.8125rem;
       color: var(--text-secondary);
-      margin-bottom: 1rem;
-      line-height: 1.5;
+      margin-bottom: 0.75rem;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
@@ -230,100 +319,164 @@
     }
 
     .email-suggestion {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.375rem;
       font-size: 0.75rem;
       color: var(--accent-yellow);
-      margin-bottom: 1rem;
-      padding: 0.5rem;
-      background: rgba(245, 158, 11, 0.1);
-      border-radius: 0.375rem;
+      margin-bottom: 0.75rem;
+      padding: 0.375rem 0.625rem;
+      background: rgba(210, 153, 34, 0.12);
+      border-radius: var(--radius-sm);
     }
 
     .email-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.75rem;
-      align-items: flex-start;
+      gap: 0.625rem;
+      align-items: flex-end;
     }
 
     .action-group {
       display: flex;
       flex-direction: column;
-      gap: 0.375rem;
+      gap: 0.25rem;
     }
 
     .action-group label {
       font-size: 0.6875rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       color: var(--text-muted);
+      font-weight: 500;
     }
 
+    .confidence-badge {
+      font-size: 0.6875rem;
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      margin-left: 0.5rem;
+    }
+
+    .confidence-high { background: rgba(63, 185, 80, 0.15); color: var(--accent-green); }
+    .confidence-medium { background: rgba(210, 153, 34, 0.15); color: var(--accent-yellow); }
+    .confidence-low { background: rgba(248, 81, 73, 0.15); color: var(--accent-red); }
+
     select, input[type="text"], input[type="date"] {
-      background: var(--bg-primary);
+      background: var(--bg-input);
       border: 1px solid var(--border-color);
       color: var(--text-primary);
-      padding: 0.5rem 0.75rem;
-      border-radius: 0.375rem;
+      padding: 0.4375rem 0.625rem;
+      border-radius: var(--radius-sm);
       font-size: 0.8125rem;
-      min-width: 140px;
+      min-width: 130px;
+      transition: border-color 0.15s ease;
     }
 
     select:focus, input:focus {
       outline: none;
       border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+    }
+
+    select {
+      cursor: pointer;
     }
 
     .steering-input {
       flex: 1;
-      min-width: 200px;
+      min-width: 180px;
     }
 
     .steering-input input {
       width: 100%;
     }
 
-    /* Badges */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.375rem;
-      padding: 0.25rem 0.625rem;
-      border-radius: 9999px;
-      font-size: 0.6875rem;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.025em;
+    /* Reply Draft */
+    .reply-draft {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border-subtle);
+      display: none;
     }
 
-    .badge-blue { background: rgba(74, 158, 255, 0.2); color: var(--accent-blue); }
-    .badge-green { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
-    .badge-yellow { background: rgba(245, 158, 11, 0.2); color: var(--accent-yellow); }
-    .badge-red { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
-    .badge-purple { background: rgba(139, 92, 246, 0.2); color: var(--accent-purple); }
+    .reply-draft.visible {
+      display: block;
+    }
+
+    .reply-draft label {
+      display: block;
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 0.375rem;
+    }
+
+    .reply-draft textarea {
+      width: 100%;
+      min-height: 100px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 0.625rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8125rem;
+      font-family: inherit;
+      line-height: 1.5;
+      resize: vertical;
+      transition: border-color 0.15s ease;
+    }
+
+    .reply-draft textarea:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+    }
+
+    .reply-draft textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    .reply-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.375rem;
+    }
 
     /* Footer */
+    .footer-wrapper {
+      position: sticky;
+      bottom: 0;
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border-color);
+      backdrop-filter: blur(12px);
+    }
+
     .footer {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 2rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--border-color);
+      padding: 1rem 0;
     }
 
     .bulk-actions {
       display: flex;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     /* Empty State */
     .empty-state {
       text-align: center;
-      padding: 3rem;
+      padding: 4rem 2rem;
       color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
     }
 
     /* Success Modal */
@@ -333,79 +486,124 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.8);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
+      opacity: 1;
+      transition: opacity 0.2s ease;
     }
 
     .modal-overlay.hidden {
-      display: none;
+      opacity: 0;
+      pointer-events: none;
     }
 
     .modal {
       background: var(--bg-secondary);
-      border-radius: 0.75rem;
-      padding: 2rem;
-      max-width: 500px;
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      max-width: 440px;
       width: 90%;
       border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-md);
+      transform: scale(1);
+      transition: transform 0.2s ease;
+    }
+
+    .modal-overlay.hidden .modal {
+      transform: scale(0.95);
     }
 
     .modal h2 {
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
+      font-size: 1.125rem;
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     .modal p {
       color: var(--text-secondary);
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
     }
 
     .modal code {
       display: block;
       background: var(--bg-primary);
-      padding: 1rem;
-      border-radius: 0.375rem;
-      font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-      font-size: 0.875rem;
-      margin-bottom: 1.5rem;
-      word-break: break-all;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+      font-size: 0.8125rem;
+      margin-bottom: 1rem;
+      color: var(--accent-blue);
+      border: 1px solid var(--border-color);
     }
 
     .modal-actions {
       display: flex;
-      gap: 1rem;
+      gap: 0.75rem;
       justify-content: flex-end;
     }
 
-    /* Confidence indicator */
-    .confidence {
-      font-size: 0.6875rem;
-      color: var(--text-muted);
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .confidence-high { color: var(--accent-green); }
-    .confidence-medium { color: var(--accent-yellow); }
-    .confidence-low { color: var(--accent-red); }
+    .category {
+      animation: fadeIn 0.25s ease forwards;
+    }
+
+    .category:nth-child(2) { animation-delay: 0.05s; }
+    .category:nth-child(3) { animation-delay: 0.1s; }
+    .category:nth-child(4) { animation-delay: 0.15s; }
+    .category:nth-child(5) { animation-delay: 0.2s; }
+    .category:nth-child(6) { animation-delay: 0.25s; }
+    .category:nth-child(7) { animation-delay: 0.3s; }
+
+    .email-card {
+      animation: fadeIn 0.2s ease forwards;
+    }
+
+    /* Pulse animation for changed items */
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0.4); }
+      70% { box-shadow: 0 0 0 8px rgba(88, 166, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0); }
+    }
+
+    .email-card.just-changed {
+      animation: pulse 0.4s ease;
+    }
 
     /* Responsive */
-    @media (max-width: 768px) {
+    @media (max-width: 640px) {
       .container {
-        padding: 1rem;
+        padding: 0 1rem;
       }
 
       .header {
         flex-direction: column;
-        gap: 1rem;
         align-items: flex-start;
+        gap: 0.75rem;
+      }
+
+      .header-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .progress-counts {
+        display: none;
       }
 
       .email-actions {
         flex-direction: column;
+        align-items: stretch;
       }
 
       .action-group {
@@ -422,48 +620,69 @@
 
       .footer {
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.75rem;
       }
 
       .bulk-actions {
         width: 100%;
         flex-wrap: wrap;
       }
+
+      .bulk-actions .btn {
+        flex: 1;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="header-wrapper">
+    <div class="container">
+      <header class="header">
+        <h1>Inbox Batch Triage</h1>
+        <div class="header-actions">
+          <span class="stats" id="stats">Loading...</span>
+          <button class="btn btn-primary" onclick="submitAll()">Submit All</button>
+        </div>
+      </header>
+      <div class="progress-wrapper">
+        <div class="progress-stats">
+          <span class="progress-label" id="progress-label">0 of 0 decided</span>
+          <div class="progress-counts" id="progress-counts"></div>
+        </div>
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
-    <header class="header">
-      <h1>Inbox Batch Triage</h1>
-      <div class="header-actions">
-        <span class="stats" id="stats">Loading...</span>
-        <button class="btn btn-success" onclick="submitAll()">Submit All</button>
-      </div>
-    </header>
-
     <main id="categories">
-      <div class="empty-state">Loading emails...</div>
-    </main>
-
-    <footer class="footer">
-      <div class="bulk-actions">
-        <button class="btn btn-secondary" onclick="selectAllAction('archive')">Archive All FYI</button>
-        <button class="btn btn-secondary" onclick="selectAllAction('delete')">Delete All Newsletters</button>
-        <button class="btn btn-secondary" onclick="resetAll()">Reset All</button>
+      <div class="empty-state">
+        <div class="empty-state-icon">Loading...</div>
       </div>
-      <button class="btn btn-success" onclick="submitAll()">Submit All</button>
-    </footer>
+    </main>
+  </div>
+
+  <div class="footer-wrapper">
+    <div class="container">
+      <footer class="footer">
+        <div class="bulk-actions">
+          <button class="btn btn-secondary btn-sm" onclick="selectAllAction('archive')">Archive All FYI</button>
+          <button class="btn btn-secondary btn-sm" onclick="selectAllAction('delete')">Delete All Newsletters</button>
+          <button class="btn btn-secondary btn-sm" onclick="resetAll()">Reset All</button>
+        </div>
+        <button class="btn btn-primary" onclick="submitAll()">Submit All</button>
+      </footer>
+    </div>
   </div>
 
   <!-- Success Modal -->
   <div class="modal-overlay hidden" id="successModal">
     <div class="modal">
       <h2>Decisions Saved</h2>
-      <p>Your triage decisions have been downloaded. Run this command in Claude Code to process them:</p>
-      <code>/inbox-triage:batch --process</code>
+      <p>Your triage decisions have been downloaded. Run this command to process them:</p>
+      <code>/chief-of-staff:batch --process</code>
       <div class="modal-actions">
-        <button class="btn btn-primary" onclick="closeModal()">Close</button>
+        <button class="btn btn-primary" onclick="closeModal()">Done</button>
       </div>
     </div>
   </div>
@@ -474,9 +693,7 @@
       generated: "{{GENERATED_DATE}}",
       sessionId: "{{SESSION_ID}}",
       config: {
-        folders: [
-          // { id: "folder-123", name: "Financial", path: "Financial" }
-        ],
+        folders: [],
         reminderLists: ["Reminders", "Budget & Finances", "Travel", "Family"]
       },
       categories: {
@@ -490,65 +707,65 @@
       }
     };
 
-    // Track user decisions
     const decisions = {};
 
-    // Action options based on category
     const actionOptions = {
       topOfMind: [
-        { value: 'reminder', label: 'Create Reminder', recommended: true },
-        { value: 'calendar', label: 'Create Calendar Event' },
-        { value: 'archive', label: 'Archive' },
-        { value: 'delete', label: 'Delete' },
-        { value: 'keep', label: 'Keep in Inbox' },
-        { value: 'reply', label: 'Reply' }
+        { value: 'reminder', label: 'Reminder', icon: '\u23f0', recommended: true },
+        { value: 'calendar', label: 'Calendar', icon: '\ud83d\udcc5' },
+        { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
+        { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
+        { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
+        { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' }
       ],
       deliveries: [
-        { value: 'addToParcel', label: 'Add to Parcel', recommended: true },
-        { value: 'archive', label: 'Archive to Orders' },
-        { value: 'reminder', label: 'Create Reminder' },
-        { value: 'keep', label: 'Keep in Inbox' },
-        { value: 'delete', label: 'Delete' }
+        { value: 'addToParcel', label: 'Add to Parcel', icon: '\ud83d\udce6', recommended: true },
+        { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
+        { value: 'reminder', label: 'Reminder', icon: '\u23f0' },
+        { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
+        { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' }
       ],
       newsletters: [
-        { value: 'unsubscribe', label: 'Delete + Unsubscribe', recommended: true },
-        { value: 'delete', label: 'Delete Only' },
-        { value: 'archive', label: 'Archive' },
-        { value: 'keep', label: 'Keep in Inbox' }
+        { value: 'unsubscribe', label: 'Unsubscribe + Delete', icon: '\ud83d\udeab', recommended: true },
+        { value: 'delete', label: 'Delete Only', icon: '\ud83d\uddd1\ufe0f' },
+        { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
+        { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' }
       ],
       financial: [
-        { value: 'archive', label: 'Archive to Financial', recommended: true },
-        { value: 'reminder', label: 'Create Reminder' },
-        { value: 'calendar', label: 'Create Calendar Event' },
-        { value: 'keep', label: 'Keep in Inbox' },
-        { value: 'delete', label: 'Delete' }
+        { value: 'archive', label: 'Archive', icon: '\ud83d\udce5', recommended: true },
+        { value: 'reminder', label: 'Reminder', icon: '\u23f0' },
+        { value: 'calendar', label: 'Calendar', icon: '\ud83d\udcc5' },
+        { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
+        { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
+        { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' }
       ],
       archiveReady: [
-        { value: 'archive', label: 'Archive', recommended: true },
-        { value: 'delete', label: 'Delete' },
-        { value: 'keep', label: 'Keep in Inbox' },
-        { value: 'reminder', label: 'Create Reminder' }
+        { value: 'archive', label: 'Archive', icon: '\ud83d\udce5', recommended: true },
+        { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
+        { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
+        { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
+        { value: 'reminder', label: 'Reminder', icon: '\u23f0' }
       ],
       deleteReady: [
-        { value: 'delete', label: 'Delete', recommended: true },
-        { value: 'archive', label: 'Archive' },
-        { value: 'keep', label: 'Keep in Inbox' }
+        { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f', recommended: true },
+        { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
+        { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' }
       ],
       fyi: [
-        { value: 'archive', label: 'Archive', recommended: true },
-        { value: 'delete', label: 'Delete' },
-        { value: 'keep', label: 'Keep in Inbox' },
-        { value: 'reminder', label: 'Create Reminder' }
+        { value: 'archive', label: 'Archive', icon: '\ud83d\udce5', recommended: true },
+        { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
+        { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
+        { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
+        { value: 'reminder', label: 'Reminder', icon: '\u23f0' }
       ]
     };
 
-    // Initialize the page
     function init() {
       renderCategories();
       updateStats();
+      updateProgressBar();
     }
 
-    // Render all categories
     function renderCategories() {
       const container = document.getElementById('categories');
       container.innerHTML = '';
@@ -565,17 +782,14 @@
       });
 
       if (totalEmails === 0) {
-        container.innerHTML = '<div class="empty-state">No emails to triage. Your inbox is clean!</div>';
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">\u2728</div>No emails to triage. Your inbox is clean!</div>';
       }
     }
 
-    // Render a single category
     function renderCategory(categoryKey, category) {
       const section = document.createElement('section');
       section.className = 'category';
       section.dataset.category = categoryKey;
-
-      const badgeClass = getBadgeClass(categoryKey);
 
       section.innerHTML = `
         <div class="category-header" onclick="toggleCategory('${categoryKey}')">
@@ -585,7 +799,7 @@
             <span class="category-count">${category.emails.length}</span>
           </div>
           <div class="category-actions">
-            <button class="btn btn-secondary" onclick="event.stopPropagation(); selectAllInCategory('${categoryKey}', getDefaultAction('${categoryKey}'))">
+            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); selectAllInCategory('${categoryKey}', getDefaultAction('${categoryKey}'))">
               Select All Default
             </button>
           </div>
@@ -598,21 +812,19 @@
       return section;
     }
 
-    // Render a single email card
     function renderEmailCard(email, categoryKey) {
       const options = actionOptions[categoryKey] || actionOptions.fyi;
       const defaultAction = email.suggestion?.action || getDefaultAction(categoryKey);
 
-      // Initialize decision
       if (!decisions[email.id]) {
         decisions[email.id] = {
           emailId: email.id,
           action: defaultAction,
           params: {},
-          steering: ''
+          steering: '',
+          classification: email.classification
         };
 
-        // Set default params based on suggestion
         if (email.suggestion) {
           if (email.suggestion.folder) {
             decisions[email.id].params.folderId = email.suggestion.folderId;
@@ -635,12 +847,12 @@
 
       const confidenceClass = getConfidenceClass(email.classification?.confidence);
       const confidenceHtml = email.classification?.confidence
-        ? `<span class="confidence ${confidenceClass}">${Math.round(email.classification.confidence * 100)}% match</span>`
+        ? `<span class="confidence-badge ${confidenceClass}">${Math.round(email.classification.confidence * 100)}%</span>`
         : '';
 
       return `
-        <article class="email-card" id="card-${email.id}" data-email-id="${email.id}">
-          <div class="email-header">
+        <article class="email-card action-${defaultAction}" id="card-${email.id}" data-email-id="${email.id}">
+          <div class="email-top">
             <div>
               <div class="email-from">${escapeHtml(email.from?.name || email.from?.email || 'Unknown')}</div>
               <div class="email-address">&lt;${escapeHtml(email.from?.email || '')}&gt;</div>
@@ -656,7 +868,7 @@
               <select onchange="updateAction('${email.id}', this.value)">
                 ${options.map(opt => `
                   <option value="${opt.value}" ${opt.value === defaultAction ? 'selected' : ''}>
-                    ${opt.label}${opt.recommended ? ' (Recommended)' : ''}
+                    ${opt.icon} ${opt.label}${opt.recommended ? ' \u2605' : ''}
                   </option>
                 `).join('')}
               </select>
@@ -668,21 +880,28 @@
               </select>
             </div>
             <div class="action-group" id="reminder-group-${email.id}" style="display: ${defaultAction === 'reminder' ? 'flex' : 'none'}">
-              <label>Due Date</label>
+              <label>Due</label>
               <input type="date" value="${getTomorrowDate()}" onchange="updateReminderDate('${email.id}', this.value)">
             </div>
             <div class="action-group steering-input">
-              <label>Notes/Instructions ${confidenceHtml}</label>
-              <input type="text" placeholder="Add notes or steering text..."
+              <label>Notes ${confidenceHtml}</label>
+              <input type="text" placeholder="Add notes..."
                      value="${escapeHtml(decisions[email.id]?.steering || '')}"
                      onchange="updateSteering('${email.id}', this.value)">
             </div>
+          </div>
+          <div class="reply-draft ${defaultAction === 'reply' ? 'visible' : ''}" id="reply-draft-${email.id}">
+            <label>Draft Reply</label>
+            <textarea
+              placeholder="Write your reply here... (will be sent as a draft for review)"
+              onchange="updateReplyDraft('${email.id}', this.value)"
+            >${escapeHtml(decisions[email.id]?.replyDraft || '')}</textarea>
+            <div class="reply-hint">This will create a draft reply for you to review before sending.</div>
           </div>
         </article>
       `;
     }
 
-    // Render folder dropdown options
     function renderFolderOptions(email) {
       const folders = TRIAGE_DATA.config.folders || [];
       const suggestedFolderId = email.suggestion?.folderId;
@@ -690,48 +909,62 @@
       let options = '<option value="">Select folder...</option>';
       folders.forEach(folder => {
         const selected = folder.id === suggestedFolderId ? 'selected' : '';
-        options += `<option value="${folder.id}" ${selected}>${escapeHtml(folder.name)}</option>`;
+        const icon = folder.name.toLowerCase().includes('financial') ? '\ud83d\udcb0' :
+                     folder.name.toLowerCase().includes('order') ? '\ud83d\udce6' :
+                     folder.name.toLowerCase().includes('travel') ? '\u2708\ufe0f' : '\ud83d\udcc1';
+        options += `<option value="${folder.id}" ${selected}>${icon} ${escapeHtml(folder.name)}</option>`;
       });
 
       return options;
     }
 
-    // Update action for an email
     function updateAction(emailId, action) {
+      const card = document.getElementById(`card-${emailId}`);
+
+      // Remove old action class, add new one
+      card.className = card.className.replace(/action-\w+/g, '');
+      card.classList.add(`action-${action}`);
+      card.classList.add('just-changed');
+      setTimeout(() => card.classList.remove('just-changed'), 400);
+
       decisions[emailId].action = action;
 
-      // Show/hide folder select
       const folderGroup = document.getElementById(`folder-group-${emailId}`);
       if (folderGroup) {
         folderGroup.style.display = needsFolderSelect(action) ? 'flex' : 'none';
       }
 
-      // Show/hide reminder date
       const reminderGroup = document.getElementById(`reminder-group-${emailId}`);
       if (reminderGroup) {
         reminderGroup.style.display = action === 'reminder' ? 'flex' : 'none';
       }
 
+      const replyDraft = document.getElementById(`reply-draft-${emailId}`);
+      if (replyDraft) {
+        replyDraft.classList.toggle('visible', action === 'reply');
+      }
+
       updateStats();
+      updateProgressBar();
     }
 
-    // Update folder for an email
     function updateFolder(emailId, folderId, folderName) {
       decisions[emailId].params.folderId = folderId;
       decisions[emailId].params.folderName = folderName;
     }
 
-    // Update reminder date
     function updateReminderDate(emailId, date) {
       decisions[emailId].params.dueDate = date;
     }
 
-    // Update steering text
     function updateSteering(emailId, text) {
       decisions[emailId].steering = text;
     }
 
-    // Select all in a category with a specific action
+    function updateReplyDraft(emailId, text) {
+      decisions[emailId].replyDraft = text;
+    }
+
     function selectAllInCategory(categoryKey, action) {
       const category = TRIAGE_DATA.categories[categoryKey];
       if (!category) return;
@@ -739,9 +972,11 @@
       category.emails.forEach(email => {
         decisions[email.id].action = action;
 
-        // Update the select element
         const card = document.getElementById(`card-${email.id}`);
         if (card) {
+          card.className = card.className.replace(/action-\w+/g, '');
+          card.classList.add(`action-${action}`);
+
           const select = card.querySelector('select');
           if (select) select.value = action;
 
@@ -754,28 +989,29 @@
           if (reminderGroup) {
             reminderGroup.style.display = action === 'reminder' ? 'flex' : 'none';
           }
+
+          const replyDraft = document.getElementById(`reply-draft-${email.id}`);
+          if (replyDraft) {
+            replyDraft.classList.toggle('visible', action === 'reply');
+          }
         }
       });
 
       updateStats();
+      updateProgressBar();
     }
 
-    // Bulk actions
     function selectAllAction(action) {
-      // For archive all FYI
       if (action === 'archive') {
         selectAllInCategory('fyi', 'archive');
         selectAllInCategory('archiveReady', 'archive');
       }
-      // For delete all newsletters
       if (action === 'delete') {
         selectAllInCategory('newsletters', 'unsubscribe');
         selectAllInCategory('deleteReady', 'delete');
       }
-      updateStats();
     }
 
-    // Reset all to defaults
     function resetAll() {
       Object.keys(TRIAGE_DATA.categories).forEach(categoryKey => {
         const category = TRIAGE_DATA.categories[categoryKey];
@@ -786,16 +1022,17 @@
               emailId: email.id,
               action: defaultAction,
               params: {},
-              steering: ''
+              steering: '',
+              classification: email.classification
             };
           });
         }
       });
       renderCategories();
       updateStats();
+      updateProgressBar();
     }
 
-    // Submit all decisions
     function submitAll() {
       const output = {
         sessionId: TRIAGE_DATA.sessionId,
@@ -803,7 +1040,6 @@
         decisions: Object.values(decisions).filter(d => d.action !== 'keep' || d.steering)
       };
 
-      // Download as JSON
       const blob = new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -814,16 +1050,13 @@
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      // Show success modal
       document.getElementById('successModal').classList.remove('hidden');
     }
 
-    // Close modal
     function closeModal() {
       document.getElementById('successModal').classList.add('hidden');
     }
 
-    // Toggle category collapse
     function toggleCategory(categoryKey) {
       const content = document.getElementById(`content-${categoryKey}`);
       if (content) {
@@ -831,19 +1064,8 @@
       }
     }
 
-    // Update stats display
     function updateStats() {
-      const stats = {
-        total: 0,
-        archive: 0,
-        delete: 0,
-        reminder: 0,
-        keep: 0,
-        parcel: 0,
-        unsubscribe: 0,
-        calendar: 0,
-        reply: 0
-      };
+      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, parcel: 0, unsubscribe: 0, calendar: 0, reply: 0 };
 
       Object.values(decisions).forEach(d => {
         stats.total++;
@@ -860,16 +1082,63 @@
       const parts = [];
       if (stats.archive > 0) parts.push(`${stats.archive} archive`);
       if (stats.delete > 0) parts.push(`${stats.delete} delete`);
-      if (stats.unsubscribe > 0) parts.push(`${stats.unsubscribe} unsubscribe`);
+      if (stats.unsubscribe > 0) parts.push(`${stats.unsubscribe} unsub`);
       if (stats.parcel > 0) parts.push(`${stats.parcel} parcel`);
       if (stats.reminder > 0) parts.push(`${stats.reminder} reminder`);
-      if (stats.calendar > 0) parts.push(`${stats.calendar} calendar`);
-      if (stats.keep > 0) parts.push(`${stats.keep} keep`);
 
-      document.getElementById('stats').textContent = `${stats.total} emails: ${parts.join(', ') || 'none selected'}`;
+      document.getElementById('stats').textContent = parts.join(' \u2022 ') || `${stats.total} emails`;
     }
 
-    // Helper functions
+    function updateProgressBar() {
+      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, parcel: 0, unsubscribe: 0, reply: 0 };
+
+      Object.values(decisions).forEach(d => {
+        stats.total++;
+        if (d.action === 'archive') stats.archive++;
+        else if (d.action === 'delete') stats.delete++;
+        else if (d.action === 'reminder' || d.action === 'calendar') stats.reminder++;
+        else if (d.action === 'keep') stats.keep++;
+        else if (d.action === 'addToParcel') stats.parcel++;
+        else if (d.action === 'unsubscribe') stats.unsubscribe++;
+        else if (d.action === 'reply') stats.reply++;
+      });
+
+      const decided = stats.total - stats.keep;
+      document.getElementById('progress-label').textContent = `${decided} of ${stats.total} decided`;
+
+      // Update progress bar segments
+      const bar = document.getElementById('progress-bar');
+      if (stats.total === 0) {
+        bar.innerHTML = '';
+        return;
+      }
+
+      const segments = [
+        { class: 'segment-archive', width: (stats.archive / stats.total) * 100 },
+        { class: 'segment-delete', width: (stats.delete / stats.total) * 100 },
+        { class: 'segment-unsubscribe', width: (stats.unsubscribe / stats.total) * 100 },
+        { class: 'segment-parcel', width: (stats.parcel / stats.total) * 100 },
+        { class: 'segment-reminder', width: (stats.reminder / stats.total) * 100 },
+        { class: 'segment-reply', width: (stats.reply / stats.total) * 100 },
+        { class: 'segment-keep', width: (stats.keep / stats.total) * 100 }
+      ];
+
+      bar.innerHTML = segments
+        .filter(s => s.width > 0)
+        .map(s => `<div class="progress-segment ${s.class}" style="width: ${s.width}%"></div>`)
+        .join('');
+
+      // Update counts
+      const counts = document.getElementById('progress-counts');
+      const countItems = [];
+      if (stats.archive > 0) countItems.push(`<span class="progress-count"><span class="dot dot-archive"></span>${stats.archive}</span>`);
+      if (stats.delete + stats.unsubscribe > 0) countItems.push(`<span class="progress-count"><span class="dot dot-delete"></span>${stats.delete + stats.unsubscribe}</span>`);
+      if (stats.reminder > 0) countItems.push(`<span class="progress-count"><span class="dot dot-reminder"></span>${stats.reminder}</span>`);
+      if (stats.parcel > 0) countItems.push(`<span class="progress-count"><span class="dot dot-parcel"></span>${stats.parcel}</span>`);
+      if (stats.reply > 0) countItems.push(`<span class="progress-count"><span class="dot dot-reply"></span>${stats.reply}</span>`);
+      counts.innerHTML = countItems.join('');
+    }
+
     function getDefaultAction(categoryKey) {
       const defaults = {
         topOfMind: 'reminder',
@@ -885,19 +1154,6 @@
 
     function needsFolderSelect(action) {
       return action === 'archive';
-    }
-
-    function getBadgeClass(categoryKey) {
-      const classes = {
-        topOfMind: 'badge-red',
-        deliveries: 'badge-blue',
-        newsletters: 'badge-purple',
-        financial: 'badge-green',
-        archiveReady: 'badge-blue',
-        deleteReady: 'badge-red',
-        fyi: 'badge-yellow'
-      };
-      return classes[categoryKey] || 'badge-blue';
     }
 
     function getConfidenceClass(confidence) {
@@ -937,7 +1193,6 @@
       return div.innerHTML;
     }
 
-    // Initialize on load
     document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
