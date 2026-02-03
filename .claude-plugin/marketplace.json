@@ -13,7 +13,7 @@
       "name": "chief-of-staff",
       "source": "./plugins/chief-of-staff",
       "description": "The orchestrator plugin for personal productivity - inbox triage, package tracking, reminder creation, newsletter management, and more",
-      "version": "1.2.1",
+      "version": "1.2.2",
       "keywords": ["email", "inbox", "triage", "packages", "parcel", "reminders", "newsletters", "unsubscribe", "productivity", "orchestrator", "filing", "patterns", "learning"],
       "category": "productivity"
     },

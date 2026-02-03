@@ -349,13 +349,17 @@
       letter-spacing: 0.04em;
       color: var(--text-muted);
       font-weight: 500;
+      height: 1rem;
+      display: flex;
+      align-items: center;
     }
 
     .confidence-badge {
-      font-size: 0.6875rem;
-      padding: 0.125rem 0.375rem;
-      border-radius: 4px;
-      margin-left: 0.5rem;
+      font-size: 0.625rem;
+      padding: 0.0625rem 0.3125rem;
+      border-radius: 3px;
+      margin-left: 0.375rem;
+      line-height: 1;
     }
 
     .confidence-high { background: rgba(63, 185, 80, 0.15); color: var(--accent-green); }
@@ -370,6 +374,7 @@
       border-radius: var(--radius-sm);
       font-size: 0.8125rem;
       min-width: 130px;
+      height: 2.125rem;
       transition: border-color 0.15s ease;
     }
 
@@ -688,22 +693,279 @@
   </div>
 
   <script>
-    // This will be replaced by the generator agent with actual data
+    // Sample data for testing - replace with actual data in production
+    // To use production data, the batch-html-generator agent replaces this entire block
     const TRIAGE_DATA = {
-      generated: "{{GENERATED_DATE}}",
-      sessionId: "{{SESSION_ID}}",
+      generated: "2025-02-03T10:30:00Z",
+      sessionId: "test-session-2025-02-03",
       config: {
-        folders: [],
+        folders: [
+          { id: "folder-financial", name: "Financial" },
+          { id: "folder-orders", name: "Orders" },
+          { id: "folder-travel", name: "Travel" },
+          { id: "folder-receipts", name: "Receipts" },
+          { id: "folder-family", name: "Family" },
+          { id: "folder-work", name: "Work" }
+        ],
         reminderLists: ["Reminders", "Budget & Finances", "Travel", "Family"]
       },
       categories: {
-        topOfMind: { title: "Top of Mind", icon: "\ud83d\udccc", emails: [] },
-        deliveries: { title: "Deliveries", icon: "\ud83d\udce6", emails: [] },
-        newsletters: { title: "Newsletters", icon: "\ud83d\udcf0", emails: [] },
-        financial: { title: "Financial", icon: "\ud83d\udcb0", emails: [] },
-        archiveReady: { title: "Archive Ready", icon: "\ud83d\udcc1", emails: [] },
-        deleteReady: { title: "Delete Candidates", icon: "\ud83d\uddd1\ufe0f", emails: [] },
-        fyi: { title: "FYI", icon: "\u2139\ufe0f", emails: [] }
+        topOfMind: {
+          title: "Top of Mind",
+          icon: "\ud83d\udccc",
+          emails: [
+            {
+              id: "email-tom-1",
+              from: { name: "Dr. Sarah Chen", email: "sarah.chen@medicalcenter.com" },
+              subject: "Follow-up appointment scheduling",
+              preview: "Hi, I wanted to follow up on your recent visit. We should schedule a follow-up appointment in the next 2 weeks to review your test results. Please let me know your availability.",
+              receivedAt: "2025-02-03T09:15:00Z",
+              suggestion: { action: "reply" },
+              classification: { confidence: 0.92, reasons: ["Requires response", "Time-sensitive"] }
+            },
+            {
+              id: "email-tom-2",
+              from: { name: "Jane Miller", email: "jane.miller@company.com" },
+              subject: "Project deadline reminder - Action needed by Friday",
+              preview: "Just a reminder that the Q1 project deliverables are due this Friday. Please confirm you're on track or let me know if you need any support.",
+              receivedAt: "2025-02-02T16:30:00Z",
+              suggestion: { action: "reminder" },
+              classification: { confidence: 0.88, reasons: ["Deadline mentioned", "Action required"] }
+            },
+            {
+              id: "email-tom-3",
+              from: { name: "Mom", email: "mom@family.com" },
+              subject: "Birthday dinner plans?",
+              preview: "Hi sweetie! Dad's birthday is coming up next Saturday. Are you able to make it to dinner? Let me know so I can make reservations. Love you!",
+              receivedAt: "2025-02-02T11:00:00Z",
+              suggestion: { action: "reply" },
+              classification: { confidence: 0.85, reasons: ["Family", "Needs response"] }
+            }
+          ]
+        },
+        deliveries: {
+          title: "Deliveries",
+          icon: "\ud83d\udce6",
+          emails: [
+            {
+              id: "email-del-1",
+              from: { name: "Amazon.com", email: "shipment-tracking@amazon.com" },
+              subject: "Your package has shipped! Arriving Wednesday",
+              preview: "Your order of Sony WH-1000XM5 Headphones has shipped and is on its way. Track your package with the link below.",
+              receivedAt: "2025-02-02T14:20:00Z",
+              suggestion: { action: "addToParcel" },
+              packageInfo: { trackingNumber: "1Z999AA10123456784", carrier: "UPS" },
+              classification: { confidence: 0.95, reasons: ["Shipping notification", "Tracking available"] }
+            },
+            {
+              id: "email-del-2",
+              from: { name: "FedEx", email: "TrackingUpdates@fedex.com" },
+              subject: "FedEx Shipment Delivered",
+              preview: "Your FedEx package was delivered at 2:34 PM. It was left at the front door. Tracking number: 789456123012",
+              receivedAt: "2025-02-01T14:35:00Z",
+              suggestion: { action: "archive", folder: "Orders", folderId: "folder-orders" },
+              packageInfo: { trackingNumber: "789456123012", carrier: "FedEx" },
+              classification: { confidence: 0.90, reasons: ["Already delivered"] }
+            },
+            {
+              id: "email-del-3",
+              from: { name: "B&H Photo", email: "orders@bhphoto.com" },
+              subject: "Your B&H Order Has Shipped",
+              preview: "Great news! Your order containing Canon EF 24-70mm f/2.8L II USM Lens has shipped via UPS Ground.",
+              receivedAt: "2025-02-03T08:00:00Z",
+              suggestion: { action: "addToParcel" },
+              packageInfo: { trackingNumber: "1Z999BB20234567895", carrier: "UPS" },
+              classification: { confidence: 0.94, reasons: ["Shipping confirmation", "High-value item"] }
+            }
+          ]
+        },
+        newsletters: {
+          title: "Newsletters",
+          icon: "\ud83d\udcf0",
+          emails: [
+            {
+              id: "email-news-1",
+              from: { name: "The Morning Brew", email: "crew@morningbrew.com" },
+              subject: "☕ Tech layoffs continue, Fed holds rates steady",
+              preview: "Good morning! Here's what you need to know today: Tech companies announced another round of layoffs, the Fed kept interest rates unchanged, and more.",
+              receivedAt: "2025-02-03T06:00:00Z",
+              suggestion: { action: "delete" },
+              newsletterInfo: { domain: "morningbrew.com", unsubscribeUrl: "https://morningbrew.com/unsubscribe" },
+              classification: { confidence: 0.75, reasons: ["Newsletter", "Daily digest"] }
+            },
+            {
+              id: "email-news-2",
+              from: { name: "Stratechery", email: "ben@stratechery.com" },
+              subject: "The AI Platform Shift",
+              preview: "This week we explore how AI is fundamentally changing the technology platform landscape and what it means for the industry...",
+              receivedAt: "2025-02-02T12:00:00Z",
+              suggestion: { action: "archive" },
+              newsletterInfo: { domain: "stratechery.com", unsubscribeUrl: "https://stratechery.com/unsubscribe" },
+              classification: { confidence: 0.70, reasons: ["Premium newsletter", "Often read"] }
+            },
+            {
+              id: "email-news-3",
+              from: { name: "LinkedIn News", email: "news@linkedin.com" },
+              subject: "Top stories for you this week",
+              preview: "See what's trending in your network: Remote work policies changing, salary transparency laws expanding, and the hottest job markets.",
+              receivedAt: "2025-02-01T09:00:00Z",
+              suggestion: { action: "unsubscribe" },
+              newsletterInfo: { domain: "linkedin.com", unsubscribeUrl: "https://linkedin.com/unsubscribe" },
+              classification: { confidence: 0.88, reasons: ["Bulk sender", "Low engagement"] }
+            },
+            {
+              id: "email-news-4",
+              from: { name: "Product Hunt", email: "hello@producthunt.com" },
+              subject: "🚀 Daily Digest - Top 5 Products",
+              preview: "Check out today's top products: 1. AIWriter Pro - Write better with AI. 2. FinanceTracker - Budget smarter...",
+              receivedAt: "2025-02-02T17:00:00Z",
+              suggestion: { action: "unsubscribe" },
+              newsletterInfo: { domain: "producthunt.com", unsubscribeUrl: "https://producthunt.com/unsubscribe" },
+              classification: { confidence: 0.92, reasons: ["Never opened", "Daily spam"] }
+            }
+          ]
+        },
+        financial: {
+          title: "Financial",
+          icon: "\ud83d\udcb0",
+          emails: [
+            {
+              id: "email-fin-1",
+              from: { name: "Chase", email: "no-reply@chase.com" },
+              subject: "Your statement is ready",
+              preview: "Your January 2025 statement for account ending in 4567 is now available. View your statement online or in the Chase Mobile app.",
+              receivedAt: "2025-02-01T03:00:00Z",
+              suggestion: { action: "archive", folder: "Financial", folderId: "folder-financial" },
+              classification: { confidence: 0.95, reasons: ["Bank statement", "Monthly routine"] }
+            },
+            {
+              id: "email-fin-2",
+              from: { name: "American Express", email: "americanexpress@welcome.aexp.com" },
+              subject: "Payment Received - Thank You",
+              preview: "We received your payment of $2,847.53 for your Platinum Card account. Thank you for your payment.",
+              receivedAt: "2025-02-02T10:00:00Z",
+              suggestion: { action: "archive", folder: "Financial", folderId: "folder-financial" },
+              classification: { confidence: 0.93, reasons: ["Payment confirmation"] }
+            },
+            {
+              id: "email-fin-3",
+              from: { name: "Vanguard", email: "vanguard@notifications.vanguard.com" },
+              subject: "Your account statement is available",
+              preview: "Your Vanguard account statement for January 2025 is now available. Log in to view your investment performance and account details.",
+              receivedAt: "2025-02-01T08:00:00Z",
+              suggestion: { action: "archive", folder: "Financial", folderId: "folder-financial" },
+              classification: { confidence: 0.91, reasons: ["Investment statement"] }
+            }
+          ]
+        },
+        archiveReady: {
+          title: "Archive Ready",
+          icon: "\ud83d\udcc1",
+          emails: [
+            {
+              id: "email-arch-1",
+              from: { name: "Google", email: "noreply@google.com" },
+              subject: "Security alert: New sign-in on MacBook Pro",
+              preview: "We noticed a new sign-in to your Google Account on a MacBook Pro device. If this was you, you don't need to do anything.",
+              receivedAt: "2025-02-02T20:15:00Z",
+              suggestion: { action: "archive" },
+              classification: { confidence: 0.89, reasons: ["Security notification", "Expected sign-in"] }
+            },
+            {
+              id: "email-arch-2",
+              from: { name: "GitHub", email: "noreply@github.com" },
+              subject: "[Agent-Plugins] Pull request merged: feat/batch-triage",
+              preview: "omarshahine merged pull request #10 into main. View the pull request on GitHub.",
+              receivedAt: "2025-02-02T18:30:00Z",
+              suggestion: { action: "archive" },
+              classification: { confidence: 0.87, reasons: ["Automated notification", "Already acted on"] }
+            },
+            {
+              id: "email-arch-3",
+              from: { name: "Zoom", email: "noreply@zoom.us" },
+              subject: "Cloud Recording Available: Team Sync Meeting",
+              preview: "Your cloud recording for 'Team Sync Meeting' is now available. Click here to view, share, or download the recording.",
+              receivedAt: "2025-02-01T16:00:00Z",
+              suggestion: { action: "archive" },
+              classification: { confidence: 0.82, reasons: ["Meeting recording", "FYI only"] }
+            }
+          ]
+        },
+        deleteReady: {
+          title: "Delete Candidates",
+          icon: "\ud83d\uddd1\ufe0f",
+          emails: [
+            {
+              id: "email-del-ready-1",
+              from: { name: "Uber", email: "uber@uber.com" },
+              subject: "Your Wednesday evening trip receipt",
+              preview: "Thanks for riding with Uber. Trip from Home to Downtown. Total: $18.45. Rate your driver to help improve the experience.",
+              receivedAt: "2025-01-30T22:00:00Z",
+              suggestion: { action: "delete" },
+              classification: { confidence: 0.94, reasons: ["Old receipt", "No action needed"] }
+            },
+            {
+              id: "email-del-ready-2",
+              from: { name: "DoorDash", email: "noreply@doordash.com" },
+              subject: "Your order from Chipotle is on the way!",
+              preview: "Your Dasher is on the way with your order. Estimated arrival: 6:45 PM. Track your order in the app.",
+              receivedAt: "2025-01-28T18:30:00Z",
+              suggestion: { action: "delete" },
+              classification: { confidence: 0.96, reasons: ["Expired delivery", "Old notification"] }
+            },
+            {
+              id: "email-del-ready-3",
+              from: { name: "Spotify", email: "no-reply@spotify.com" },
+              subject: "Your Discover Weekly is ready",
+              preview: "We made you a new playlist! 30 songs based on your recent listening. Listen now before it updates next Monday.",
+              receivedAt: "2025-01-27T05:00:00Z",
+              suggestion: { action: "delete" },
+              classification: { confidence: 0.91, reasons: ["Expired content", "Weekly refresh"] }
+            }
+          ]
+        },
+        fyi: {
+          title: "FYI",
+          icon: "\u2139\ufe0f",
+          emails: [
+            {
+              id: "email-fyi-1",
+              from: { name: "Apple", email: "noreply@apple.com" },
+              subject: "Your App Store receipt",
+              preview: "Thank you for your purchase. Subscription renewal: iCloud+ 200GB - $2.99/month. Your next billing date is March 3, 2025.",
+              receivedAt: "2025-02-03T04:00:00Z",
+              suggestion: { action: "archive", folder: "Receipts", folderId: "folder-receipts" },
+              classification: { confidence: 0.86, reasons: ["Recurring charge", "Expected"] }
+            },
+            {
+              id: "email-fyi-2",
+              from: { name: "Costco", email: "costco@online.costco.com" },
+              subject: "New warehouse coupons available",
+              preview: "Check out this month's savings! Valid February 1-28. Members save on electronics, groceries, and more.",
+              receivedAt: "2025-02-01T07:00:00Z",
+              suggestion: { action: "archive" },
+              classification: { confidence: 0.78, reasons: ["Promotional", "May be useful"] }
+            },
+            {
+              id: "email-fyi-3",
+              from: { name: "Southwest Airlines", email: "SouthwestAirlines@luv.southwest.com" },
+              subject: "Upcoming trip reminder: Seattle to Los Angeles",
+              preview: "Your trip is coming up! Flight 1234 departs Seattle (SEA) on Feb 15 at 8:30 AM. Check in starting 24 hours before departure.",
+              receivedAt: "2025-02-02T08:00:00Z",
+              suggestion: { action: "archive", folder: "Travel", folderId: "folder-travel" },
+              classification: { confidence: 0.84, reasons: ["Trip reminder", "Save for reference"] }
+            },
+            {
+              id: "email-fyi-4",
+              from: { name: "Tesla", email: "noreply@tesla.com" },
+              subject: "Supercharging session complete",
+              preview: "Your Model Y finished charging at Seattle Supercharger. Charged 45 kWh for $12.60. Battery at 90%.",
+              receivedAt: "2025-02-01T15:30:00Z",
+              suggestion: { action: "archive" },
+              classification: { confidence: 0.80, reasons: ["Charging receipt", "FYI only"] }
+            }
+          ]
+        }
       }
     };
 
