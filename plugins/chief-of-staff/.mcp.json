@@ -9,11 +9,7 @@
       "args": ["-y", "@playwright/mcp", "--headless", "--browser", "chrome"]
     },
     "parcel": {
-      "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp-server/parcel/dist/server.js"],
-      "env": {
-        "PARCEL_API_KEY": "${PARCEL_API_KEY}"
-      }
+      "command": "${CLAUDE_PLUGIN_ROOT}/scripts/parcel-server.sh"
     }
   }
 }
