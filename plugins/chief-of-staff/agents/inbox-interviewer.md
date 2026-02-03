@@ -438,9 +438,42 @@ groups = {
 }
 ```
 
-### Execute Bulk Operations
+### Execute Operations (ORDER MATTERS)
 
-**Archive (bulk per folder)**:
+**CRITICAL: Execute in this order to ensure emails are accessible when needed.**
+
+#### Step 1: Unsubscribes FIRST (before any deletes)
+```
+If groups.unsubscribe not empty:
+  Use Task tool:
+    subagent_type: "chief-of-staff:newsletter-unsubscriber"
+    prompt: "UNSUBSCRIBE batch: [JSON array with emailIds and sender info]"
+
+Output: "Unsubscribing from 3 newsletters... ✓"
+```
+**WHY FIRST:** Unsubscriber needs to fetch email content to find unsubscribe links. If emails are deleted first, the links are lost.
+
+#### Step 2: Parcel tracking
+```
+If groups.parcel not empty:
+  Use Task tool:
+    subagent_type: "chief-of-staff:inbox-to-parcel"
+    prompt: "Process packages in batch mode: [JSON array]"
+
+Output: "Adding 2 packages to Parcel... ✓"
+```
+
+#### Step 3: Reminders
+```
+If groups.reminder not empty:
+  Use Task tool:
+    subagent_type: "chief-of-staff:inbox-to-reminder"
+    prompt: "Create reminders batch: [JSON array]"
+
+Output: "Creating 2 reminders... ✓"
+```
+
+#### Step 4: Archives (bulk per folder)
 ```
 For each folderId in groups.archive:
   Call mcp__fastmail__bulk_move({
@@ -451,16 +484,7 @@ For each folderId in groups.archive:
 Output: "Archiving 6 emails... ✓"
 ```
 
-**Delete (single bulk call)**:
-```
-Call mcp__fastmail__bulk_delete({
-  emailIds: groups.delete
-})
-
-Output: "Deleting 3 emails... ✓"
-```
-
-**Keep/Flag (bulk flag if any)**:
+#### Step 5: Flags
 ```
 If groups.flag not empty:
   For each emailId in groups.flag:
@@ -469,34 +493,15 @@ If groups.flag not empty:
 Output: "Keeping 1 email (flagged)... ✓"
 ```
 
-### Delegate to Sub-agents
-
-**Parcel** (if batch not empty):
+#### Step 6: Deletes LAST
 ```
-Use Task tool:
-  subagent_type: "chief-of-staff:inbox-to-parcel"
-  prompt: "Process packages in batch mode: [JSON array]"
+Call mcp__fastmail__bulk_delete({
+  emailIds: groups.delete  // Includes unsubscribed emails
+})
 
-Output: "Adding 2 packages to Parcel... ✓"
+Output: "Deleting 5 emails... ✓"
 ```
-
-**Newsletter** (if batch not empty):
-```
-Use Task tool:
-  subagent_type: "chief-of-staff:newsletter-unsubscriber"
-  prompt: "UNSUBSCRIBE batch: [JSON array]"
-
-Output: "Unsubscribing from 1 newsletter... ✓"
-```
-
-**Reminder** (if batch not empty):
-```
-Use Task tool:
-  subagent_type: "chief-of-staff:inbox-to-reminder"
-  prompt: "Create reminders batch: [JSON array]"
-
-Output: "Creating 2 reminders... ✓"
-```
+**WHY LAST:** Ensures all operations that need email content complete first.
 
 ### Execute Individual Operations
 

@@ -97,12 +97,18 @@ Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The tr
 3. For each email, use `AskUserQuestion` to present options:
    - Include email summary in the question text
    - Provide 4 options: Archive, Delete, Keep, Reminder (or contextual alternatives)
+   - For newsletters with unsubscribe: offer "Unsubscribe + Delete" option
 4. Collect all decisions in memory
-5. Execute bulk operations:
-   - `bulk_move` for archives (grouped by folder)
-   - `bulk_delete` for deletions
-   - Create reminders via `mcp__apple-pim__reminder_create`
+5. Execute operations in this order:
+   a. **Unsubscribes FIRST** - Delegate to `chief-of-staff:newsletter-unsubscriber` sub-agent
+      (must happen before delete so emails are still accessible)
+   b. **Parcel tracking** - Delegate to `chief-of-staff:inbox-to-parcel` sub-agent
+   c. **Reminders** - Create via `mcp__apple-pim__reminder_create`
+   d. **Archives** - `bulk_move` grouped by folder
+   e. **Deletes** - `bulk_delete` for all deletions (including unsubscribed emails)
 6. Report summary
+
+**IMPORTANT: Unsubscribes must run BEFORE deletes.** The unsubscriber needs to fetch email content to find unsubscribe links. If emails are deleted first, the links are lost.
 
 **Question format:**
 ```
