@@ -1,5 +1,9 @@
 {
   "mcpServers": {
+    "fastmail": {
+      "type": "http",
+      "url": "${FASTMAIL_MCP_URL}"
+    },
     "playwright": {
       "command": "npx",
       "args": ["-y", "@playwright/mcp", "--headless", "--browser", "chrome"]
