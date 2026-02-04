@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Parcel MCP Server
  *
