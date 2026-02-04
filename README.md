@@ -184,8 +184,62 @@ Creates Apple Reminders from emails requiring action.
 
 ### Requirements
 
-- Email MCP server (Fastmail, Gmail, or Outlook)
+- Email MCP server (Fastmail, Gmail, or Outlook) - see setup below
 - Existing folder structure to learn from
+
+### Email MCP Setup (Required)
+
+**Chief-of-Staff does NOT bundle an email MCP server.** You must configure your email provider separately.
+
+#### Fastmail (Recommended)
+
+Deploy your own Fastmail MCP server using Cloudflare Workers:
+
+**Repository:** [omarshahine/fastmail-mcp-remote](https://github.com/omarshahine/fastmail-mcp-remote)
+
+```bash
+# After deploying, add to Claude Code:
+claude mcp add --transport http fastmail https://your-worker.workers.dev/mcp
+```
+
+#### Gmail
+
+Several community MCP servers are available:
+
+| Server | Description |
+|--------|-------------|
+| [GongRzhe/Gmail-MCP-Server](https://github.com/GongRzhe/Gmail-MCP-Server) | Auto-authentication support, Claude Desktop optimized |
+| [jeremyjordan/mcp-gmail](https://github.com/jeremyjordan/mcp-gmail) | Python SDK based, OAuth 2.0 |
+
+```bash
+# Example using GongRzhe's server:
+claude mcp add gmail -- npx -y @anthropic/gmail-mcp
+```
+
+#### Outlook / Microsoft 365
+
+| Server | Description |
+|--------|-------------|
+| [Microsoft MCP Server for Enterprise](https://learn.microsoft.com/en-us/graph/mcp-server/overview) | Official Microsoft server (preview) |
+| [Softeria/ms-365-mcp-server](https://github.com/Softeria/ms-365-mcp-server) | Full M365 integration via Graph API |
+| [ryaker/outlook-mcp](https://github.com/ryaker/outlook-mcp) | Outlook-focused, requires Azure app registration |
+
+```bash
+# Example using Softeria's server:
+claude mcp add outlook -- npx -y ms-365-mcp-server
+```
+
+#### Verification
+
+After adding your email MCP, verify it's working:
+
+```bash
+# Check MCP status
+/mcp
+
+# Run setup to configure Chief-of-Staff
+/chief-of-staff:setup
+```
 
 ### Provider-Agnostic Architecture
 
