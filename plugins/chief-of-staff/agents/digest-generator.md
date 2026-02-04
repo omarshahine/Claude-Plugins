@@ -6,8 +6,6 @@ description: |
   user: "Summarize my automated emails"
   assistant: "I'll create a categorized summary of your automated emails."
   </example>
-mcp:
-  - fastmail
 model: opus
 tools:
   - Glob
