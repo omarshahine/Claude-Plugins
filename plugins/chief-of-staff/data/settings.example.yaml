@@ -8,10 +8,12 @@ persona:
   greeting_style: friendly # professional, friendly, casual
 
 # Email provider configuration
+# Set 'active' to your email provider, then configure its tool mappings below
 providers:
   email:
-    active: fastmail  # Currently only fastmail is supported
+    active: fastmail  # Options: fastmail, gmail, outlook, or your custom provider
     mappings:
+      # Fastmail MCP (https://github.com/nicholasgriffintn/fastmail-mcp)
       fastmail:
         list_mailboxes: mcp__fastmail__list_mailboxes
         list_emails: mcp__fastmail__list_emails
@@ -27,6 +29,42 @@ providers:
         send_email: mcp__fastmail__send_email
         reply_to_email: mcp__fastmail__reply_to_email
         get_thread: mcp__fastmail__get_thread
+
+      # Gmail MCP (placeholder - update tool names when MCP is available)
+      # Add your Gmail MCP server: claude mcp add --transport http gmail <url>
+      gmail:
+        list_mailboxes: mcp__gmail__list_labels        # Gmail uses "labels" not "mailboxes"
+        list_emails: mcp__gmail__list_messages         # Gmail uses "messages" not "emails"
+        get_email: mcp__gmail__get_message
+        search_emails: mcp__gmail__search_messages
+        advanced_search: mcp__gmail__search_messages   # Gmail search is already advanced
+        move_email: mcp__gmail__modify_labels          # Gmail moves via label changes
+        bulk_move: mcp__gmail__batch_modify_labels
+        bulk_delete: mcp__gmail__batch_trash
+        delete_email: mcp__gmail__trash_message
+        flag_email: mcp__gmail__star_message           # Gmail uses "star" not "flag"
+        bulk_flag: mcp__gmail__batch_star
+        send_email: mcp__gmail__send_message
+        reply_to_email: mcp__gmail__send_reply
+        get_thread: mcp__gmail__get_thread
+
+      # Outlook/Microsoft Graph MCP (placeholder - update when MCP is available)
+      # Add your Outlook MCP server: claude mcp add --transport http outlook <url>
+      outlook:
+        list_mailboxes: mcp__outlook__list_folders     # Outlook uses "folders"
+        list_emails: mcp__outlook__list_messages
+        get_email: mcp__outlook__get_message
+        search_emails: mcp__outlook__search_messages
+        advanced_search: mcp__outlook__search_messages
+        move_email: mcp__outlook__move_message
+        bulk_move: mcp__outlook__batch_move
+        bulk_delete: mcp__outlook__batch_delete
+        delete_email: mcp__outlook__delete_message
+        flag_email: mcp__outlook__flag_message
+        bulk_flag: mcp__outlook__batch_flag
+        send_email: mcp__outlook__send_mail
+        reply_to_email: mcp__outlook__reply
+        get_thread: mcp__outlook__get_conversation
 
   # Reminders provider (for inbox-to-reminder)
   reminders:

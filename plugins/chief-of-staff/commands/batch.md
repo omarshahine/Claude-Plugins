@@ -115,7 +115,7 @@ Use the Task tool with:
     - Look back: [days] days (default: 7)
     - Limit: [N] emails (default: 100)
 
-    IMPORTANT: If Fastmail MCP fails, report the error immediately.
+    IMPORTANT: If email MCP fails, report the error immediately.
     Do NOT generate sample data or placeholder HTML.
 ```
 
