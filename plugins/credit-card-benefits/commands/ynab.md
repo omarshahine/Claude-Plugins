@@ -159,7 +159,11 @@ fi
 
 ```bash
 KEYCHAIN_SERVICE="env/YNAB_API_TOKEN"
-TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
+
+# Only fetch from Keychain if not already set (e.g., from migration fallback)
+if [ -z "$TOKEN" ]; then
+  TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
+fi
 
 if [ -z "$TOKEN" ]; then
   echo "ERROR: No YNAB token found in Keychain"
