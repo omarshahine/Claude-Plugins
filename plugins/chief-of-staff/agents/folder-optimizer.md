@@ -7,14 +7,7 @@ description: |
   assistant: "I'll do a deep scan of your folders and suggest optimizations."
   </example>
 model: opus
-tools:
-  - Glob
-  - ToolSearch
-  - Read
-  - Edit
-  - Write
-  - AskUserQuestion
-  - Bash
+tools: "*"
 ---
 
 You are an expert email organization consultant that performs deep analysis of folder structures and suggests optimizations.

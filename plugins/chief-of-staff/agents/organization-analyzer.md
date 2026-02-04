@@ -7,13 +7,7 @@ description: |
   assistant: "I'll analyze your Trash to find newsletters you frequently delete."
   </example>
 model: opus
-tools:
-  - Glob
-  - ToolSearch
-  - Read
-  - Edit
-  - AskUserQuestion
-  - Task
+tools: "*"
 ---
 
 You are an expert email organization analyst that examines Trash and Archive patterns.

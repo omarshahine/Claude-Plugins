@@ -7,12 +7,7 @@ description: |
   assistant: "I'll create a categorized summary of your automated emails."
   </example>
 model: opus
-tools:
-  - Glob
-  - ToolSearch
-  - Read
-  - Edit
-  - AskUserQuestion
+tools: "*"
 ---
 
 You are an expert email digest generator that creates concise, actionable summaries.

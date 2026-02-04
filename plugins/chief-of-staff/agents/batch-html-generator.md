@@ -16,18 +16,39 @@ description: |
   </example>
 model: sonnet
 color: blue
-tools:
-  - Glob
-  - Read
-  - Write
-  - Bash
+tools: "*"
 ---
 
 # Batch HTML Generator
 
-**You receive email data and folders in the prompt. Do NOT fetch emails yourself.**
+Generate an HTML batch triage interface for visual inbox processing.
 
-## Step 1: Find Template (REQUIRED)
+## Step 1: Discover Email Tools
+
+Use ToolSearch to find and load Fastmail MCP tools:
+```
+ToolSearch query: "+fastmail mailbox"
+```
+
+If no email tools found, STOP and display:
+```
+⚠️ No email provider configured!
+
+Chief-of-Staff requires the Fastmail MCP server. Configure it via:
+- CLI: `claude mcp add --transport http fastmail <your-mcp-url>`
+
+After configuring, restart Claude Code and run this command again.
+```
+
+## Step 2: Fetch Mailboxes and Emails
+
+1. Call `mcp__fastmail__list_mailboxes` to get folder structure
+2. Find the Inbox mailbox (role: "inbox" or name: "Inbox")
+3. Call `mcp__fastmail__list_emails` with:
+   - mailboxId: inbox ID
+   - limit: from prompt parameters (default: 100)
+
+## Step 3: Find Template (REQUIRED)
 
 ```
 Glob: "**/chief-of-staff/**/batch-triage.html"
@@ -36,13 +57,13 @@ Paths: ~/.claude/plugins/cache/ then ~/GitHub/
 
 **If not found → STOP. Report error. Never generate HTML from scratch.**
 
-## Step 2: Read Template
+## Step 4: Read Template
 
 Read the entire file. Find `const TRIAGE_DATA = {` (~line 698).
 
-## Step 3: Classify Emails
+## Step 5: Classify Emails
 
-Use the email data provided in the prompt. Classify each into ONE category (first match wins):
+Classify each email from step 2 into ONE category (first match wins):
 
 | Category | Signals | Default Action |
 |----------|---------|----------------|
@@ -54,7 +75,7 @@ Use the email data provided in the prompt. Classify each into ONE category (firs
 | deleteReady | Promotional, spam-like, old tutorials | delete |
 | fyi | Everything else | archive |
 
-## Step 4: Build TRIAGE_DATA
+## Step 6: Build TRIAGE_DATA
 
 ```javascript
 const TRIAGE_DATA = {
@@ -75,14 +96,16 @@ const TRIAGE_DATA = {
 
 Email structure: `{ id, from: {name, email}, subject, preview, receivedAt, suggestion: {action, folder?, folderId?}, classification: {confidence, reasons} }`
 
-## Step 5: Replace & Save
+Use the folders from step 2 for the config.folders array.
+
+## Step 7: Replace & Save
 
 1. Find `const TRIAGE_DATA = {` in template (line 698)
 2. Replace through line 970 (`};`) with your generated data
 3. Write to scratchpad: `inbox-batch-triage.html`
 4. Open: `open <scratchpad>/inbox-batch-triage.html`
 
-## Step 6: Report
+## Step 8: Report
 
 ```
 Generated batch triage interface.
@@ -103,5 +126,6 @@ Then run: /chief-of-staff:batch --process
 
 | Error | Action |
 |-------|--------|
+| No email MCP tools | STOP. Report configuration instructions. |
 | Template not found | STOP. Report paths searched. |
-| No emails in input | Report "No emails provided". |
+| No emails in inbox | Report "No emails found in the last N days". |
