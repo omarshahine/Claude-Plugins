@@ -77,9 +77,14 @@ if [ -z "$TOKEN" ] && [ -f "$LEGACY_TOKEN_FILE" ]; then
   security add-generic-password -s "$KEYCHAIN_SERVICE" -a "$USER" -w "$LEGACY_TOKEN" 2>/dev/null || \
     security delete-generic-password -s "$KEYCHAIN_SERVICE" 2>/dev/null && \
     security add-generic-password -s "$KEYCHAIN_SERVICE" -a "$USER" -w "$LEGACY_TOKEN"
-  rm "$LEGACY_TOKEN_FILE"
-  echo "✓ Token migrated to Keychain, legacy file removed"
-  TOKEN="$LEGACY_TOKEN"
+  # Verify token was successfully stored before deleting legacy file
+  if security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null >/dev/null; then
+    rm "$LEGACY_TOKEN_FILE"
+    echo "✓ Token migrated to Keychain, legacy file removed"
+    TOKEN="$LEGACY_TOKEN"
+  else
+    echo "⚠ Failed to migrate token to Keychain - legacy file preserved"
+  fi
 fi
 ```
 
