@@ -162,6 +162,15 @@ KEYCHAIN_SERVICE="env/YNAB_API_TOKEN"
 TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
 
 if [ -z "$TOKEN" ]; then
+  # Fallback to legacy token file if migration failed
+  LEGACY_TOKEN_FILE="$HOME/.config/credit-card-benefits/ynab-token"
+  if [ -f "$LEGACY_TOKEN_FILE" ]; then
+    TOKEN=$(cat "$LEGACY_TOKEN_FILE")
+    echo "Using legacy token file (migration to Keychain pending)"
+  fi
+fi
+
+if [ -z "$TOKEN" ]; then
   echo "ERROR: No YNAB token found in Keychain"
   echo "Run setup again to add your token"
   exit 1
