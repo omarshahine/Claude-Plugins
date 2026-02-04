@@ -39,6 +39,10 @@ venv/
 # Claude Code
 .claude/cache/
 
+# MCP config files may contain sensitive URLs - servers are defined inline in plugin.json
+.mcp.json
+plugins/*/.mcp.json
+
 # Plugin data folders contain user-specific files (symlinked to private repo)
 # But we want to track .example.yaml templates and .gitignore
 /plugins/*/data/*

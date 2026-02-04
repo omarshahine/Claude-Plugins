@@ -13,6 +13,8 @@ description: |
   <example>
   user: "I want to triage my inbox visually"
   assistant: "Let me use the batch-html-generator agent to generate the HTML batch triage page."
+mcp:
+  - fastmail
   </example>
 model: sonnet
 color: blue
