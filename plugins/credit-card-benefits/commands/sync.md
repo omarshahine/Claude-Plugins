@@ -121,9 +121,32 @@ If using direct API:
 KEYCHAIN_SERVICE="env/YNAB_API_TOKEN"
 TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
 
+# Migration: Check for legacy file-based token and migrate to Keychain
+LEGACY_TOKEN_FILE="$HOME/.config/credit-card-benefits/ynab-token"
+if [ -z "$TOKEN" ] && [ -f "$LEGACY_TOKEN_FILE" ]; then
+  echo "Found legacy token file - migrating to Keychain..."
+  LEGACY_TOKEN=$(cat "$LEGACY_TOKEN_FILE")
+
+  # Try to add to keychain (delete first if exists, then add)
+  security delete-generic-password -s "$KEYCHAIN_SERVICE" 2>/dev/null
+  security add-generic-password -s "$KEYCHAIN_SERVICE" -a "$USER" -w "$LEGACY_TOKEN"
+
+  # Verify migration succeeded before deleting legacy file
+  VERIFY_TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
+  if [ "$VERIFY_TOKEN" = "$LEGACY_TOKEN" ]; then
+    rm "$LEGACY_TOKEN_FILE"
+    echo "✓ Token migrated to Keychain, legacy file removed"
+    TOKEN="$LEGACY_TOKEN"
+  else
+    echo "ERROR: Failed to migrate token to Keychain. Legacy file preserved."
+    echo "You may need to unlock your keychain or check permissions."
+    TOKEN="$LEGACY_TOKEN"  # Use the legacy token for this session
+  fi
+fi
+
 if [ -z "$TOKEN" ]; then
   echo "ERROR: No YNAB token found in Keychain"
-  echo "Run /credit-card-benefits:configure to set up YNAB"
+  echo "Run /credit-card-benefits:ynab setup to set up YNAB"
   exit 1
 fi
 
@@ -178,6 +201,29 @@ Search for transactions matching ANY of these patterns:
 # Search each mapped account for annual fee transactions
 KEYCHAIN_SERVICE="env/YNAB_API_TOKEN"
 TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
+
+# Migration: Check for legacy file-based token and migrate to Keychain
+LEGACY_TOKEN_FILE="$HOME/.config/credit-card-benefits/ynab-token"
+if [ -z "$TOKEN" ] && [ -f "$LEGACY_TOKEN_FILE" ]; then
+  echo "Found legacy token file - migrating to Keychain..."
+  LEGACY_TOKEN=$(cat "$LEGACY_TOKEN_FILE")
+
+  # Try to add to keychain (delete first if exists, then add)
+  security delete-generic-password -s "$KEYCHAIN_SERVICE" 2>/dev/null
+  security add-generic-password -s "$KEYCHAIN_SERVICE" -a "$USER" -w "$LEGACY_TOKEN"
+
+  # Verify migration succeeded before deleting legacy file
+  VERIFY_TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
+  if [ "$VERIFY_TOKEN" = "$LEGACY_TOKEN" ]; then
+    rm "$LEGACY_TOKEN_FILE"
+    echo "✓ Token migrated to Keychain, legacy file removed"
+    TOKEN="$LEGACY_TOKEN"
+  else
+    echo "ERROR: Failed to migrate token to Keychain. Legacy file preserved."
+    echo "You may need to unlock your keychain or check permissions."
+    TOKEN="$LEGACY_TOKEN"  # Use the legacy token for this session
+  fi
+fi
 
 if [ -z "$TOKEN" ]; then
   echo "ERROR: No YNAB token found in Keychain"
