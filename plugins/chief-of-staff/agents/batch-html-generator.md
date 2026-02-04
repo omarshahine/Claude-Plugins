@@ -23,28 +23,51 @@ tools: "*"
 
 Generate an HTML batch triage interface for visual inbox processing.
 
-## Step 1: Discover Email Tools
+## Step 1: Initialize Email Provider
 
-Use ToolSearch to find and load Fastmail MCP tools:
+### 1a. Find Plugin Data Directory
 ```
-ToolSearch query: "+fastmail mailbox"
+Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml
 ```
+Extract the data directory path from the result.
 
-If no email tools found, STOP and display:
+### 1b. Read Settings and Get Tool Mappings
+Read `settings.yaml` and extract:
+- `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail", "gmail", "outlook")
+- `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
+
+### 1c. Load Email Tools via ToolSearch
+```
+ToolSearch query: "+{EMAIL_PROVIDER}"
+```
+Example: If provider is "fastmail", search for `+fastmail`.
+
+### 1d. Verify Tools Available
+If ToolSearch finds no email tools, STOP and display:
 ```
 ⚠️ No email provider configured!
 
-Chief-of-Staff requires the Fastmail MCP server. Configure it via:
-- CLI: `claude mcp add --transport http fastmail <your-mcp-url>`
+Chief-of-Staff requires an email MCP server. Configure one:
 
+1. Add your email MCP server:
+   claude mcp add --transport http <provider-name> <your-mcp-url>
+
+2. Update settings.yaml:
+   providers:
+     email:
+       active: <provider-name>
+
+Supported providers: fastmail, gmail, outlook
 After configuring, restart Claude Code and run this command again.
 ```
 
 ## Step 2: Fetch Mailboxes and Emails
 
-1. Call `mcp__fastmail__list_mailboxes` to get folder structure
+Using the tool names from `EMAIL_TOOLS` mappings:
+
+1. Call `EMAIL_TOOLS.list_mailboxes` to get folder structure
 2. Find the Inbox mailbox (role: "inbox" or name: "Inbox")
-3. Call `mcp__fastmail__list_emails` with:
+3. Call `EMAIL_TOOLS.list_emails` with:
    - mailboxId: inbox ID
    - limit: from prompt parameters (default: 100)
 

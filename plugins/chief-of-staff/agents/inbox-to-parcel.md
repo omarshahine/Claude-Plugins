@@ -52,31 +52,36 @@ Archived to Orders: Z emails
 
 **Do NOT ask the user any questions in batch mode - just process and report.**
 
-## Email Provider Requirement (Tool Discovery)
+## Email Provider Initialization
 
-**This agent requires an email MCP server.** The email provider is NOT bundled with this plugin.
+**This agent requires an email MCP server.** The provider is configured in settings.yaml.
 
-### Discovery Workflow
+### Step 1: Find Plugin Data Directory
+```
+Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml
+```
 
-Before processing emails:
+### Step 2: Read Settings and Get Tool Mappings
+Read `settings.yaml` and extract:
+- `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail", "gmail", "outlook")
+- `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
 
-1. **Search for email tools** using ToolSearch:
-   ```
-   ToolSearch query: "+fastmail" OR "+gmail" OR "+outlook"
-   ```
+### Step 3: Load Email Tools via ToolSearch
+```
+ToolSearch query: "+{EMAIL_PROVIDER}"
+```
 
-2. **If NO email tools found**, STOP and display:
-   ```
-   ⚠️ No email provider configured!
+### Step 4: Handle Missing Provider
+If ToolSearch finds no email tools, STOP and display:
+```
+⚠️ No email provider configured!
 
-   Chief-of-Staff requires an email MCP server. Add your email provider:
-   - Cowork: Add as custom connector (name: "fastmail", URL: your MCP URL)
-   - CLI: `claude mcp add --transport http fastmail <your-mcp-url>`
+Chief-of-Staff requires an email MCP server. Configure one:
+1. Add your email MCP: claude mcp add --transport http <provider> <url>
+2. Update settings.yaml: providers.email.active: <provider>
 
-   After configuring, run this command again.
-   ```
-
-3. **Determine tool prefix** from discovered tools and use for all email operations.
+Supported providers: fastmail, gmail, outlook
+```
 
 ## Data Files Location
 

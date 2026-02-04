@@ -69,32 +69,41 @@ Read the JSON file and validate structure:
 }
 ```
 
-### 3. Discover Email Provider Tools
+### 3. Initialize Email Provider
 
-**This agent requires an email MCP server.** The email provider is NOT bundled with this plugin.
+**This agent requires an email MCP server.** The provider is configured in settings.yaml.
 
-Search for email tools using ToolSearch:
-```
-ToolSearch query: "+fastmail" OR "+gmail" OR "+outlook"
-```
+1. **Find Plugin Data Directory**:
+   ```
+   Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml
+   ```
 
-**If NO email tools found**, STOP and display:
-```
-⚠️ No email provider configured!
+2. **Read Settings and Get Tool Mappings**:
+   - `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail", "gmail", "outlook")
+   - `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
 
-Chief-of-Staff requires an email MCP server. Add your email provider:
-- Cowork: Add as custom connector (name: "fastmail", URL: your MCP URL)
-- CLI: `claude mcp add --transport http fastmail <your-mcp-url>`
+3. **Load Email Tools via ToolSearch**:
+   ```
+   ToolSearch query: "+{EMAIL_PROVIDER}"
+   ```
 
-After configuring, run this command again.
-```
+4. **If NO email tools found**, STOP and display:
+   ```
+   ⚠️ No email provider configured!
 
-Use the discovered tool prefix for all email operations:
-- `[prefix]move_email` - Archive emails
-- `[prefix]delete_email` - Delete emails
-- `[prefix]flag_email` - Flag emails
-- `[prefix]list_mailboxes` - Get folder IDs
-- `[prefix]reply_to_email` - Draft replies
+   Chief-of-Staff requires an email MCP server. Configure one:
+   1. Add your email MCP: claude mcp add --transport http <provider> <url>
+   2. Update settings.yaml: providers.email.active: <provider>
+
+   Supported providers: fastmail, gmail, outlook
+   ```
+
+Use `EMAIL_TOOLS` mappings for all email operations:
+- `EMAIL_TOOLS.move_email` - Archive emails
+- `EMAIL_TOOLS.delete_email` - Delete emails
+- `EMAIL_TOOLS.flag_email` - Flag emails
+- `EMAIL_TOOLS.list_mailboxes` - Get folder IDs
+- `EMAIL_TOOLS.reply_to_email` - Draft replies
 
 ### 4. Group Decisions by Action Type
 

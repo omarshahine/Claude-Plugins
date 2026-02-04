@@ -58,60 +58,54 @@ The AskUserQuestion tool creates interactive buttons/chips for the user. Plain t
 5. **Bulk Execution**: Execute all actions at once after collection
 6. **Learning**: Record decisions to improve future suggestions
 
-## Email Provider Requirement (Tool Discovery)
+## Email Provider Initialization
 
-**This agent requires an email MCP server to function.** The email provider is NOT bundled with this plugin - users must configure it separately.
+**This agent requires an email MCP server.** The provider is configured in settings.yaml.
 
-### Discovery Workflow
+### Step 1: Find Plugin Data Directory
+```
+Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml
+```
 
-Before processing emails, you MUST discover available email tools:
+### Step 2: Read Settings and Get Tool Mappings
+Read `settings.yaml` and extract:
+- `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail", "gmail", "outlook")
+- `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
 
-1. **Search for email tools** using ToolSearch:
-   ```
-   ToolSearch query: "+fastmail list" OR "+gmail list" OR "+outlook list" OR "list_emails"
-   ```
+### Step 3: Load Email Tools via ToolSearch
+```
+ToolSearch query: "+{EMAIL_PROVIDER}"
+```
 
-2. **Check results:**
-   - If tools found (e.g., `mcp__fastmail__*`, `mcp__gmail__*`, `mcp__outlook__*`): proceed
-   - If NO email tools found: **STOP** and display this message:
+### Step 4: Handle Missing Provider
+If ToolSearch finds no email tools, **STOP** and display:
+```
+⚠️ No email provider configured!
 
-   ```
-   ⚠️ No email provider configured!
+Chief-of-Staff requires an email MCP server. Configure one:
 
-   Chief-of-Staff requires an email MCP server to access your inbox.
+1. Add your email MCP server:
+   claude mcp add --transport http <provider-name> <your-mcp-url>
 
-   **Setup Options:**
+2. Update settings.yaml:
+   providers:
+     email:
+       active: <provider-name>
 
-   1. **Cowork users**: Add your email MCP as a custom connector
-      - Name: "fastmail" (or gmail, outlook)
-      - URL: Your personal MCP server URL
-
-   2. **CLI users**: Add via command line
-      - `claude mcp add --transport http fastmail <your-mcp-url>`
-
-   **Supported Providers:**
-   - Fastmail (recommended)
-   - Gmail
-   - Outlook
-
-   After configuring, run this command again.
-   ```
-
-3. **Determine tool prefix** from discovered tools:
-   - Fastmail: `mcp__fastmail__*` or `mcp__plugin_chief-of-staff_fastmail__*`
-   - Gmail: `mcp__gmail__*`
-   - Outlook: `mcp__outlook__*`
-
-4. **Store the prefix** for all subsequent email operations
+Supported providers: fastmail, gmail, outlook
+After configuring, restart Claude Code and run this command again.
+```
 
 ### Provider-Agnostic Tool Usage
 
-Once you've discovered the email tools, use them with the detected prefix:
-- `[prefix]list_mailboxes` - Get folder list
-- `[prefix]advanced_search` - Search inbox
-- `[prefix]get_email` - Read full email
-- `[prefix]bulk_move` - Archive emails
-- `[prefix]bulk_delete` - Delete emails
+Throughout this agent, reference email tools via the `EMAIL_TOOLS` mappings:
+- `EMAIL_TOOLS.list_mailboxes` - Get folder list
+- `EMAIL_TOOLS.advanced_search` - Search inbox
+- `EMAIL_TOOLS.get_email` - Read full email
+- `EMAIL_TOOLS.bulk_move` - Archive emails
+- `EMAIL_TOOLS.bulk_delete` - Delete emails
+- `EMAIL_TOOLS.flag_email` - Flag/star emails
+- `EMAIL_TOOLS.reply_to_email` - Send replies
 
 ## Data Files Location
 
@@ -219,7 +213,7 @@ AskUserQuestion:
 **CRITICAL**: Before presenting each email, you MUST call `get_email` to read its full content:
 
 ```
-Call mcp__fastmail__get_email({ emailId: "..." })
+Call EMAIL_TOOLS.get_email({ emailId: "..." })
 ```
 
 From the response, extract:
@@ -531,7 +525,7 @@ Output: "Creating 2 reminders... ✓"
 #### Step 4: Archives (bulk per folder)
 ```
 For each folderId in groups.archive:
-  Call mcp__fastmail__bulk_move({
+  Call EMAIL_TOOLS.bulk_move({
     emailIds: groups.archive[folderId],
     mailboxId: folderId
   })
@@ -543,14 +537,14 @@ Output: "Archiving 6 emails... ✓"
 ```
 If groups.flag not empty:
   For each emailId in groups.flag:
-    Call mcp__fastmail__flag_email({ emailId, flagged: true })
+    Call EMAIL_TOOLS.flag_email({ emailId, flagged: true })
 
 Output: "Keeping 1 email (flagged)... ✓"
 ```
 
 #### Step 6: Deletes LAST
 ```
-Call mcp__fastmail__bulk_delete({
+Call EMAIL_TOOLS.bulk_delete({
   emailIds: groups.delete  // Includes unsubscribed emails
 })
 
@@ -588,7 +582,7 @@ For each reply decision:
     # e.g., "Lobster 🦞 (Omar's AI assistant)"
     fullBody = decision.replyParams.body + "\n\n" + signature
 
-  Call mcp__fastmail__reply_to_email({
+  Call EMAIL_TOOLS.reply_to_email({
     emailId: decision.emailId,
     markdownBody: fullBody,
     sendImmediately: false

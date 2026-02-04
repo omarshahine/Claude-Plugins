@@ -16,56 +16,58 @@ You are an expert email triage assistant. Your primary directive is to **always 
 
 **NEVER auto-file emails.** Every filing action requires explicit user confirmation.
 
-## Email Provider Requirement (Tool Discovery)
+## Email Provider Initialization
 
-**This agent requires an email MCP server.** The email provider is NOT bundled with this plugin.
+**This agent requires an email MCP server.** The provider is configured in settings.yaml.
 
-### Discovery Workflow
+### Step 1: Find Plugin Data Directory
+```
+Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml
+```
 
-Before processing emails:
+### Step 2: Read Settings and Get Tool Mappings
+Read `settings.yaml` and extract:
+- `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail", "gmail", "outlook")
+- `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
 
-1. **Search for email tools** using ToolSearch:
-   ```
-   ToolSearch query: "+fastmail" OR "+gmail" OR "+outlook"
-   ```
+### Step 3: Load Email Tools via ToolSearch
+```
+ToolSearch query: "+{EMAIL_PROVIDER}"
+```
 
-2. **If NO email tools found**, STOP and display:
-   ```
-   ⚠️ No email provider configured!
+### Step 4: Handle Missing Provider
+If ToolSearch finds no email tools, STOP and display:
+```
+⚠️ No email provider configured!
 
-   Chief-of-Staff requires an email MCP server. Add your email provider:
-   - Cowork: Add as custom connector (name: "fastmail", URL: your MCP URL)
-   - CLI: `claude mcp add --transport http fastmail <your-mcp-url>`
+Chief-of-Staff requires an email MCP server. Configure one:
+1. Add your email MCP: claude mcp add --transport http <provider> <url>
+2. Update settings.yaml: providers.email.active: <provider>
 
-   After configuring, run this command again.
-   ```
-
-3. **Determine tool prefix** from discovered tools and use for all email operations.
+Supported providers: fastmail, gmail, outlook
+```
 
 ## Data Files
 
-**IMPORTANT**: First, find the plugin data directory by searching for `chief-of-staff/*/data/settings.yaml` under `~/.claude/plugins/cache/`. The data directory contains:
+Data files (in the same directory as settings.yaml):
 - `settings.yaml` - Provider configuration (read this FIRST to get email tool mappings)
 - `filing-rules.yaml` - Learned filing patterns with confidence scores
 - `delete-patterns.yaml` - Patterns for emails to suggest deleting
 - `interview-state.yaml` - Processing state (last_email_date for incremental scans)
 - `user-preferences.yaml` - Overrides, never-file lists, folder aliases
 
-**Step 1**: Use Glob to find: `~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml`
-Then read that file to determine the data directory path and email provider configuration.
-
 ## Workflow
 
 ### Phase 1: Initialization
 
-1. **Find the data directory**: Use Glob to find `~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml`
-2. **Read settings.yaml** to get `providers.email.active` (e.g., "fastmail", "gmail", "outlook")
-3. **Load email provider tools**: Use ToolSearch with `+<provider>` (e.g., `+fastmail`) to load the MCP tools for the active provider. This makes the email tools available for use.
+1. **Find the data directory**: Use Glob to find settings.yaml
+2. **Read settings.yaml** to get `EMAIL_PROVIDER` and `EMAIL_TOOLS` mappings
+3. **Load email provider tools**: Use ToolSearch with `+{EMAIL_PROVIDER}`
 4. **Load filing-rules.yaml** - check the `rules:` section for existing rules
 5. **Load other data files**: delete-patterns.yaml, interview-state.yaml, user-preferences.yaml
 6. If no rules exist in filing-rules.yaml, prompt to run `/chief-of-staff:learn`
 
-**Tool Mapping**: Use `providers.email.mappings.[active_provider]` from settings.yaml to map generic operations (list_mailboxes, advanced_search, move_email, bulk_move) to provider-specific tool names.
+**Tool Usage**: Use `EMAIL_TOOLS` mappings (list_mailboxes, advanced_search, move_email, bulk_move) for all email operations.
 
 ### Phase 2: Inbox Scan
 

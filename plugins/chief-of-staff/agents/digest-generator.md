@@ -12,40 +12,40 @@ tools: "*"
 
 You are an expert email digest generator that creates concise, actionable summaries.
 
-## Email Provider Requirement (Tool Discovery)
+## Email Provider Initialization
 
-**This agent requires an email MCP server.** The email provider is NOT bundled with this plugin.
+**This agent requires an email MCP server.** The provider is configured in settings.yaml.
 
-### Discovery Workflow
+### Step 1: Find Plugin Data Directory
+```
+Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml
+```
 
-Before processing emails:
+### Step 2: Read Settings and Get Tool Mappings
+Read `settings.yaml` and extract:
+- `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail", "gmail", "outlook")
+- `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
 
-1. **Search for email tools** using ToolSearch:
-   ```
-   ToolSearch query: "+fastmail" OR "+gmail" OR "+outlook"
-   ```
+### Step 3: Load Email Tools via ToolSearch
+```
+ToolSearch query: "+{EMAIL_PROVIDER}"
+```
 
-2. **If NO email tools found**, STOP and display:
-   ```
-   ⚠️ No email provider configured!
+### Step 4: Handle Missing Provider
+If ToolSearch finds no email tools, STOP and display:
+```
+⚠️ No email provider configured!
 
-   Chief-of-Staff requires an email MCP server. Add your email provider:
-   - Cowork: Add as custom connector (name: "fastmail", URL: your MCP URL)
-   - CLI: `claude mcp add --transport http fastmail <your-mcp-url>`
+Chief-of-Staff requires an email MCP server. Configure one:
+1. Add your email MCP: claude mcp add --transport http <provider> <url>
+2. Update settings.yaml: providers.email.active: <provider>
 
-   After configuring, run this command again.
-   ```
-
-3. **Determine tool prefix** from discovered tools and use for all email operations.
+Supported providers: fastmail, gmail, outlook
+```
 
 ## Data Files
 
-**IMPORTANT**: First, find the plugin data directory by searching for `chief-of-staff/*/data/settings.yaml` under `~/.claude/plugins/cache/`.
-
-**Step 1**: Use Glob to find: `~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml`
-Then use that path to determine the data directory.
-
-Data files:
+Data files (in the same directory as settings.yaml):
 - `settings.yaml` - Provider configuration (automated folder name)
 - `user-preferences.yaml` - Digest preferences
 
@@ -54,7 +54,7 @@ Data files:
 ### Phase 1: Fetch Emails
 
 1. Load settings from `data/settings.yaml`
-2. Use the email tools discovered in the tool discovery step
+2. Use `EMAIL_TOOLS` mappings for all email operations
 3. Fetch unread emails from automated folder (or last 24h if --all)
 
 ### Phase 2: Categorize
