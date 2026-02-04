@@ -94,7 +94,14 @@ KEYCHAIN_SERVICE="env/YNAB_API_TOKEN"
 security delete-generic-password -s "$KEYCHAIN_SERVICE" 2>/dev/null
 security add-generic-password -s "$KEYCHAIN_SERVICE" -a "$USER" -w "$TOKEN"
 
-echo "✓ Token saved securely to macOS Keychain"
+# Verify token was stored successfully
+VERIFY_TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
+if [ "$VERIFY_TOKEN" = "$TOKEN" ]; then
+  echo "✓ Token saved securely to macOS Keychain"
+else
+  echo "ERROR: Failed to save token to Keychain. Check keychain permissions."
+  exit 1
+fi
 ```
 
 #### 3b. Validate Token and Fetch Budgets

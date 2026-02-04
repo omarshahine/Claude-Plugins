@@ -177,7 +177,13 @@ Search for transactions matching ANY of these patterns:
 ```bash
 # Search each mapped account for annual fee transactions
 KEYCHAIN_SERVICE="env/YNAB_API_TOKEN"
-TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w)
+TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
+
+if [ -z "$TOKEN" ]; then
+  echo "ERROR: No YNAB token found in Keychain"
+  exit 1
+fi
+
 BUDGET_ID="<budget-id>"
 ACCOUNT_ID="<account-id>"
 
