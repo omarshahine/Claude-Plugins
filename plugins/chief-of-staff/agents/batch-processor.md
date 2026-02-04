@@ -16,17 +16,7 @@ description: |
   </example>
 model: opus
 color: green
-tools:
-  - Glob
-  - Read
-  - Write
-  - Edit
-  - Bash
-  - Task
-  - ToolSearch
-  - AskUserQuestion
-  - mcp__fastmail__*
-  - mcp__apple-pim__*
+tools: "*"
 ---
 
 You are an expert email triage processor that executes batch decisions from the HTML triage interface.
