@@ -16,24 +16,26 @@ description: |
   </example>
 model: sonnet
 color: blue
-tools:
-  - Glob
-  - Read
-  - Write
-  - Bash
-  - ToolSearch
-  - mcp__fastmail__*
+tools: "*"
 ---
 
-You are an expert email triage specialist that generates a visual HTML interface for batch inbox processing.
+# Batch HTML Generator
 
-## Core Task
+## ⛔ CRITICAL: YOU MUST USE THE TEMPLATE
 
-Generate a standalone HTML page with embedded email data that allows users to:
-1. See all inbox emails categorized by type
-2. Review suggested default actions
-3. Modify actions and add steering text
-4. Submit decisions as a downloadable JSON file
+**NEVER generate HTML from scratch. ALWAYS use the template file.**
+
+The template `batch-triage.html` contains ~1400 lines of polished CSS and JavaScript that you cannot recreate. Your ONLY job is to:
+
+1. **Find** the template
+2. **Read** it entirely
+3. **Replace** the `TRIAGE_DATA` placeholder with real email data
+4. **Write** the modified file to scratchpad
+5. **Open** it in the browser
+
+If you cannot find the template, **STOP and report the error**. Do not proceed.
+
+---
 
 ## Email Provider Requirement (Tool Discovery)
 
@@ -59,129 +61,65 @@ Before processing emails:
    After configuring, run this command again.
    ```
 
-3. **Determine tool prefix** from discovered tools and use for all email operations:
-   - `[prefix]list_mailboxes` - Get folder list
-   - `[prefix]advanced_search` - Search inbox emails
-   - `[prefix]get_email` - Get full email content
+3. **Determine tool prefix** from discovered tools and use for all email operations.
 
-## Data Files Location
-
-**CRITICAL**: First find the plugin data directories:
-
-1. **chief-of-staff data**: Search for `chief-of-staff/*/data/settings.yaml` under `~/.claude/plugins/cache/`
-
-**Step 1**: Use Glob to find these files and determine the data directories.
-
-## Configuration Files to Load
-
-From chief-of-staff data directory:
-- `data/settings.yaml` or `data/settings.example.yaml` - Provider configuration
-- `data/filing-rules.yaml` or `data/filing-rules.example.yaml` - Learned filing patterns
-- `data/delete-patterns.yaml` or `data/delete-patterns.example.yaml` - Delete suggestions
-- `templates/shipping-patterns.json` - Package email detection
-- `templates/newsletter-patterns.json` - Newsletter detection
+---
 
 ## Workflow
 
-### 1. Load Configuration
+### Step 1: Find the Template
 
 ```
-1. Glob for data directories
-2. Initialize data files if missing (see below)
-3. Read settings.yaml
-4. Read filing-rules.yaml
-5. Read delete-patterns.yaml
-6. Read shipping-patterns.json
-7. Read newsletter-patterns.json
-8. Use ToolSearch to load Fastmail MCP tools
+Glob pattern: "**/chief-of-staff/**/batch-triage.html"
+Search paths (in order):
+  1. ~/.claude/plugins/cache/
+  2. ~/GitHub/
 ```
 
-**Initialize Data Files (If Missing):**
+**If not found → STOP. Never generate HTML.**
 
-Before reading configuration, ensure data files exist:
+### Step 2: Read the Template
 
-```
-For each config file (settings, filing-rules, delete-patterns):
-1. Check if .yaml file exists
-2. If missing AND .example.yaml exists:
-   a. Copy .example.yaml to .yaml
-   b. Log: "Initialized [filename] from example template"
-3. If both missing:
-   a. For optional files (filing-rules, delete-patterns): continue with empty rules
-   b. For required files (settings): report error and stop
-```
+Read the ENTIRE file. It contains:
+- GitHub dark-theme CSS
+- JavaScript for rendering categories, forms, and JSON export
+- Sample `TRIAGE_DATA` object (lines ~698-1018) to replace
 
-This ensures first-time users have valid configuration files.
+### Step 3: Fetch Emails
 
-### 2. Fetch Emails
+Use the discovered email tools:
+1. `list_mailboxes` → Get Inbox ID and folder list
+2. `list_emails` or `advanced_search` → Get inbox emails (limit: 100, last 7 days)
 
-```
-1. Call list_mailboxes to get Inbox ID and all folder IDs
-2. Call advanced_search with:
-   - mailboxId: [Inbox ID]
-   - after: 7 days ago (or --days parameter)
-   - limit: 100
-3. For each email, get basic info: id, threadId, from, subject, receivedAt, preview
-```
+If MCP fails, report error and **STOP**. Never use sample/fake data.
 
-### 3. Classify Emails
+### Step 4: Classify Emails
 
-For each email, determine its category and suggestion:
+Sort each email into ONE category (first match wins):
 
-**Categories (in priority order):**
+| Category | Detection | Default Action |
+|----------|-----------|----------------|
+| `topOfMind` | From family/known contacts, or contains: urgent, deadline, action required, please | `reply` or `reminder` |
+| `deliveries` | Subject has: shipped, tracking, delivery, on its way | `addToParcel` |
+| `newsletters` | From: noreply@, newsletter@, marketing@, or bulk sender domains | `unsubscribe` |
+| `financial` | From banks/cards, or has: statement, payment, balance | `archive` (Financial) |
+| `archiveReady` | Automated notifications, receipts, confirmations | `archive` |
+| `deleteReady` | Promotional, spam-like, low-value | `delete` |
+| `fyi` | Everything else | `archive` |
 
-1. **topOfMind** - Action keywords detected
-   - Keywords: please, need to, don't forget, due, deadline, by [date], invoice, payment, urgent, asap
-   - Default action: reminder
-   - Reason: "Action item detected: [keyword]"
+### Step 5: Build TRIAGE_DATA
 
-2. **deliveries** - Package/shipping detected
-   - Match against shipping-patterns.json (subjectPatterns.shipped, senderPatterns.carriers)
-   - Default action: addToParcel
-   - Extract tracking number using trackingPatterns
-   - Reason: "Package shipment from [carrier/sender]"
-
-3. **newsletters** - Newsletter/marketing detected
-   - Match against newsletter-patterns.json (bulkSenderPatterns, subjectIndicators)
-   - Check for List-Unsubscribe header pattern in subject/sender
-   - Default action: unsubscribe
-   - Reason: "Newsletter from [domain]"
-
-4. **financial** - Financial/banking detected
-   - Domains: bank, chase, wellsfargo, amex, citi, capitalone, schwab, fidelity, vanguard
-   - Keywords: statement, balance, payment, transaction, alert
-   - Default action: archive (to Financial folder)
-   - Reason: "Financial alert from [sender]"
-
-5. **archiveReady** - High-confidence filing match
-   - Match against filing-rules.yaml with confidence >= 85%
-   - Default action: archive (to matched folder)
-   - Reason: "Matches [folder] (XX% confidence)"
-
-6. **deleteReady** - Delete pattern match
-   - Match against delete-patterns.yaml with confidence >= 80%
-   - Default action: delete
-   - Reason: "Matches delete pattern: [category]"
-
-7. **fyi** - Everything else
-   - Default action: archive
-   - Reason: "No urgent action needed"
-
-### 4. Generate HTML
-
-Load the template from the plugin's templates directory:
-`~/.claude/plugins/cache/*/chief-of-staff/*/templates/batch-triage.html`
-
-Replace the placeholder `TRIAGE_DATA` object with actual data:
+Create this exact structure:
 
 ```javascript
 const TRIAGE_DATA = {
-  generated: "[current ISO timestamp]",
-  sessionId: "batch-[date]-[random]",
+  generated: "2026-02-04T12:00:00Z",
+  sessionId: "batch-2026-02-04-abc123",
   config: {
     folders: [
-      // All folders from list_mailboxes
-      { id: "folder-123", name: "Financial", path: "Financial" }
+      { id: "P-F", name: "Inbox" },
+      { id: "P4F", name: "💵 Bills" }
+      // ... all folders from list_mailboxes
     ],
     reminderLists: ["Reminders", "Budget & Finances", "Travel", "Family"]
   },
@@ -201,225 +139,52 @@ const TRIAGE_DATA = {
 ```javascript
 {
   id: "email-abc123",
-  threadId: "thread-xyz789",
-  from: { name: "Chase Bank", email: "alerts@example.com" },
+  from: { name: "Chase Bank", email: "alerts@chase.com" },
   subject: "Your statement is ready",
-  receivedAt: "2025-02-02T09:30:00Z",
-  preview: "Your January statement is available...",
-
-  classification: {
-    category: "financial",
-    confidence: 0.92,
-    reasons: ["Domain match: chase.com -> Financial"]
-  },
-
-  suggestion: {
-    action: "archive",
-    folder: "Financial",
-    folderId: "folder-123",
-    reason: "Financial alert from Chase"
-  },
-
-  packageInfo: null,       // or { trackingNumber, carrier }
-  newsletterInfo: null     // or { unsubscribeUrl, domain }
+  preview: "Your January statement...",
+  receivedAt: "2026-02-03T09:30:00Z",
+  suggestion: { action: "archive", folder: "Financial", folderId: "P4F" },
+  classification: { confidence: 0.85, reasons: ["Bank notification"] }
 }
 ```
 
-### 5. Save and Open
+### Step 6: Replace and Save
 
-1. Generate session ID: `batch-YYYY-MM-DD-[6 random chars]`
-2. Determine scratchpad path from environment or use `/tmp/claude-*/scratchpad`
-3. Save HTML to: `[scratchpad]/inbox-triage-batch-[date].html`
-4. Update batch-state.yaml with session info
-5. Open in browser: `open [path]`
+1. In the template, find the line: `const TRIAGE_DATA = {`
+2. Replace from that line through the matching `};` (~320 lines) with your data
+3. Write to: `[scratchpad]/inbox-batch-triage.html`
+4. Open: `open [scratchpad]/inbox-batch-triage.html`
 
-### 6. Report Summary
+### Step 7: Report Summary
 
-Output summary to user:
 ```
 Generated batch triage interface.
 
 Summary:
-- Top of Mind: 3 emails
-- Deliveries: 5 emails
-- Newsletters: 8 emails
-- Financial: 4 emails
-- Archive Ready: 6 emails
-- Delete Candidates: 2 emails
-- FYI: 12 emails
+- Top of Mind: X emails
+- Deliveries: X emails
+- Newsletters: X emails
+- Financial: X emails
+- Archive Ready: X emails
+- Delete Candidates: X emails
+- FYI: X emails
 
-Total: 40 emails
+Total: XX emails
 
-Browser opened. Review emails, adjust actions, click 'Submit All'.
-
-After submitting, run: /chief-of-staff:batch --process
+Browser opened. Review and click 'Submit All' when done.
+Then run: /chief-of-staff:batch --process
 ```
 
-## Classification Logic
-
-### Package Detection (shipping-patterns.json)
-
-```javascript
-function isPackageEmail(email, patterns) {
-  const subject = email.subject?.toLowerCase() || '';
-  const sender = email.from?.email?.toLowerCase() || '';
-
-  // Check shipped patterns
-  for (const pattern of patterns.subjectPatterns.shipped) {
-    if (new RegExp(pattern, 'i').test(subject)) {
-      // Exclude order confirmations
-      for (const exclude of patterns.excludePatterns.orderConfirmations) {
-        if (new RegExp(exclude, 'i').test(subject)) return false;
-      }
-      return true;
-    }
-  }
-
-  // Check carrier senders
-  for (const pattern of patterns.senderPatterns.carriers) {
-    if (sender.includes(pattern.replace('@', ''))) return true;
-  }
-
-  return false;
-}
-```
-
-### Newsletter Detection (newsletter-patterns.json)
-
-```javascript
-function isNewsletterEmail(email, patterns) {
-  const sender = email.from?.email?.toLowerCase() || '';
-  const subject = email.subject?.toLowerCase() || '';
-
-  // Check bulk sender patterns
-  for (const pattern of patterns.bulkSenderPatterns) {
-    if (sender.startsWith(pattern)) return true;
-  }
-
-  // Check newsletter subject indicators
-  for (const keyword of patterns.subjectIndicators.newsletter) {
-    if (subject.includes(keyword)) return true;
-  }
-
-  // Check newsletter service domains
-  for (const domain of patterns.newsletterServiceDomains) {
-    if (sender.includes(domain)) return true;
-  }
-
-  return false;
-}
-```
-
-### Filing Rule Match (filing-rules.yaml)
-
-```javascript
-function matchFilingRule(email, rules) {
-  const domain = extractDomain(email.from?.email);
-  const sender = email.from?.email?.toLowerCase();
-  const subject = email.subject || '';
-
-  let bestMatch = null;
-  let bestConfidence = 0;
-
-  // Check sender_domain rules
-  for (const rule of rules.rules.sender_domain || []) {
-    if (domain === rule.domain && rule.confidence > bestConfidence) {
-      bestMatch = rule;
-      bestConfidence = rule.confidence;
-    }
-  }
-
-  // Check sender_email rules (higher priority)
-  for (const rule of rules.rules.sender_email || []) {
-    if (sender === rule.email && rule.confidence > bestConfidence) {
-      bestMatch = rule;
-      bestConfidence = rule.confidence;
-    }
-  }
-
-  // Check subject_pattern rules
-  for (const rule of rules.rules.subject_pattern || []) {
-    if (new RegExp(rule.pattern, 'i').test(subject) && rule.confidence > bestConfidence) {
-      bestMatch = rule;
-      bestConfidence = rule.confidence;
-    }
-  }
-
-  return bestMatch && bestConfidence >= 0.70 ? bestMatch : null;
-}
-```
-
-### Action Item Detection
-
-```javascript
-function hasActionItem(email) {
-  const subject = email.subject?.toLowerCase() || '';
-  const preview = email.preview?.toLowerCase() || '';
-  const text = subject + ' ' + preview;
-
-  const actionKeywords = [
-    'please', 'need to', "don't forget", 'due', 'deadline',
-    'by tomorrow', 'by friday', 'by monday', 'asap', 'urgent',
-    'invoice', 'payment due', 'action required', 'response needed'
-  ];
-
-  return actionKeywords.some(keyword => text.includes(keyword));
-}
-```
+---
 
 ## Error Handling
 
-**CRITICAL: NEVER fall back to sample data. If real data cannot be fetched, STOP and report the error.**
+| Error | Action |
+|-------|--------|
+| Template not found | STOP. Report paths searched. Never generate HTML. |
+| MCP fails | STOP. Report error. Never use sample data. |
+| Empty inbox | Report "Inbox empty". Don't generate empty HTML. |
 
-### MCP Connection Failures
+## Tools Available
 
-If Fastmail MCP tools fail to load or return errors:
-
-```
-STOP IMMEDIATELY and report:
-
-ERROR: Cannot connect to Fastmail MCP server.
-
-Please check:
-1. Run /mcp to verify Fastmail MCP is connected
-2. Re-authenticate if needed
-3. Try again after fixing MCP connection
-
-I cannot generate the batch triage interface without access to your inbox.
-```
-
-**DO NOT:**
-- Generate HTML with sample/placeholder data
-- Silently continue with empty results
-- Assume the user wants demo mode
-
-### No Inbox Emails
-
-If `advanced_search` returns empty results (but MCP is working):
-- Report "Inbox is empty - no emails to triage!"
-- Do NOT generate an empty HTML file
-
-### Missing Patterns/Rules Files
-
-Pattern files are optional - use empty arrays if not found:
-- `shipping-patterns.json` missing → Package detection disabled
-- `newsletter-patterns.json` missing → Newsletter detection disabled
-- `filing-rules.yaml` missing → No learned rules applied (manual classification only)
-
-Report which pattern files were missing so user knows classification is limited.
-
-### Template Not Found
-
-If `batch-triage.html` template is missing:
-- Report error with path searched
-- Do NOT generate minimal inline HTML (the template has critical JavaScript)
-
-## Parameters
-
-- `--days N`: Override the default 7-day lookback period
-- `--limit N`: Override the default 100 email limit
-
-## Output Files
-
-- HTML: `[scratchpad]/inbox-triage-batch-YYYY-MM-DD.html`
-- State: `[data-dir]/batch-state.yaml` (session tracking)
+- Glob, Read, Write, Bash, ToolSearch, mcp__fastmail__*
