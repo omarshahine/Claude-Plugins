@@ -29,16 +29,6 @@ Agent-Plugins/
 │   │   │   └── plugin.json
 │   │   ├── skills/
 │   │   └── commands/
-│   ├── apple-pim/             # macOS Calendar, Reminders, Contacts
-│   │   ├── .claude-plugin/
-│   │   │   └── plugin.json
-│   │   ├── .mcp.json          # MCP server configuration
-│   │   ├── agents/            # pim-assistant
-│   │   ├── commands/          # calendars, reminders, contacts slash commands
-│   │   ├── skills/
-│   │   ├── swift/             # Native Swift CLIs
-│   │   ├── mcp-server/        # Node.js MCP server
-│   │   └── setup.sh           # Build script
 │   └── credit-card-benefits/  # Credit card benefit tracking
 │       ├── .claude-plugin/
 │       │   └── plugin.json
@@ -48,6 +38,9 @@ Agent-Plugins/
 ├── README.md                  # User-facing documentation
 └── CLAUDE.md                  # This file (development instructions)
 ```
+
+**External plugins** (sourced from separate GitHub repos):
+- **apple-pim** - macOS Calendar, Reminders, Contacts (sourced from `omarshahine/Apple-PIM-Agent-Plugin`)
 
 ## Plugin Development
 
@@ -210,10 +203,7 @@ Check MCP status:
 /mcp
 ```
 
-For apple-pim, ensure setup script has been run:
-```bash
-./plugins/apple-pim/setup.sh
-```
+For plugins with bundled MCP servers (e.g., apple-pim from external repo), ensure any required setup scripts have been run. See individual plugin documentation.
 
 ## Plugin-Specific Notes
 
@@ -339,88 +329,20 @@ Use `chief-of-staff-private:netjets-invoice-downloader` for invoice management.
 
 **Source repository:** https://github.com/omarshahine/claude-rename-agent
 
-### apple-pim
+### apple-pim (External Plugin)
 
-**Architecture:**
-1. Swift CLIs (`calendar-cli`, `reminder-cli`, `contacts-cli`) use EventKit/Contacts frameworks
-2. Node.js MCP server (`mcp-server/server.js`) wraps CLIs and exposes tools
-3. Slash commands (`/apple-pim:calendars`, `/apple-pim:reminders`, `/apple-pim:contacts`) provide structured access
-4. Agent (`pim-assistant`) and skill provide natural language interface
+**Source:** https://github.com/omarshahine/Apple-PIM-Agent-Plugin
 
-**Components:**
-```
-plugins/apple-pim/
-├── .claude-plugin/plugin.json    # Plugin manifest with mcpServers reference
-├── .mcp.json                     # MCP server config (uses ${CLAUDE_PLUGIN_ROOT})
-├── agents/pim-assistant.md       # Natural language PIM assistant
-├── commands/
-│   ├── calendars.md              # /apple-pim:calendars command
-│   ├── reminders.md              # /apple-pim:reminders command
-│   └── contacts.md               # /apple-pim:contacts command
-├── skills/apple-pim/SKILL.md     # EventKit/Contacts framework knowledge
-├── swift/                        # Native Swift CLI tools
-│   ├── Package.swift
-│   └── Sources/
-│       ├── CalendarCLI/          # Calendar operations
-│       ├── ReminderCLI/          # Reminder operations
-│       └── ContactsCLI/          # Contact operations
-├── mcp-server/
-│   ├── package.json
-│   └── server.js                 # MCP server wrapping Swift CLIs
-└── setup.sh                      # Build script
-```
+This plugin is sourced from an external GitHub repository rather than being bundled in this marketplace. It provides native macOS integration for Calendar, Reminders, and Contacts.
 
-**MCP Tools (21 total):**
+**Why external?** The plugin has its own build system (Swift CLIs + Node.js MCP server) and benefits from independent versioning.
 
-Calendar (7):
-- `calendar_list` - List all calendars
-- `calendar_events` - List events (supports `lastDays`/`nextDays` OR `from`/`to`)
-- `calendar_get` - Get single event by ID
-- `calendar_search` - Search by title/notes/location
-- `calendar_create` - Create event with title, start, end/duration, location, notes, alarms
-- `calendar_update` - Update event fields
-- `calendar_delete` - Delete event
-
-Reminders (8):
-- `reminder_lists` - List all reminder lists
-- `reminder_items` - List reminders (filterable by list, completion status)
-- `reminder_get` - Get single reminder by ID
-- `reminder_search` - Search by title/notes
-- `reminder_create` - Create with title, list, due date, priority (0/1/5/9), notes
-- `reminder_complete` - Mark complete (or undo)
-- `reminder_update` - Update fields
-- `reminder_delete` - Delete reminder
-
-Contacts (7):
-- `contact_groups` - List contact groups
-- `contact_list` - List contacts (filterable by group)
-- `contact_search` - Search by name/email/phone
-- `contact_get` - Get full details including photo
-- `contact_create` - Create with name, email, phone, org, etc.
-- `contact_update` - Update fields
-- `contact_delete` - Delete contact
-
-**Building:**
+**Usage:** Install via this marketplace - the plugin is listed here but code lives in the external repo:
 ```bash
-cd plugins/apple-pim
-./setup.sh  # Builds Swift CLIs and installs npm deps
+/plugin install apple-pim@omarshahine-agent-plugins
 ```
 
-**Testing:**
-```bash
-# Test Swift CLIs directly
-./swift/.build/release/calendar-cli list
-./swift/.build/release/reminder-cli lists
-./swift/.build/release/contacts-cli search "John"
-
-# Test via Claude Code
-/apple-pim:calendars events
-/apple-pim:reminders items
-/apple-pim:contacts search "John"
-```
-
-**Permissions:**
-Users must grant Calendar, Reminders, and Contacts access in System Settings > Privacy & Security.
+See the [Apple-PIM-Agent-Plugin repo](https://github.com/omarshahine/Apple-PIM-Agent-Plugin) for full documentation.
 
 ### credit-card-benefits
 
@@ -446,9 +368,10 @@ Users must grant Calendar, Reminders, and Contacts access in System Settings > P
 - Command name comes from filename automatically
 
 ### MCP server not connecting
-1. Run setup script (for apple-pim)
+1. Run setup script if the plugin has one (check plugin's README)
 2. Check `/mcp` for server status
 3. Restart Claude Code after MCP changes
+4. Verify environment variables are set in `.claude/settings.local.json`
 
 ### Agent not being invoked
 - Check description has clear trigger examples
@@ -486,10 +409,10 @@ Use **major version bumps** (X.0.0 → X+1.0.0) only for:
 
 **Example workflow:**
 ```
-# Fixing a bug in chief-of-staff (currently 1.4.0, marketplace 2.0.0)
+# Fixing a bug in chief-of-staff (currently 1.1.0, marketplace 1.1.0)
 1. Make the fix
-2. Bump chief-of-staff: 1.4.0 → 1.5.0
-3. Bump marketplace: 2.0.0 → 2.1.0
+2. Bump chief-of-staff: 1.1.0 → 1.2.0
+3. Bump marketplace: 1.1.0 → 1.2.0
 4. Update plugin entry in marketplace.json to match new version
 ```
 
