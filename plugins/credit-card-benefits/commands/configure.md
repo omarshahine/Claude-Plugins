@@ -85,19 +85,28 @@ options:
     description: "I'll set this up later"
 ```
 
-If user selects "I have my token ready", prompt them to enter the token. Store it securely:
+If user selects "I have my token ready", prompt them to enter the token. Store it securely in macOS Keychain:
 
 ```bash
-mkdir -p ~/.config/credit-card-benefits
-# User provides token
-echo "$TOKEN" > ~/.config/credit-card-benefits/ynab-token
-chmod 600 ~/.config/credit-card-benefits/ynab-token
+KEYCHAIN_SERVICE="env/YNAB_API_TOKEN"
+
+# Delete existing entry if present, then add new one
+security delete-generic-password -s "$KEYCHAIN_SERVICE" 2>/dev/null
+security add-generic-password -s "$KEYCHAIN_SERVICE" -a "$USER" -w "$TOKEN"
+
+echo "✓ Token saved securely to macOS Keychain"
 ```
 
 #### 3b. Validate Token and Fetch Budgets
 
 ```bash
-TOKEN=$(cat ~/.config/credit-card-benefits/ynab-token)
+KEYCHAIN_SERVICE="env/YNAB_API_TOKEN"
+TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
+
+if [ -z "$TOKEN" ]; then
+  echo "ERROR: No YNAB token found in Keychain"
+  exit 1
+fi
 
 # Validate token by fetching budgets
 RESPONSE=$(curl -s -w "\n%{http_code}" -H "Authorization: Bearer $TOKEN" \
@@ -336,10 +345,16 @@ If the problem persists, YNAB's API may be temporarily unavailable.
 
 ## File Locations
 
-| File | Purpose |
-|------|---------|
+| Location | Purpose |
+|----------|---------|
 | `~/.config/credit-card-benefits/checklist.yaml` | Main configuration and benefit tracking |
-| `~/.config/credit-card-benefits/ynab-token` | YNAB API token (chmod 600) |
+| macOS Keychain: `env/YNAB_API_TOKEN` | YNAB API token (encrypted) |
+
+### Security Notes
+
+- **YNAB token**: Stored in macOS Keychain, encrypted at rest
+- **Checklist**: Contains only account IDs and config, no sensitive data
+- **Legacy migration**: Old token files are automatically migrated to Keychain
 
 ---
 

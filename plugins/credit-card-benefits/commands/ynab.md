@@ -61,10 +61,25 @@ When `/credit-card-benefits:ynab setup` runs, follow these steps:
 ### Step 1: Check Existing Token
 
 ```bash
-TOKEN_FILE="$HOME/.config/credit-card-benefits/ynab-token"
-if [ -f "$TOKEN_FILE" ]; then
-  echo "Existing YNAB token found"
-  TOKEN=$(cat "$TOKEN_FILE")
+# Check macOS Keychain for existing token
+KEYCHAIN_SERVICE="env/YNAB_API_TOKEN"
+TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
+
+if [ -n "$TOKEN" ]; then
+  echo "Existing YNAB token found in Keychain"
+fi
+
+# Migration: Check for legacy file-based token and migrate to Keychain
+LEGACY_TOKEN_FILE="$HOME/.config/credit-card-benefits/ynab-token"
+if [ -z "$TOKEN" ] && [ -f "$LEGACY_TOKEN_FILE" ]; then
+  echo "Found legacy token file - migrating to Keychain..."
+  LEGACY_TOKEN=$(cat "$LEGACY_TOKEN_FILE")
+  security add-generic-password -s "$KEYCHAIN_SERVICE" -a "$USER" -w "$LEGACY_TOKEN" 2>/dev/null || \
+    security delete-generic-password -s "$KEYCHAIN_SERVICE" 2>/dev/null && \
+    security add-generic-password -s "$KEYCHAIN_SERVICE" -a "$USER" -w "$LEGACY_TOKEN"
+  rm "$LEGACY_TOKEN_FILE"
+  echo "✓ Token migrated to Keychain, legacy file removed"
+  TOKEN="$LEGACY_TOKEN"
 fi
 ```
 
@@ -112,18 +127,28 @@ open "https://app.ynab.com/settings/developer"
 ```
 Then repeat the question.
 
-If "Yes, I have my token", prompt user to paste it, then store:
+If "Yes, I have my token", prompt user to paste it, then store in macOS Keychain:
 ```bash
-mkdir -p ~/.config/credit-card-benefits
-echo "$USER_TOKEN" > ~/.config/credit-card-benefits/ynab-token
-chmod 600 ~/.config/credit-card-benefits/ynab-token
-echo "Token saved securely"
+KEYCHAIN_SERVICE="env/YNAB_API_TOKEN"
+
+# Delete existing entry if present, then add new one
+security delete-generic-password -s "$KEYCHAIN_SERVICE" 2>/dev/null
+security add-generic-password -s "$KEYCHAIN_SERVICE" -a "$USER" -w "$USER_TOKEN"
+
+echo "✓ Token saved securely to macOS Keychain"
 ```
 
 ### Step 3: Validate Token and Fetch Budgets
 
 ```bash
-TOKEN=$(cat ~/.config/credit-card-benefits/ynab-token)
+KEYCHAIN_SERVICE="env/YNAB_API_TOKEN"
+TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
+
+if [ -z "$TOKEN" ]; then
+  echo "ERROR: No YNAB token found in Keychain"
+  echo "Run setup again to add your token"
+  exit 1
+fi
 
 # Test token by fetching budgets
 RESPONSE=$(curl -s -w "\n%{http_code}" -H "Authorization: Bearer $TOKEN" \
@@ -313,16 +338,20 @@ Next: Run /credit-card-benefits:sync to pull transactions and detect benefit usa
 
 ## Security Notes
 
-- **Token file**: `~/.config/credit-card-benefits/ynab-token`
-  - Stored outside git repositories
-  - File permissions: 600 (owner read/write only)
-  - Never displayed in full in output
+- **Token storage**: macOS Keychain
+  - Service name: `env/YNAB_API_TOKEN`
+  - Encrypted by macOS at rest
+  - Protected by your login password
+  - Never stored in plain text files
+  - Never displayed in output
 
 - **Data processing**: All transaction analysis happens locally
 
 - **Stored data**: Only IDs and timestamps saved to checklist.yaml
   - No transaction amounts or descriptions persisted
   - No sensitive financial data in config
+
+- **Migration**: Legacy tokens in `~/.config/credit-card-benefits/ynab-token` are automatically migrated to Keychain and the file is deleted
 
 ---
 
@@ -335,7 +364,7 @@ https://api.youneedabudget.com/v1
 
 ### Authentication
 ```bash
-curl -H "Authorization: Bearer $(cat ~/.config/credit-card-benefits/ynab-token)" <url>
+curl -H "Authorization: Bearer $(security find-generic-password -s 'env/YNAB_API_TOKEN' -w)" <url>
 ```
 
 ### Useful Endpoints
@@ -434,9 +463,10 @@ ANNUAL FEE DETECTED
 
 ## Security & Privacy
 
-1. **Token Storage**: `~/.config/credit-card-benefits/ynab-token`
-   - Outside of any git repository
-   - File permissions: 600 (owner only)
+1. **Token Storage**: macOS Keychain (service: `env/YNAB_API_TOKEN`)
+   - Encrypted at rest by macOS
+   - Protected by login keychain password
+   - Never stored in plain text files
    - Never displayed in logs or output
 
 2. **Data Processing**: All transaction analysis happens locally

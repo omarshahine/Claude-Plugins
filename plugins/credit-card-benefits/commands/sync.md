@@ -118,7 +118,15 @@ for card in enabled_cards:
 If using direct API:
 
 ```bash
-TOKEN=$(cat ~/.config/credit-card-benefits/ynab-token)
+KEYCHAIN_SERVICE="env/YNAB_API_TOKEN"
+TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
+
+if [ -z "$TOKEN" ]; then
+  echo "ERROR: No YNAB token found in Keychain"
+  echo "Run /credit-card-benefits:configure to set up YNAB"
+  exit 1
+fi
+
 curl -s -H "Authorization: Bearer $TOKEN" \
   "https://api.youneedabudget.com/v1/budgets/${BUDGET_ID}/accounts/${ACCOUNT_ID}/transactions?since_date=${SINCE_DATE}"
 ```
@@ -168,7 +176,8 @@ Search for transactions matching ANY of these patterns:
 
 ```bash
 # Search each mapped account for annual fee transactions
-TOKEN=$(cat ~/.config/credit-card-benefits/ynab-token)
+KEYCHAIN_SERVICE="env/YNAB_API_TOKEN"
+TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w)
 BUDGET_ID="<budget-id>"
 ACCOUNT_ID="<account-id>"
 
@@ -349,7 +358,15 @@ Error: YNAB API returned 401 Unauthorized
 Your YNAB token may have expired. To fix:
 1. Go to https://app.ynab.com/settings/developer
 2. Generate a new token
-3. Update: ~/.config/credit-card-benefits/ynab-token
+3. Run /credit-card-benefits:configure to update the token in Keychain
+```
+
+### Missing Token
+
+```
+Error: No YNAB token found in Keychain
+
+Run /credit-card-benefits:configure to set up YNAB integration.
 ```
 
 ### Missing Account Mapping
