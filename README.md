@@ -204,30 +204,17 @@ claude mcp add --transport http fastmail https://your-worker.workers.dev/mcp
 
 #### Gmail
 
-Several community MCP servers are available:
+**Official Integration:** Google services are available as [official integrations in Claude](https://www.anthropic.com/integrations). Enable Google Drive, Docs, and Gmail directly in Claude's settings.
 
-| Server | Description |
-|--------|-------------|
-| [GongRzhe/Gmail-MCP-Server](https://github.com/GongRzhe/Gmail-MCP-Server) | Auto-authentication support, Claude Desktop optimized |
-| [jeremyjordan/mcp-gmail](https://github.com/jeremyjordan/mcp-gmail) | Python SDK based, OAuth 2.0 |
-
-```bash
-# Example using GongRzhe's server:
-claude mcp add gmail -- npx -y @anthropic/gmail-mcp
-```
+**MCP Server:** For Claude Code CLI usage, use the Smithery Gmail server:
+- [smithery.ai/server/gmail](https://smithery.ai/server/gmail)
 
 #### Outlook / Microsoft 365
 
-| Server | Description |
-|--------|-------------|
-| [Microsoft MCP Server for Enterprise](https://learn.microsoft.com/en-us/graph/mcp-server/overview) | Official Microsoft server (preview) |
-| [Softeria/ms-365-mcp-server](https://github.com/Softeria/ms-365-mcp-server) | Full M365 integration via Graph API |
-| [ryaker/outlook-mcp](https://github.com/ryaker/outlook-mcp) | Outlook-focused, requires Azure app registration |
+**Official Integration:** Microsoft services are available as [official integrations in Claude](https://www.anthropic.com/integrations). Enable Outlook, OneDrive, and other M365 services directly in Claude's settings.
 
-```bash
-# Example using Softeria's server:
-claude mcp add outlook -- npx -y ms-365-mcp-server
-```
+**MCP Server:** For Claude Code CLI usage, use the Smithery Outlook server:
+- [smithery.ai/server/outlook](https://smithery.ai/server/outlook)
 
 #### Verification
 
