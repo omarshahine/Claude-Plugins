@@ -79,14 +79,32 @@ Read the JSON file and validate structure:
 }
 ```
 
-### 3. Load Email Provider Tools
+### 3. Discover Email Provider Tools
 
-Use ToolSearch with `+fastmail` to load MCP tools:
-- `mcp__fastmail__move_email` - Archive emails
-- `mcp__fastmail__delete_email` - Delete emails
-- `mcp__fastmail__flag_email` - Flag emails
-- `mcp__fastmail__list_mailboxes` - Get folder IDs
-- `mcp__fastmail__reply_to_email` - Draft replies
+**This agent requires an email MCP server.** The email provider is NOT bundled with this plugin.
+
+Search for email tools using ToolSearch:
+```
+ToolSearch query: "+fastmail" OR "+gmail" OR "+outlook"
+```
+
+**If NO email tools found**, STOP and display:
+```
+⚠️ No email provider configured!
+
+Chief-of-Staff requires an email MCP server. Add your email provider:
+- Cowork: Add as custom connector (name: "fastmail", URL: your MCP URL)
+- CLI: `claude mcp add --transport http fastmail <your-mcp-url>`
+
+After configuring, run this command again.
+```
+
+Use the discovered tool prefix for all email operations:
+- `[prefix]move_email` - Archive emails
+- `[prefix]delete_email` - Delete emails
+- `[prefix]flag_email` - Flag emails
+- `[prefix]list_mailboxes` - Get folder IDs
+- `[prefix]reply_to_email` - Draft replies
 
 ### 4. Group Decisions by Action Type
 

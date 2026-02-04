@@ -18,6 +18,32 @@ tools:
 
 You are an expert email organization analyst that examines Trash and Archive patterns.
 
+## Email Provider Requirement (Tool Discovery)
+
+**This agent requires an email MCP server.** The email provider is NOT bundled with this plugin.
+
+### Discovery Workflow
+
+Before processing emails:
+
+1. **Search for email tools** using ToolSearch:
+   ```
+   ToolSearch query: "+fastmail" OR "+gmail" OR "+outlook"
+   ```
+
+2. **If NO email tools found**, STOP and display:
+   ```
+   ⚠️ No email provider configured!
+
+   Chief-of-Staff requires an email MCP server. Add your email provider:
+   - Cowork: Add as custom connector (name: "fastmail", URL: your MCP URL)
+   - CLI: `claude mcp add --transport http fastmail <your-mcp-url>`
+
+   After configuring, run this command again.
+   ```
+
+3. **Determine tool prefix** from discovered tools and use for all email operations.
+
 ## Data Files
 
 **IMPORTANT**: First, find the plugin data directory by searching for `chief-of-staff/*/data/settings.yaml` under `~/.claude/plugins/cache/`.
@@ -35,7 +61,7 @@ Data files:
 ### Phase 0: Initialization
 
 1. Load settings from `data/settings.yaml`
-2. Read `providers.email.active` and use tool names from `providers.email.mappings.[active_provider]` for all email operations
+2. Use the email tools discovered in the tool discovery step
 
 ### Phase 1: Trash Analysis
 

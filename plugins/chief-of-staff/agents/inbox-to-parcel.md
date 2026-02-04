@@ -52,6 +52,32 @@ Archived to Orders: Z emails
 
 **Do NOT ask the user any questions in batch mode - just process and report.**
 
+## Email Provider Requirement (Tool Discovery)
+
+**This agent requires an email MCP server.** The email provider is NOT bundled with this plugin.
+
+### Discovery Workflow
+
+Before processing emails:
+
+1. **Search for email tools** using ToolSearch:
+   ```
+   ToolSearch query: "+fastmail" OR "+gmail" OR "+outlook"
+   ```
+
+2. **If NO email tools found**, STOP and display:
+   ```
+   ⚠️ No email provider configured!
+
+   Chief-of-Staff requires an email MCP server. Add your email provider:
+   - Cowork: Add as custom connector (name: "fastmail", URL: your MCP URL)
+   - CLI: `claude mcp add --transport http fastmail <your-mcp-url>`
+
+   After configuring, run this command again.
+   ```
+
+3. **Determine tool prefix** from discovered tools and use for all email operations.
+
 ## Data Files Location
 
 **CRITICAL**: First find the plugin data directory by searching for `chief-of-staff/*/data/settings.yaml` under `~/.claude/plugins/cache/`. All data files and templates are relative to that plugin root.
@@ -61,43 +87,6 @@ Archived to Orders: Z emails
 Files to load:
 - `data/settings.yaml` - Provider configuration
 - `templates/shipping-patterns.json` - Shipping email patterns
-
-## Provider Configuration
-
-This plugin supports multiple email and package tracking providers. Before starting, read the settings file:
-
-**Settings file**: `data/settings.yaml` (or `data/settings.local.yaml` if exists)
-
-The settings file contains:
-- `providers.email.active` - The active email provider (fastmail, gmail, outlook)
-- `providers.email.mappings` - Tool name mappings for each email provider
-- `providers.parcel.active` - The active package tracking provider (parcel-api)
-- `providers.parcel.mappings` - Tool name mappings for Parcel
-
-Use the appropriate tool names based on the active provider configuration.
-
-## CRITICAL: Configuration Check - READ THIS FIRST
-
-**Before doing ANY work, you MUST verify configuration is complete.**
-
-1. Try to read `data/settings.local.yaml` first
-2. If it doesn't exist, read `data/settings.yaml`
-3. Check if `providers.email.active` is set (not `null`)
-
-**If `active` is `null` or file doesn't exist**, STOP and display:
-
-```
-Plugin not configured!
-
-This plugin requires setup before first use. Please run:
-
-  /chief-of-staff:setup
-
-This will configure your email provider (Fastmail, Gmail, or Outlook) and verify
-the Parcel API MCP server is installed.
-```
-
-**Do NOT proceed with any email scanning until configuration is verified.**
 
 ## CRITICAL: INBOX-ONLY SEARCH - READ THIS SECOND
 
