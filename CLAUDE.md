@@ -78,6 +78,49 @@ For plugins with MCP servers, add:
 }
 ```
 
+### MCP Environment Variables
+
+**IMPORTANT**: This repo is PUBLIC. Never hardcode URLs or secrets in plugin configs.
+
+MCP servers use `${VAR}` syntax for environment variables (e.g., `${FASTMAIL_MCP_URL}`). These variables must be set in `.claude/settings.local.json` (which is globally gitignored):
+
+```json
+{
+  "env": {
+    "FASTMAIL_MCP_URL": "https://your-fastmail-mcp.workers.dev/mcp"
+  },
+  "permissions": { ... }
+}
+```
+
+**Why `.claude/settings.local.json`?**
+- Globally gitignored via `~/.config/git/ignore`
+- Per-project, so different projects can have different values
+- Loaded automatically by Claude Code
+- Variables are expanded in MCP configs
+
+**Pattern for plugin MCP configs**:
+```json
+// In plugin.json - uses env var (safe to commit)
+{
+  "mcpServers": {
+    "fastmail": {
+      "type": "http",
+      "url": "${FASTMAIL_MCP_URL}"
+    }
+  }
+}
+```
+
+```json
+// In .claude/settings.local.json - actual URL (never committed)
+{
+  "env": {
+    "FASTMAIL_MCP_URL": "https://fastmail-mcp-remote.your-subdomain.workers.dev/mcp"
+  }
+}
+```
+
 ### Agent Definition
 
 Agents go in `plugins/<plugin>/agents/<agent-name>.md`:
@@ -419,8 +462,43 @@ Users must grant Calendar, Reminders, and Contacts access in System Settings > P
 
 ## Versioning
 
-Bump version in:
-1. `plugins/<plugin>/.claude-plugin/plugin.json`
-2. `.claude-plugin/marketplace.json`
+### Version Bump Rules
+
+**ALWAYS bump both versions when making changes:**
+
+1. **Plugin version** in `plugins/<plugin>/.claude-plugin/plugin.json`
+2. **Marketplace version** in `.claude-plugin/marketplace.json` (metadata.version)
+
+The marketplace version must be bumped whenever ANY child plugin changes. This ensures users get updates.
+
+### Semantic Versioning
+
+Use **minor version bumps** (X.Y.0 → X.Y+1.0) for:
+- New features, commands, or agents
+- Bug fixes
+- Documentation updates
+- Refactoring
+
+Use **major version bumps** (X.0.0 → X+1.0.0) only for:
+- Breaking changes to command syntax or behavior
+- Removing functionality
+- Significant architectural changes
+
+**Example workflow:**
+```
+# Fixing a bug in chief-of-staff (currently 1.4.0, marketplace 2.0.0)
+1. Make the fix
+2. Bump chief-of-staff: 1.4.0 → 1.5.0
+3. Bump marketplace: 2.0.0 → 2.1.0
+4. Update plugin entry in marketplace.json to match new version
+```
+
+### Where to Update
+
+| Change Type | Update Plugin Version | Update Marketplace Version | Update Plugin Entry in marketplace.json |
+|-------------|----------------------|---------------------------|----------------------------------------|
+| Plugin change | ✓ | ✓ | ✓ |
+| New plugin added | ✓ | ✓ | Add new entry |
+| Marketplace-only change | - | ✓ | - |
 
 After version bump, plugins auto-update on next Claude Code session (if auto-updates enabled).
