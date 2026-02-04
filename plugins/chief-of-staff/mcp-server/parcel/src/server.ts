@@ -2,6 +2,7 @@
  * Parcel MCP Server
  *
  * Provides tools for interacting with the Parcel delivery tracking API.
+ * API documentation: https://parcelapp.net/help/api.html
  *
  * Environment variables:
  *   PARCEL_API_KEY - Required. Get from Parcel app: Settings > Integrations > API Key
@@ -11,7 +12,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-const PARCEL_API_BASE = "https://api.parcel.app/external/v1";
+const PARCEL_API_BASE = "https://api.parcel.app/external";
 
 // Validate API key on startup
 const apiKey = process.env.PARCEL_API_KEY;
@@ -31,20 +32,47 @@ To get your API key:
 // Create server instance
 const server = new McpServer({
   name: "parcel",
-  version: "1.0.0",
+  version: "1.1.0",
 });
+
+// Parcel API response types
+interface ParcelDelivery {
+  carrier_code: string;
+  description: string;
+  status_code: number;
+  tracking_number: string;
+  extra_information?: string;
+  date_expected?: string;
+  date_expected_end?: string;
+  events?: Array<{
+    event: string;
+    date: string;
+    location?: string;
+  }>;
+}
+
+interface ParcelDeliveriesResponse {
+  success: boolean;
+  error_message?: string;
+  deliveries: ParcelDelivery[];
+}
+
+interface ParcelAddDeliveryResponse {
+  success: boolean;
+  error_message?: string;
+}
 
 // Helper for API requests
 async function parcelRequest(
   endpoint: string,
-  method: "GET" | "POST" | "DELETE" = "GET",
+  method: "GET" | "POST" = "GET",
   body?: unknown
 ): Promise<unknown> {
   const url = `${PARCEL_API_BASE}${endpoint}`;
   const options: RequestInit = {
     method,
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      "api-key": apiKey!,
       "Content-Type": "application/json",
     },
   };
@@ -63,8 +91,8 @@ async function parcelRequest(
   return response.json();
 }
 
-// Carrier codes reference
-const CARRIERS = {
+// Carrier codes reference (common ones)
+const CARRIERS: Record<string, string> = {
   ups: "UPS",
   fedex: "FedEx",
   usps: "USPS",
@@ -73,7 +101,7 @@ const CARRIERS = {
   ontrac: "OnTrac",
   lasership: "LaserShip",
   amazon: "Amazon Logistics",
-  "amazon-us": "Amazon US",
+  amzlus: "Amazon US",
   cdl: "CDL Last Mile",
   "ups-mi": "UPS Mail Innovations",
   "fedex-smartpost": "FedEx SmartPost",
@@ -81,18 +109,18 @@ const CARRIERS = {
   newgistics: "Newgistics/Pitney Bowes",
   veho: "Veho",
   "ups-surepost": "UPS SurePost",
+  pholder: "Placeholder (manual tracking)",
 };
 
-// Status codes reference
-const STATUS_CODES = {
-  unknown: "Status unknown",
-  "info-received": "Shipping label created, carrier awaiting package",
-  "in-transit": "Package in transit",
-  "out-for-delivery": "Out for delivery",
-  delivered: "Delivered",
-  exception: "Delivery exception (delay, failed attempt, etc.)",
-  pickup: "Available for pickup",
-  returned: "Package returned to sender",
+// Status codes from Parcel API
+const STATUS_CODES: Record<number, string> = {
+  0: "Delivered",
+  1: "Attempted delivery",
+  2: "In transit",
+  3: "Out for delivery",
+  4: "Info received / Label created",
+  5: "Exception / Problem",
+  6: "Expired / Unknown",
 };
 
 // Tool: Get deliveries
@@ -112,51 +140,36 @@ server.tool(
       .describe("Maximum number of deliveries to return (default: 50)"),
   },
   async ({ include_delivered, limit }) => {
-    const deliveries = (await parcelRequest("/deliveries")) as Array<{
-      id: string;
-      trackingNumber: string;
-      carrier: string;
-      description: string;
-      status: string;
-      statusMessage: string;
-      estimatedDelivery: string | null;
-      deliveredAt: string | null;
-      lastUpdate: string;
-      events: Array<{
-        timestamp: string;
-        description: string;
-        location: string;
-      }>;
-    }>;
+    const response = (await parcelRequest(
+      "/deliveries/"
+    )) as ParcelDeliveriesResponse;
 
-    let filtered = deliveries;
+    if (!response.success) {
+      throw new Error(
+        `Parcel API error: ${response.error_message || "Unknown error"}`
+      );
+    }
 
-    // Filter out delivered if requested
+    let deliveries = response.deliveries;
+
+    // Filter out delivered (status_code 0) if requested
     if (!include_delivered) {
-      filtered = filtered.filter((d) => d.status !== "delivered");
+      deliveries = deliveries.filter((d) => d.status_code !== 0);
     }
 
     // Apply limit
-    filtered = filtered.slice(0, limit);
+    deliveries = deliveries.slice(0, limit);
 
     // Format for display
-    const formatted = filtered.map((d) => ({
-      id: d.id,
-      tracking_number: d.trackingNumber,
-      carrier: d.carrier,
+    const formatted = deliveries.map((d) => ({
+      tracking_number: d.tracking_number,
+      carrier: d.carrier_code,
+      carrier_name: CARRIERS[d.carrier_code] || d.carrier_code,
       description: d.description || "No description",
-      status: d.status,
-      status_message: d.statusMessage,
-      estimated_delivery: d.estimatedDelivery,
-      delivered_at: d.deliveredAt,
-      last_update: d.lastUpdate,
-      latest_event: d.events?.[0]
-        ? {
-            time: d.events[0].timestamp,
-            description: d.events[0].description,
-            location: d.events[0].location,
-          }
-        : null,
+      status_code: d.status_code,
+      status: STATUS_CODES[d.status_code] || "Unknown",
+      date_expected: d.date_expected || null,
+      latest_event: d.events?.[0] || null,
     }));
 
     return {
@@ -185,35 +198,32 @@ server.tool(
       ),
     description: z
       .string()
-      .optional()
-      .describe("Optional description (e.g., 'Amazon order - headphones')"),
+      .describe("Description of the package (e.g., 'Amazon order - headphones')"),
   },
   async ({ tracking_number, carrier, description }) => {
-    const payload: {
-      trackingNumber: string;
-      carrier: string;
-      description?: string;
-    } = {
-      trackingNumber: tracking_number,
-      carrier: carrier.toLowerCase(),
+    const payload = {
+      tracking_number: tracking_number,
+      carrier_code: carrier.toLowerCase(),
+      description: description || "Package",
     };
 
-    if (description) {
-      payload.description = description;
+    const result = (await parcelRequest(
+      "/add-delivery/",
+      "POST",
+      payload
+    )) as ParcelAddDeliveryResponse;
+
+    if (!result.success) {
+      throw new Error(
+        `Failed to add delivery: ${result.error_message || "Unknown error"}`
+      );
     }
-
-    const result = (await parcelRequest("/deliveries", "POST", payload)) as {
-      id: string;
-      trackingNumber: string;
-      carrier: string;
-      status: string;
-    };
 
     return {
       content: [
         {
           type: "text" as const,
-          text: `Successfully added delivery:\n- ID: ${result.id}\n- Tracking: ${result.trackingNumber}\n- Carrier: ${result.carrier}\n- Status: ${result.status}`,
+          text: `Successfully added delivery:\n- Tracking: ${tracking_number}\n- Carrier: ${carrier}\n- Description: ${description || "Package"}`,
         },
       ],
     };
