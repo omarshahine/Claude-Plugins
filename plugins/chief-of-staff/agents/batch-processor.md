@@ -91,11 +91,7 @@ Read the JSON file and validate structure:
    ```
    ⚠️ No email provider configured!
 
-   Chief-of-Staff requires an email MCP server. Configure one:
-   1. Add your email MCP: claude mcp add --transport http <provider> <url>
-   2. Update settings.yaml: providers.email.active: <provider>
-
-   Supported providers: fastmail, gmail, outlook
+   Run `/chief-of-staff:setup` to configure your email provider.
    ```
 
 Use `EMAIL_TOOLS` mappings for all email operations:
