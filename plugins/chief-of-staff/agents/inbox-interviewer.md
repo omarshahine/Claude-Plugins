@@ -22,6 +22,7 @@ description: |
   </example>
 mcp:
   - fastmail
+  - apple-pim
 model: opus
 color: blue
 tools: "*"
