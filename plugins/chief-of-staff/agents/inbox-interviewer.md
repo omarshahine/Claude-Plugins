@@ -82,18 +82,7 @@ If ToolSearch finds no email tools, **STOP** and display:
 ```
 ⚠️ No email provider configured!
 
-Chief-of-Staff requires an email MCP server. Configure one:
-
-1. Add your email MCP server:
-   claude mcp add --transport http <provider-name> <your-mcp-url>
-
-2. Update settings.yaml:
-   providers:
-     email:
-       active: <provider-name>
-
-Supported providers: fastmail, gmail, outlook
-After configuring, restart Claude Code and run this command again.
+Run `/chief-of-staff:setup` to configure your email provider.
 ```
 
 ### Provider-Agnostic Tool Usage

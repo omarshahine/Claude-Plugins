@@ -68,24 +68,67 @@ AskUserQuestion:
 
 ### Phase 2: Email Provider Setup
 
-4. Read `data/settings.example.yaml` to get the template
-5. Ask user which email provider they're using via AskUserQuestion:
-```
-AskUserQuestion:
-  questions:
-    - question: "Which email provider are you using?"
-      header: "Email"
-      options:
-        - label: "Fastmail (Recommended)"
-          description: "Full MCP integration with advanced search"
-        - label: "Gmail"
-          description: "Gmail MCP server required"
-        - label: "Outlook"
-          description: "Microsoft Graph MCP required"
-```
+4. **Discover existing email MCP tools** using ToolSearch:
+   ```
+   ToolSearch query: "list_mailboxes email"
+   ```
 
-6. Use ToolSearch to load email MCP tools (e.g., `+fastmail list mailboxes`)
-7. Call list_mailboxes to verify connection
+   Check results for known providers: `mcp__fastmail__`, `mcp__gmail__`, `mcp__outlook__`
+
+5. **If email tools found**, auto-detect provider:
+   - Extract provider name from tool prefix (e.g., `mcp__fastmail__` → "fastmail")
+   - Skip to step 7 (verify connection)
+   - Confirm with user: "Found [provider] email tools. Using this provider."
+
+6. **If NO email tools found**, guide user through setup:
+   ```
+   AskUserQuestion:
+     questions:
+       - question: "No email MCP server detected. Which email provider do you want to set up?"
+         header: "Email Provider"
+         options:
+           - label: "Fastmail (Recommended)"
+             description: "Best MCP support, advanced search, bulk operations"
+           - label: "Gmail"
+             description: "Requires Gmail MCP server"
+           - label: "Outlook"
+             description: "Requires Microsoft Graph MCP server"
+         multiSelect: false
+   ```
+
+   Then display setup instructions based on selection:
+   ```
+   ## Email MCP Setup Required
+
+   To use Chief-of-Staff, you need to add your [PROVIDER] MCP server:
+
+   **Cowork users:**
+   1. Go to Settings → Custom Connectors
+   2. Click "Add Connector"
+   3. Enter:
+      - Name: `[provider]` (exactly as shown - lowercase)
+      - URL: Your [PROVIDER] MCP server URL
+   4. Click Save
+   5. Re-run `/chief-of-staff:setup`
+
+   **CLI users:**
+   ```
+   claude mcp add --transport http [provider] <your-mcp-url>
+   ```
+
+   **Need an MCP server?**
+   - Fastmail: https://github.com/nicholasgriffintn/fastmail-mcp
+   - Gmail: [community MCP servers]
+   - Outlook: [community MCP servers]
+   ```
+
+   **STOP here** - user must add the MCP connector first, then re-run setup.
+
+7. **Verify email connection**:
+   - Load provider tools: `ToolSearch query: "+[provider]"`
+   - Call `list_mailboxes` to verify connection works
+   - If connection fails, show troubleshooting steps
+   - If success, extract folder list for settings.yaml
 
 ### Phase 3: Integration Verification
 
@@ -96,11 +139,55 @@ AskUserQuestion:
 
 ### Phase 4: Configuration Files
 
-9. Create `data/settings.yaml` with:
-   - Persona configuration (name, user_name, greeting_style)
-   - Provider configuration
-   - Discovered folder IDs
-   - Integration status
+9. **Find plugin data directory**:
+   ```
+   Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.example.yaml
+   ```
+   Extract the data directory path.
+
+10. **Read settings.example.yaml** as the template
+
+11. **Create settings.yaml** with:
+
+   **Persona section:**
+   ```yaml
+   persona:
+     name: "[selected name]"           # e.g., "Friday"
+     user_name: "[user's name or null]"
+     greeting_style: "[selected style]" # professional, friendly, casual
+   ```
+
+   **Email provider section** (based on detected/selected provider):
+   ```yaml
+   providers:
+     email:
+       active: [provider]  # fastmail, gmail, or outlook
+       mappings:
+         # Copy the mappings for the active provider from settings.example.yaml
+         [provider]:
+           list_mailboxes: mcp__[provider]__list_mailboxes
+           list_emails: mcp__[provider]__list_emails
+           # ... all other mappings
+   ```
+
+   **Discovered folders:**
+   ```yaml
+   folders:
+     inbox_id: "[discovered inbox ID]"
+     archive_id: "[discovered archive ID or null]"
+     orders_folder_name: "Orders"
+     # ... other folder settings
+   ```
+
+   **Integration status:**
+   ```yaml
+   integrations:
+     parcel: [true/false based on discovery]
+     reminders: [true/false based on discovery]
+     newsletters: [true/false based on discovery]
+   ```
+
+12. **Write settings.yaml** to the data directory (same location as settings.example.yaml)
 
 ### Phase 5: Generate Summon Command
 
