@@ -396,11 +396,16 @@ The marketplace version must be bumped whenever ANY child plugin changes. This e
 
 ### Semantic Versioning
 
-Use **minor version bumps** (X.Y.0 → X.Y+1.0) for:
-- New features, commands, or agents
+Use **patch version bumps** (1.0.X → 1.0.X+1) for most changes:
 - Bug fixes
+- Small improvements
+- Config changes
 - Documentation updates
 - Refactoring
+
+Use **minor version bumps** (1.X.0 → 1.X+1.0) for:
+- New features, commands, or agents
+- Significant new functionality
 
 Use **major version bumps** (X.0.0 → X+1.0.0) only for:
 - Breaking changes to command syntax or behavior
@@ -409,10 +414,10 @@ Use **major version bumps** (X.0.0 → X+1.0.0) only for:
 
 **Example workflow:**
 ```
-# Fixing a bug in chief-of-staff (currently 1.1.0, marketplace 1.1.0)
+# Fixing a bug in chief-of-staff (currently 1.0.0, marketplace 1.0.0)
 1. Make the fix
-2. Bump chief-of-staff: 1.1.0 → 1.2.0
-3. Bump marketplace: 1.1.0 → 1.2.0
+2. Bump chief-of-staff: 1.0.0 → 1.0.1
+3. Bump marketplace: 1.0.0 → 1.0.1
 4. Update plugin entry in marketplace.json to match new version
 ```
 
