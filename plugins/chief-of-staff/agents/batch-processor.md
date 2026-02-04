@@ -14,7 +14,7 @@ description: |
   user: "/chief-of-staff:batch --process"
   assistant: "Let me use the batch-processor agent to process the decisions file."
   </example>
-model: sonnet
+model: opus
 color: green
 tools:
   - Glob

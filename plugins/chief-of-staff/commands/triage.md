@@ -93,7 +93,7 @@ Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The tr
 **Workflow:**
 
 1. Load Fastmail MCP tools via ToolSearch (`+fastmail`)
-2. Fetch inbox emails with `get_recent_emails` or `list_emails`
+2. Fetch inbox emails with `get_recent_emails` (limit: 50) or `list_emails` (limit: 50)
 3. For each email, use `AskUserQuestion` to present options:
    - Include email summary in the question text
    - Provide 4 options: Archive, Delete, Keep, Reminder (or contextual alternatives)
