@@ -6,6 +6,7 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
+    "bundle": "esbuild src/server.ts --bundle --platform=node --format=esm --outfile=bundle/server.mjs --banner:js='#!/usr/bin/env node'",
     "start": "node dist/server.js",
     "dev": "tsx src/server.ts"
   },
@@ -15,6 +16,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.17.9",
+    "esbuild": "^0.27.2",
     "tsx": "^4.21.0",
     "typescript": "^5.7.2"
   }

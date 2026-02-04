@@ -12,8 +12,6 @@ fi
 
 # Get the directory where this script lives, then find the server
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SERVER_DIR="$SCRIPT_DIR/../mcp-server/parcel"
 
-# Use npx tsx to run TypeScript directly (avoids needing pre-built dist/)
-# This ensures the server works even when dist/ is gitignored and not in plugin cache
-exec npx --yes tsx "$SERVER_DIR/src/server.ts" "$@"
+# Use the pre-bundled server (includes all dependencies, no node_modules needed)
+exec node "$SCRIPT_DIR/../mcp-server/parcel/bundle/server.mjs" "$@"
