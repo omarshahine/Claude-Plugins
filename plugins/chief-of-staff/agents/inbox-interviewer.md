@@ -20,6 +20,8 @@ description: |
   user: "Process my emails one by one"
   assistant: "I'll process each email with simple numbered options using AskUserQuestion."
   </example>
+mcp:
+  - fastmail
 model: opus
 color: blue
 tools: "*"

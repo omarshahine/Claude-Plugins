@@ -1,5 +1,9 @@
 ---
 description: "Process order/shipment emails and add tracking information to Parcel app. This includes:\n\n- Scanning inbox for shipment notification emails\n- Extracting tracking numbers and carrier information\n- Using Playwright to fetch tracking details from links in emails when needed\n- Adding deliveries to Parcel app via API\n- Moving processed emails to the Orders folder\n- Archiving Amazon order/shipment emails to Orders folder (they auto-sync to Parcel, but still need organizing)\n\nExamples:\n\n<example>\nuser: \"Check my inbox for shipping notifications and add them to Parcel\"\nassistant: \"I'll use the inbox-to-parcel agent to scan your inbox for shipment emails, extract tracking info, and add them to Parcel.\"\n</example>\n\n<example>\nuser: \"Process my recent order confirmations\"\nassistant: \"Let me use the inbox-to-parcel agent to find order emails with tracking numbers and add them to Parcel.\"\n</example>\n\n<example>\nuser: \"Add my tracking numbers to Parcel from recent emails\"\nassistant: \"I'll launch the inbox-to-parcel agent to extract tracking information and add deliveries to Parcel.\"\n</example>"
+mcp:
+  - fastmail
+  - parcel
+  - playwright
 model: sonnet
 color: orange
 tools: "*"

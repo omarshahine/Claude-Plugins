@@ -6,6 +6,8 @@ description: |
   user: "What newsletters should I unsubscribe from?"
   assistant: "I'll analyze your Trash to find newsletters you frequently delete."
   </example>
+mcp:
+  - fastmail
 model: opus
 tools:
   - Glob

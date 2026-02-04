@@ -6,6 +6,8 @@ description: |
   user: "Learn my email filing patterns"
   assistant: "I'll analyze your existing folder organization and extract filing rules."
   </example>
+mcp:
+  - fastmail
 model: opus
 tools:
   - Glob
