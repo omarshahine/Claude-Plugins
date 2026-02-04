@@ -13,10 +13,10 @@ description: |
   <example>
   user: "/chief-of-staff:batch --process"
   assistant: "Let me use the batch-processor agent to process the decisions file."
+  </example>
 mcp:
   - fastmail
   - apple-pim
-  </example>
 model: sonnet
 color: green
 tools:

@@ -26,6 +26,9 @@
     "playwright": {
       "command": "npx",
       "args": ["-y", "@playwright/mcp", "--headless", "--browser", "chrome"]
+    },
+    "parcel": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/scripts/parcel-server.sh"
     }
   }
 }
