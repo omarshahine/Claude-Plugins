@@ -90,7 +90,7 @@ Install the main orchestrator plugin:
 
 | Command | Description |
 |---------|-------------|
-| `/chief-of-staff:setup` | Configure email provider (Fastmail active) |
+| `/chief-of-staff:setup` | Configure email provider (Fastmail, Gmail, Outlook) |
 | `/chief-of-staff:daily` | Full daily orchestration routine |
 | `/chief-of-staff:status` | Quick dashboard of inbox status |
 | `/chief-of-staff:triage` | Interactive questions-first triage |
@@ -132,7 +132,7 @@ PHASE 3: LEARN (improve suggestions)
 
 | You Say | What Happens |
 |---------|--------------|
-| "Need to create a rule" | Archives + creates reminder to make Fastmail rule |
+| "Need to create a rule" | Archives + creates reminder to make a server-side rule |
 | "Flag for later" | Keeps in inbox + flags for follow-up |
 | "Read and summarize" | Summarizes content, shows at end, then archives/deletes |
 
@@ -147,7 +147,7 @@ Extracts tracking numbers from shipping emails and adds to Parcel app.
 - Supports: UPS, FedEx, USPS, DHL, OnTrac, Amazon
 - Moves processed emails to Orders folder
 - **Direct command**: `/chief-of-staff:parcel`
-- **Requires**: Email MCP + Parcel API MCP server
+- **Requires**: Parcel, Playwright MCPs (email loads via ToolSearch)
 
 #### newsletter-unsubscriber
 
@@ -157,7 +157,7 @@ Handles unwanted newsletter unsubscription.
 - Executes via mailto or web forms (uses Playwright)
 - Maintains allowlist of wanted newsletters
 - **Direct command**: `/chief-of-staff:unsubscribe`
-- **Requires**: Email MCP + Playwright plugin
+- **Requires**: Playwright MCP (email loads via ToolSearch)
 
 #### inbox-to-reminder
 
@@ -167,7 +167,7 @@ Creates Apple Reminders from emails requiring action.
 - Creates reminders with appropriate due dates
 - Routes to correct reminder list
 - **Direct command**: `/chief-of-staff:reminders`
-- **Requires**: Email MCP + `apple-pim` plugin
+- **Requires**: `apple-pim` plugin (loads via ToolSearch)
 
 #### Other Sub-Agents
 
@@ -184,8 +184,16 @@ Creates Apple Reminders from emails requiring action.
 
 ### Requirements
 
-- Email MCP server (Fastmail active; Gmail/Outlook planned)
+- Email MCP server (Fastmail, Gmail, or Outlook)
 - Existing folder structure to learn from
+
+### Provider-Agnostic Architecture
+
+Chief-of-Staff agents are **email provider-agnostic**. The active email provider is configured in `settings.yaml`, and agents dynamically load the appropriate email tools via ToolSearch at runtime.
+
+Only **fixed** integrations (Parcel, Playwright, Apple PIM) are declared in agent frontmatter. This means:
+- Switch email providers by updating `settings.yaml` - no agent changes needed
+- Gmail and Outlook support ready when MCP servers are available
 
 ### Private Extensions
 
