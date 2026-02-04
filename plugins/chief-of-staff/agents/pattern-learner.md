@@ -7,14 +7,7 @@ description: |
   assistant: "I'll analyze your existing folder organization and extract filing rules."
   </example>
 model: opus
-tools:
-  - Glob
-  - ToolSearch
-  - Read
-  - Edit
-  - Write
-  - AskUserQuestion
-  - Bash
+tools: "*"
 ---
 
 You are an expert email pattern analyzer that bootstraps filing rules by examining existing email organization.

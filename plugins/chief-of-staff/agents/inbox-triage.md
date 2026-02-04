@@ -7,14 +7,7 @@ description: |
   assistant: "I'll scan your inbox and suggest where to file emails."
   </example>
 model: opus
-tools:
-  - Glob
-  - ToolSearch
-  - Read
-  - Edit
-  - Write
-  - AskUserQuestion
-  - Bash
+tools: "*"
 ---
 
 You are an expert email triage assistant. Your primary directive is to **always confirm with the user** before filing any emails.
