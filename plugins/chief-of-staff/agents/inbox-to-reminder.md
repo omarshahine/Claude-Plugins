@@ -54,6 +54,32 @@ Failed: Z (if any)
 
 **Do NOT ask the user any questions in batch mode - just process and report.**
 
+## Email Provider Requirement (Tool Discovery)
+
+**This agent requires an email MCP server.** The email provider is NOT bundled with this plugin.
+
+### Discovery Workflow
+
+Before processing emails:
+
+1. **Search for email tools** using ToolSearch:
+   ```
+   ToolSearch query: "+fastmail" OR "+gmail" OR "+outlook"
+   ```
+
+2. **If NO email tools found**, STOP and display:
+   ```
+   ⚠️ No email provider configured!
+
+   Chief-of-Staff requires an email MCP server. Add your email provider:
+   - Cowork: Add as custom connector (name: "fastmail", URL: your MCP URL)
+   - CLI: `claude mcp add --transport http fastmail <your-mcp-url>`
+
+   After configuring, run this command again.
+   ```
+
+3. **Determine tool prefix** from discovered tools and use for all email operations.
+
 ## Data Files Location
 
 **CRITICAL**: First find the plugin data directory by searching for `chief-of-staff/*/data/settings.yaml` under `~/.claude/plugins/cache/`.
@@ -62,50 +88,14 @@ Failed: Z (if any)
 
 ## Provider Configuration
 
-This plugin supports multiple email and reminder providers. Before starting, read the settings file:
-
-**Settings file**: `data/settings.yaml` (relative to plugin root)
-
-(Check for `settings.local.yaml` first if it exists - that contains personal overrides)
-
-The settings file contains:
-- `providers.email.active` - The active email provider (fastmail, gmail, outlook)
-- `providers.email.mappings` - Tool name mappings for each provider
-- `providers.reminders.active` - The active reminder provider (apple-pim)
-- `providers.reminders.mappings` - Tool name mappings for reminders
-- `customizations` - User-specific settings:
-  - `partner_name` - Name to use when user asks for "emails from my partner"
-  - `family_list_name` - Apple Reminders list name for family tasks
-  - `family_members` - Additional family member names for filtering
-
-Use the appropriate tool names based on the active provider configuration.
+After finding data files, read `settings.yaml` for customizations:
+- `customizations.partner_name` - Name to use when user asks for "emails from my partner"
+- `customizations.family_list_name` - Apple Reminders list name for family tasks
+- `customizations.family_members` - Additional family member names for filtering
 
 **Using Customizations:**
-- When user says "from my partner" or "from partner", use the `partner_name` value in email filters
+- When user says "from my partner", use the `partner_name` value in email filters
 - When creating family-related reminders, use `family_list_name` as the reminder list
-- When filtering by family members, check both `partner_name` and `family_members` list
-
-## CRITICAL: Configuration Check
-
-**Before doing ANY work, you MUST verify configuration is complete.**
-
-1. Try to read `data/settings.local.yaml` first
-2. If it doesn't exist, read `data/settings.yaml`
-3. Check if `providers.email.active` is set (not `null`)
-
-**If `active` is `null` or file doesn't exist**, STOP and display:
-
-```
-Plugin not configured!
-
-This plugin requires setup before first use. Please run:
-
-  /chief-of-staff:setup
-
-This will configure your email provider (Fastmail, Gmail, or Outlook).
-```
-
-**Do NOT proceed with any email scanning until configuration is verified.**
 
 ## CRITICAL: INBOX-ONLY SEARCH
 

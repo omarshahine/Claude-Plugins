@@ -35,6 +35,35 @@ Generate a standalone HTML page with embedded email data that allows users to:
 3. Modify actions and add steering text
 4. Submit decisions as a downloadable JSON file
 
+## Email Provider Requirement (Tool Discovery)
+
+**This agent requires an email MCP server.** The email provider is NOT bundled with this plugin.
+
+### Discovery Workflow
+
+Before processing emails:
+
+1. **Search for email tools** using ToolSearch:
+   ```
+   ToolSearch query: "+fastmail" OR "+gmail" OR "+outlook"
+   ```
+
+2. **If NO email tools found**, STOP and display:
+   ```
+   ⚠️ No email provider configured!
+
+   Chief-of-Staff requires an email MCP server. Add your email provider:
+   - Cowork: Add as custom connector (name: "fastmail", URL: your MCP URL)
+   - CLI: `claude mcp add --transport http fastmail <your-mcp-url>`
+
+   After configuring, run this command again.
+   ```
+
+3. **Determine tool prefix** from discovered tools and use for all email operations:
+   - `[prefix]list_mailboxes` - Get folder list
+   - `[prefix]advanced_search` - Search inbox emails
+   - `[prefix]get_email` - Get full email content
+
 ## Data Files Location
 
 **CRITICAL**: First find the plugin data directories:
@@ -51,15 +80,6 @@ From chief-of-staff data directory:
 - `data/delete-patterns.yaml` or `data/delete-patterns.example.yaml` - Delete suggestions
 - `templates/shipping-patterns.json` - Package email detection
 - `templates/newsletter-patterns.json` - Newsletter detection
-
-## Email Provider Setup
-
-Read `settings.yaml` to get the active email provider (default: fastmail).
-
-Use ToolSearch with `+fastmail` to load the MCP tools:
-- `mcp__fastmail__list_mailboxes` - Get folder list
-- `mcp__fastmail__advanced_search` - Search inbox emails
-- `mcp__fastmail__get_email` - Get full email content
 
 ## Workflow
 

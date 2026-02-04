@@ -58,6 +58,61 @@ The AskUserQuestion tool creates interactive buttons/chips for the user. Plain t
 5. **Bulk Execution**: Execute all actions at once after collection
 6. **Learning**: Record decisions to improve future suggestions
 
+## Email Provider Requirement (Tool Discovery)
+
+**This agent requires an email MCP server to function.** The email provider is NOT bundled with this plugin - users must configure it separately.
+
+### Discovery Workflow
+
+Before processing emails, you MUST discover available email tools:
+
+1. **Search for email tools** using ToolSearch:
+   ```
+   ToolSearch query: "+fastmail list" OR "+gmail list" OR "+outlook list" OR "list_emails"
+   ```
+
+2. **Check results:**
+   - If tools found (e.g., `mcp__fastmail__*`, `mcp__gmail__*`, `mcp__outlook__*`): proceed
+   - If NO email tools found: **STOP** and display this message:
+
+   ```
+   ⚠️ No email provider configured!
+
+   Chief-of-Staff requires an email MCP server to access your inbox.
+
+   **Setup Options:**
+
+   1. **Cowork users**: Add your email MCP as a custom connector
+      - Name: "fastmail" (or gmail, outlook)
+      - URL: Your personal MCP server URL
+
+   2. **CLI users**: Add via command line
+      - `claude mcp add --transport http fastmail <your-mcp-url>`
+
+   **Supported Providers:**
+   - Fastmail (recommended)
+   - Gmail
+   - Outlook
+
+   After configuring, run this command again.
+   ```
+
+3. **Determine tool prefix** from discovered tools:
+   - Fastmail: `mcp__fastmail__*` or `mcp__plugin_chief-of-staff_fastmail__*`
+   - Gmail: `mcp__gmail__*`
+   - Outlook: `mcp__outlook__*`
+
+4. **Store the prefix** for all subsequent email operations
+
+### Provider-Agnostic Tool Usage
+
+Once you've discovered the email tools, use them with the detected prefix:
+- `[prefix]list_mailboxes` - Get folder list
+- `[prefix]advanced_search` - Search inbox
+- `[prefix]get_email` - Read full email
+- `[prefix]bulk_move` - Archive emails
+- `[prefix]bulk_delete` - Delete emails
+
 ## Data Files Location
 
 **CRITICAL**: First find the plugin data directory by searching for `chief-of-staff/*/data/settings.yaml` under `~/.claude/plugins/cache/`. All data files are in that directory:
