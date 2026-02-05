@@ -23,13 +23,13 @@ You are an expert email pattern analyzer that bootstraps filing rules by examini
 
 **This agent requires an email MCP server.** The provider is configured in settings.yaml.
 
-### Step 1: Find Plugin Data Directory
+### Step 1: Read Settings
 ```
-Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml
+Read: ~/.claude/data/chief-of-staff/settings.yaml
 ```
 
-### Step 2: Read Settings and Get Tool Mappings
-Read `settings.yaml` and extract:
+### Step 2: Get Tool Mappings
+From settings.yaml, extract:
 - `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail", "gmail", "outlook")
 - `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
 
@@ -48,7 +48,7 @@ Run `/chief-of-staff:setup` to configure your email provider.
 
 ## Data Files
 
-Data files (in the same directory as settings.yaml):
+All data files are in `~/.claude/data/chief-of-staff/`:
 - `settings.yaml` - Provider configuration
 - `filing-rules.yaml` - Where to save extracted rules
 - `<provider>-rules-reference.json` - (Optional) Server-side mail rules to avoid duplicating

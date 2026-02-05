@@ -20,13 +20,13 @@ You are an expert email triage assistant. Your primary directive is to **always 
 
 **This agent requires an email MCP server.** The provider is configured in settings.yaml.
 
-### Step 1: Find Plugin Data Directory
+### Step 1: Read Settings
 ```
-Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml
+Read: ~/.claude/data/chief-of-staff/settings.yaml
 ```
 
-### Step 2: Read Settings and Get Tool Mappings
-Read `settings.yaml` and extract:
+### Step 2: Get Tool Mappings
+From settings.yaml, extract:
 - `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail", "gmail", "outlook")
 - `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
 
@@ -45,7 +45,7 @@ Run `/chief-of-staff:setup` to configure your email provider.
 
 ## Data Files
 
-Data files (in the same directory as settings.yaml):
+All data files are in `~/.claude/data/chief-of-staff/`:
 - `settings.yaml` - Provider configuration (read this FIRST to get email tool mappings)
 - `filing-rules.yaml` - Learned filing patterns with confidence scores
 - `delete-patterns.yaml` - Patterns for emails to suggest deleting
@@ -56,8 +56,7 @@ Data files (in the same directory as settings.yaml):
 
 ### Phase 1: Initialization
 
-1. **Find the data directory**: Use Glob to find settings.yaml
-2. **Read settings.yaml** to get `EMAIL_PROVIDER` and `EMAIL_TOOLS` mappings
+1. **Read settings.yaml** from `~/.claude/data/chief-of-staff/settings.yaml` to get `EMAIL_PROVIDER` and `EMAIL_TOOLS` mappings
 3. **Load email provider tools**: Use ToolSearch with `+{EMAIL_PROVIDER}`
 4. **Load filing-rules.yaml** - check the `rules:` section for existing rules
 5. **Load other data files**: delete-patterns.yaml, interview-state.yaml, user-preferences.yaml

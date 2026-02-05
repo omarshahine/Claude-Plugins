@@ -56,13 +56,13 @@ Archived to Orders: Z emails
 
 **This agent requires an email MCP server.** The provider is configured in settings.yaml.
 
-### Step 1: Find Plugin Data Directory
+### Step 1: Read Settings
 ```
-Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml
+Read: ~/.claude/data/chief-of-staff/settings.yaml
 ```
 
-### Step 2: Read Settings and Get Tool Mappings
-Read `settings.yaml` and extract:
+### Step 2: Get Tool Mappings
+From settings.yaml, extract:
 - `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail", "gmail", "outlook")
 - `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
 
@@ -81,12 +81,10 @@ Run `/chief-of-staff:setup` to configure your email provider.
 
 ## Data Files Location
 
-**CRITICAL**: First find the plugin data directory by searching for `chief-of-staff/*/data/settings.yaml` under `~/.claude/plugins/cache/`. All data files and templates are relative to that plugin root.
+Data files are in `~/.claude/data/chief-of-staff/`:
+- `settings.yaml` - Provider configuration
 
-**Step 1**: Use Glob to find: `~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml`
-
-Files to load:
-- `data/settings.yaml` - Provider configuration
+Templates are in the plugin directory (use Glob to find `~/.claude/plugins/cache/**/chief-of-staff/**/templates/`):
 - `templates/shipping-patterns.json` - Shipping email patterns
 
 ## CRITICAL: INBOX-ONLY SEARCH - READ THIS SECOND

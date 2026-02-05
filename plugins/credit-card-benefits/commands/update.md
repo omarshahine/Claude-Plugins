@@ -162,7 +162,7 @@ Applying changes to checklist...
 ✓ Updated: Airline fee description expanded
 ✗ Skipped: User declined to add new benefit X
 
-Changes saved to ~/.config/credit-card-benefits/checklist.yaml
+Changes saved to ~/.claude/data/credit-card-benefits/checklist.yaml
 
 Tip: Run /credit-card-benefits:status to see your updated benefits
 ```

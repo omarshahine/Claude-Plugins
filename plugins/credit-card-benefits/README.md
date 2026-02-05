@@ -135,7 +135,7 @@ The `benefits-tracker` agent can be invoked naturally:
 ## Data Storage
 
 ```
-~/.config/credit-card-benefits/
+~/.claude/data/credit-card-benefits/
 ├── checklist.yaml      # Main tracking data (YAML for easy editing)
 └── ynab-token          # YNAB API token (if using YNAB API)
 ```
