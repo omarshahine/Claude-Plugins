@@ -683,9 +683,12 @@
   <!-- Success Modal -->
   <div class="modal-overlay hidden" id="successModal">
     <div class="modal">
-      <h2>Decisions Saved</h2>
-      <p>Your triage decisions have been downloaded. Run this command to process them:</p>
+      <h2>✅ Decisions Saved</h2>
+      <p style="margin-bottom: 0.5rem;">A JSON file was downloaded to your <strong>Downloads</strong> folder:</p>
+      <code style="margin-bottom: 1rem; font-size: 0.75rem; color: var(--text-secondary);" id="downloadedFilename">inbox-triage-decisions-YYYY-MM-DD.json</code>
+      <p>Now run this command in Claude Code to execute your decisions:</p>
       <code>/chief-of-staff:batch --process</code>
+      <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.75rem;">The command will automatically find and process the downloaded file.</p>
       <div class="modal-actions">
         <button class="btn btn-primary" onclick="closeModal()">Done</button>
       </div>
@@ -1171,10 +1174,8 @@
       let options = '<option value="">Select folder...</option>';
       folders.forEach(folder => {
         const selected = folder.id === suggestedFolderId ? 'selected' : '';
-        const icon = folder.name.toLowerCase().includes('financial') ? '\ud83d\udcb0' :
-                     folder.name.toLowerCase().includes('order') ? '\ud83d\udce6' :
-                     folder.name.toLowerCase().includes('travel') ? '\u2708\ufe0f' : '\ud83d\udcc1';
-        options += `<option value="${folder.id}" ${selected}>${icon} ${escapeHtml(folder.name)}</option>`;
+        // Folder names already include emojis - don't add extra icons
+        options += `<option value="${folder.id}" ${selected}>${escapeHtml(folder.name)}</option>`;
       });
 
       return options;
@@ -1302,16 +1303,19 @@
         decisions: Object.values(decisions).filter(d => d.action !== 'keep' || d.steering)
       };
 
+      const filename = `inbox-triage-decisions-${new Date().toISOString().split('T')[0]}.json`;
       const blob = new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `inbox-triage-decisions-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
+      // Show modal with actual filename
+      document.getElementById('downloadedFilename').textContent = filename;
       document.getElementById('successModal').classList.remove('hidden');
     }
 

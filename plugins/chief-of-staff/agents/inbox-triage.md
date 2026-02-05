@@ -6,7 +6,7 @@ description: |
   user: "Process my inbox"
   assistant: "I'll scan your inbox and suggest where to file emails."
   </example>
-model: opus
+model: sonnet
 tools: "*"
 ---
 
