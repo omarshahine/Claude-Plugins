@@ -14,7 +14,7 @@ Initialize the benefits tracking system or configure individual cards.
 ## Data Location
 
 ```
-~/.claude/data/credit-card-benefits/checklist.json
+~/.claude/data/credit-card-benefits/checklist.yaml
 ```
 
 ## Operations

@@ -21,7 +21,7 @@ When this command runs, follow these steps in order:
 
 ```bash
 # Check if config file exists
-CONFIG_DIR="$HOME/.config/credit-card-benefits"
+CONFIG_DIR="$HOME/.claude/data/credit-card-benefits"
 CONFIG_FILE="$CONFIG_DIR/checklist.yaml"
 
 if [ -f "$CONFIG_FILE" ]; then

@@ -17,7 +17,7 @@ When the user runs this command, read the checklist data and display benefit sta
 ### Data Location
 
 ```
-~/.claude/data/credit-card-benefits/checklist.json
+~/.claude/data/credit-card-benefits/checklist.yaml
 ```
 
 ### Arguments
