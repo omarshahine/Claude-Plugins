@@ -143,7 +143,7 @@ Use the Task tool with:
   subagent_type: "chief-of-staff:batch-processor"
   prompt: |
     Retry failed items from the previous batch.
-    Read failures from batch-state.yaml and reprocess only those items.
+    Read failures from ~/.claude/data/chief-of-staff/batch-state.yaml and reprocess only those items.
 ```
 
 **Why Task tool is required:**

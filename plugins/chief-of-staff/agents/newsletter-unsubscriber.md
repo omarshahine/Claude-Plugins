@@ -13,13 +13,13 @@ You are an expert email management specialist. Your job is to scan the inbox, id
 
 **This agent requires an email MCP server.** The provider is configured in settings.yaml.
 
-### Step 1: Find Plugin Data Directory
+### Step 1: Read Settings
 ```
-Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml
+Read: ~/.claude/data/chief-of-staff/settings.yaml
 ```
 
-### Step 2: Read Settings and Get Tool Mappings
-Read `settings.yaml` and extract:
+### Step 2: Get Tool Mappings
+From settings.yaml, extract:
 - `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail", "gmail", "outlook")
 - `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
 
@@ -38,13 +38,11 @@ Run `/chief-of-staff:setup` to configure your email provider.
 
 ## Data Files Location
 
-**CRITICAL**: First find the plugin data directory by searching for `chief-of-staff/*/data/settings.yaml` under `~/.claude/plugins/cache/`.
+Data files are in `~/.claude/data/chief-of-staff/`:
+- `settings.yaml` - Provider configuration
+- `newsletter-lists.yaml` - Allowlist and previously unsubscribed senders
 
-**Step 1**: Use Glob to find: `~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml`
-
-Files to load (check `.local.yaml` first, fall back to `.yaml`):
-- `data/settings.local.yaml` / `data/settings.yaml` - Provider configuration
-- `data/newsletter-lists.local.yaml` / `data/newsletter-lists.yaml` - Allowlist and previously unsubscribed senders
+Templates are in the plugin directory (use Glob to find `~/.claude/plugins/cache/**/chief-of-staff/**/templates/`):
 - `templates/newsletter-patterns.json` - Newsletter detection patterns
 
 ## TWO-MODE OPERATION
@@ -114,10 +112,10 @@ ALLOWLIST: domain2.com
 
 ### 1.1 Load Configuration
 
-Read these files (check `.local.yaml` first, fall back to `.yaml`):
-1. `data/settings.local.yaml` / `data/settings.yaml` - Get active provider and tool mappings
-2. `data/newsletter-lists.local.yaml` / `data/newsletter-lists.yaml` - Allowlist + previously unsubscribed
-3. `templates/newsletter-patterns.json` - Newsletter detection patterns
+Read these files:
+1. `~/.claude/data/chief-of-staff/settings.yaml` - Get active provider and tool mappings
+2. `~/.claude/data/chief-of-staff/newsletter-lists.yaml` - Allowlist + previously unsubscribed
+3. Use Glob to find `~/.claude/plugins/cache/**/chief-of-staff/**/templates/newsletter-patterns.json` - Newsletter detection patterns
 
 Use the tool names from `providers.email.mappings.[active_provider]` for all email operations.
 
@@ -222,7 +220,7 @@ If the EXECUTE prompt includes domains to add to the allowlist (e.g., "ALLOWLIST
 
 ### 3.1 Update User Data
 
-Read newsletter lists (check `data/newsletter-lists.local.yaml` first, fall back to `data/newsletter-lists.yaml` if local doesn't exist), merge changes, write back to `data/newsletter-lists.local.yaml`:
+Read newsletter lists from `~/.claude/data/chief-of-staff/newsletter-lists.yaml`, merge changes, write back:
 
 **Add to unsubscribed list:**
 ```yaml
@@ -267,7 +265,7 @@ Failed (1):
 Added to allowlist (1):
 - stratechery.com
 
-Lists updated: data/newsletter-lists.local.yaml
+Lists updated: ~/.claude/data/chief-of-staff/newsletter-lists.yaml
 Emails moved: 23 -> Unsubscribed folder
 ```
 
@@ -279,7 +277,7 @@ Emails moved: 23 -> Unsubscribed folder
 
 ### Email Tools (Provider-Dependent)
 
-Read `data/settings.local.yaml` (or `settings.yaml`) to get the actual tool names for the active provider:
+Read `~/.claude/data/chief-of-staff/settings.yaml` to get the actual tool names for the active provider:
 
 | Logical Name | Purpose |
 |--------------|---------|

@@ -21,7 +21,7 @@ When this command runs, follow these steps in order:
 
 ```bash
 # Check if config file exists
-CONFIG_DIR="$HOME/.config/credit-card-benefits"
+CONFIG_DIR="$HOME/.claude/data/credit-card-benefits"
 CONFIG_FILE="$CONFIG_DIR/checklist.yaml"
 
 if [ -f "$CONFIG_FILE" ]; then
@@ -251,10 +251,10 @@ options:
 Create the config directory and save the checklist:
 
 ```bash
-mkdir -p ~/.config/credit-card-benefits
+mkdir -p ~/.claude/data/credit-card-benefits
 ```
 
-Write configuration to `~/.config/credit-card-benefits/checklist.yaml`:
+Write configuration to `~/.claude/data/credit-card-benefits/checklist.yaml`:
 
 ```yaml
 # Credit Card Benefits Configuration
@@ -299,7 +299,7 @@ config:
 
 Show completion message:
 ```
-✓ Configuration saved to ~/.config/credit-card-benefits/checklist.yaml
+✓ Configuration saved to ~/.claude/data/credit-card-benefits/checklist.yaml
 
 Your setup:
 • Data source: YNAB API
@@ -354,7 +354,7 @@ If the problem persists, YNAB's API may be temporarily unavailable.
 
 | Location | Purpose |
 |----------|---------|
-| `~/.config/credit-card-benefits/checklist.yaml` | Main configuration and benefit tracking |
+| `~/.claude/data/credit-card-benefits/checklist.yaml` | Main configuration and benefit tracking |
 | macOS Keychain: `env/YNAB_API_TOKEN` | YNAB API token (encrypted) |
 
 ### Security Notes

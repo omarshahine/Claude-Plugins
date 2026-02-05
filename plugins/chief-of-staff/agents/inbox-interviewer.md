@@ -62,13 +62,13 @@ The AskUserQuestion tool creates interactive buttons/chips for the user. Plain t
 
 **This agent requires an email MCP server.** The provider is configured in settings.yaml.
 
-### Step 1: Find Plugin Data Directory
+### Step 1: Read Settings
 ```
-Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml
+Read: ~/.claude/data/chief-of-staff/settings.yaml
 ```
 
-### Step 2: Read Settings and Get Tool Mappings
-Read `settings.yaml` and extract:
+### Step 2: Get Tool Mappings
+From settings.yaml, extract:
 - `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail", "gmail", "outlook")
 - `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
 
@@ -98,15 +98,13 @@ Throughout this agent, reference email tools via the `EMAIL_TOOLS` mappings:
 
 ## Data Files Location
 
-**CRITICAL**: First find the plugin data directory by searching for `chief-of-staff/*/data/settings.yaml` under `~/.claude/plugins/cache/`. All data files are in that directory:
+All data files are in `~/.claude/data/chief-of-staff/`:
 
 - `settings.yaml` - Provider configuration
 - `filing-rules.yaml` - Filing patterns with confidence
 - `delete-patterns.yaml` - Delete suggestions
 - `interview-state.yaml` - Session state (decisions, batches)
 - `decision-history.yaml` - Learning history
-
-**Step 1**: Use Glob to find: `~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml`
 
 ## Integration Files
 

@@ -139,15 +139,20 @@ AskUserQuestion:
 
 ### Phase 4: Configuration Files
 
-9. **Find plugin data directory**:
+9. **Find plugin templates directory**:
    ```
    Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.example.yaml
    ```
-   Extract the data directory path.
+   Extract the templates path for reading examples.
 
 10. **Read settings.example.yaml** as the template
 
-11. **Create settings.yaml** with:
+11. **Create data directory if needed**:
+    ```bash
+    mkdir -p ~/.claude/data/chief-of-staff
+    ```
+
+12. **Create settings.yaml** in `~/.claude/data/chief-of-staff/settings.yaml` with:
 
    **Persona section:**
    ```yaml
@@ -187,7 +192,7 @@ AskUserQuestion:
      newsletters: [true/false based on discovery]
    ```
 
-12. **Write settings.yaml** to the data directory (same location as settings.example.yaml)
+13. **Write settings.yaml** to `~/.claude/data/chief-of-staff/settings.yaml`
 
 ### Phase 5: Generate Summon Command
 
@@ -270,7 +275,7 @@ Key folders discovered:
 ## Handling Persona Changes
 
 If the user re-runs setup:
-1. Read existing `data/settings.yaml` to get current persona name
+1. Read existing `~/.claude/data/chief-of-staff/settings.yaml` to get current persona name
 2. After new persona is configured, delete old command file if name changed
 3. Create new command file with new name
 

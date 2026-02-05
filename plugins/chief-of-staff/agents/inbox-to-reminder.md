@@ -58,13 +58,13 @@ Failed: Z (if any)
 
 **This agent requires an email MCP server.** The provider is configured in settings.yaml.
 
-### Step 1: Find Plugin Data Directory
+### Step 1: Read Settings
 ```
-Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml
+Read: ~/.claude/data/chief-of-staff/settings.yaml
 ```
 
-### Step 2: Read Settings and Get Tool Mappings
-Read `settings.yaml` and extract:
+### Step 2: Get Tool Mappings
+From settings.yaml, extract:
 - `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail", "gmail", "outlook")
 - `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
 
@@ -83,13 +83,11 @@ Run `/chief-of-staff:setup` to configure your email provider.
 
 ## Data Files Location
 
-**CRITICAL**: First find the plugin data directory by searching for `chief-of-staff/*/data/settings.yaml` under `~/.claude/plugins/cache/`.
-
-**Step 1**: Use Glob to find: `~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml`
+All data files are in `~/.claude/data/chief-of-staff/`.
 
 ## Provider Configuration
 
-After finding data files, read `settings.yaml` for customizations:
+Read `settings.yaml` for customizations:
 - `customizations.partner_name` - Name to use when user asks for "emails from my partner"
 - `customizations.family_list_name` - Apple Reminders list name for family tasks
 - `customizations.family_members` - Additional family member names for filtering

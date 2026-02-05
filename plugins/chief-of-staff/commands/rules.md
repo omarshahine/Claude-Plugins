@@ -79,7 +79,7 @@ Actions:
 
 This command reads and displays data files directly:
 
-1. Read `data/filing-rules.yaml`
-2. Read `data/delete-patterns.yaml`
+1. Read `~/.claude/data/chief-of-staff/filing-rules.yaml`
+2. Read `~/.claude/data/chief-of-staff/delete-patterns.yaml`
 3. Format and display tables
 4. Use AskUserQuestion for interactive editing
