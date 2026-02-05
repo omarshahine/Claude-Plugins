@@ -1,0 +1,15 @@
+# Environment files with secrets
+.env
+
+# macOS
+.DS_Store
+
+# User data (each user has their own)
+data/settings.yaml
+data/user-preferences.yaml
+data/filing-rules.yaml
+data/delete-patterns.yaml
+data/decision-history.yaml
+data/interview-state.yaml
+data/batch-state.yaml
+data/newsletter-lists.yaml
