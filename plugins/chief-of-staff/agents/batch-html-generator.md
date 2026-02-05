@@ -14,7 +14,7 @@ description: |
   user: "I want to triage my inbox visually"
   assistant: "Let me use the batch-html-generator agent to generate the HTML batch triage page."
   </example>
-model: haiku
+model: sonnet
 color: blue
 tools:
   - Glob
@@ -28,76 +28,127 @@ tools:
 
 # Batch HTML Generator
 
-Generate an HTML batch triage interface for visual inbox processing.
+Generate an HTML batch triage interface by injecting classified email data into a pre-built HTML template.
 
-**PERFORMANCE CRITICAL**: Complete in minimal tool calls. Avoid unnecessary reads.
+**CRITICAL RULES**:
+- You MUST use the existing HTML template. NEVER write HTML, CSS, or JavaScript yourself.
+- You ONLY produce a JSON data file, then use a script to inject it into the template.
+- The template contains ALL the UI logic (dropdowns, progress bars, buttons, etc.)
 
-## Step 1: Fetch Emails (PARALLEL)
+## Step 1: Fetch Emails and Find Template (PARALLEL)
 
-Call BOTH tools in a SINGLE message (parallel):
+Call ALL THREE in a SINGLE message (parallel):
 
 1. `mcp__fastmail__list_mailboxes` - Get folder structure
 2. `mcp__fastmail__list_emails` with `limit: 100` - Get inbox emails
-
-Extract:
-- `folders` array for archive destinations
-- `emails` array for classification
-- Find Inbox mailbox ID (role: "inbox")
+3. `Glob: ~/.claude/plugins/cache/**/chief-of-staff/**/templates/batch-triage.html`
 
 If MCP fails → STOP immediately. Report: "Fastmail MCP not available. Run /mcp to check status."
+If template not found → STOP. Report: "Template not found. Try reinstalling chief-of-staff plugin."
 
-## Step 2: Find and Read Template
+## Step 2: Read Template Path
 
-```
-Glob: ~/.claude/plugins/cache/**/chief-of-staff/**/templates/batch-triage.html
-```
+Read the template file found by Glob to confirm it has the data markers:
+- `// BEGIN_TRIAGE_DATA`
+- `// END_TRIAGE_DATA`
 
-Read the template. Find `const TRIAGE_DATA = {` around line 698.
+If markers are missing, look for `const TRIAGE_DATA = {` as the start and the matching `};` + blank line as the end.
 
-**If not found → STOP. Report error. Never generate HTML from scratch.**
+## Step 3: Classify Emails
 
-## Step 3: Classify Emails (FAST)
-
-Classify each email from step 2 into ONE category (first match wins):
+Classify each email into ONE category (first match wins):
 
 | Category | Signals | Default Action |
 |----------|---------|----------------|
-| topOfMind | Family, urgent, deadline, action required | reply/reminder |
-| deliveries | shipped, tracking, delivery | addToParcel |
-| newsletters | noreply@, newsletter@, $canunsubscribe | unsubscribe |
-| financial | Banks, statement, payment, balance | archive (Financial) |
-| archiveReady | Automated, receipts, CC'd emails | archive |
-| deleteReady | Promotional, spam-like, old tutorials | delete |
+| topOfMind | Family, urgent, deadline, action required, personal | reply/reminder |
+| deliveries | shipped, tracking, delivery, "on its way" | addToParcel |
+| newsletters | noreply@, newsletter@, digest, $canunsubscribe | unsubscribe |
+| financial | Banks, statement, payment, balance, credit card | archive (Financial) |
+| archiveReady | Automated notifications, receipts, CC'd | archive |
+| deleteReady | Promotional, spam-like, expired offers, marketing | delete |
 | fyi | Everything else | archive |
 
-## Step 4: Build TRIAGE_DATA
+## Step 4: Write TRIAGE_DATA JSON File
+
+Write a file to `/tmp/triage-data.js` containing ONLY the JavaScript data block.
+
+The file must start with `// BEGIN_TRIAGE_DATA` and end with `// END_TRIAGE_DATA`.
+
+**Required structure:**
 
 ```javascript
-const TRIAGE_DATA = {
-  generated: "ISO-date",
-  sessionId: "batch-YYYY-MM-DD-id",
-  config: { folders: [...from input...], reminderLists: ["Reminders", "Budget & Finances", "Travel", "Family"] },
-  categories: {
-    topOfMind: { title: "Top of Mind", icon: "📌", emails: [...] },
-    deliveries: { title: "Deliveries", icon: "📦", emails: [...] },
-    newsletters: { title: "Newsletters", icon: "📰", emails: [...] },
-    financial: { title: "Financial", icon: "💰", emails: [...] },
-    archiveReady: { title: "Archive Ready", icon: "📁", emails: [...] },
-    deleteReady: { title: "Delete Candidates", icon: "🗑️", emails: [...] },
-    fyi: { title: "FYI", icon: "ℹ️", emails: [...] }
-  }
-};
+    // BEGIN_TRIAGE_DATA - Do not remove this marker
+    const TRIAGE_DATA = {
+      generated: "ISO-date",
+      sessionId: "batch-YYYY-MM-DD-NNN",
+      config: {
+        folders: [
+          { id: "actual-mailbox-id", name: "Folder Name" },
+          ...use real mailbox IDs from step 1...
+        ],
+        reminderLists: ["Reminders", "Budget & Finances", "Travel", "Family"]
+      },
+      categories: {
+        topOfMind: { title: "Top of Mind", icon: "\ud83d\udccc", emails: [...] },
+        deliveries: { title: "Deliveries", icon: "\ud83d\udce6", emails: [...] },
+        newsletters: { title: "Newsletters", icon: "\ud83d\udcf0", emails: [...] },
+        financial: { title: "Financial", icon: "\ud83d\udcb0", emails: [...] },
+        archiveReady: { title: "Archive Ready", icon: "\ud83d\udcc1", emails: [...] },
+        deleteReady: { title: "Delete Candidates", icon: "\ud83d\uddd1\ufe0f", emails: [...] },
+        fyi: { title: "FYI", icon: "\u2139\ufe0f", emails: [...] }
+      }
+    };
+    // END_TRIAGE_DATA - Do not remove this marker
 ```
 
-Email structure: `{ id, from: {name, email}, subject, preview, receivedAt, suggestion: {action, folder?, folderId?}, classification: {confidence, reasons} }`
+**Email object structure** (MUST include all fields):
 
-Use the folders from step 2 for the config.folders array.
+```javascript
+{
+  id: "email-id-from-fastmail",
+  from: { name: "Sender Name", email: "sender@example.com" },
+  subject: "Email subject line",
+  preview: "First 150 chars of email body...",
+  receivedAt: "2026-02-05T10:00:00Z",
+  suggestion: {
+    action: "archive",           // one of: reply, reminder, calendar, archive, delete, addToParcel, unsubscribe, keep
+    folder: "Financial",         // optional: suggested folder name for archive action
+    folderId: "actual-mailbox-id" // optional: actual mailbox ID for archive action
+  },
+  classification: {
+    confidence: 0.85,            // 0.0-1.0
+    reasons: ["Bank statement", "Monthly routine"]  // REQUIRED: 1-2 human-readable reasons
+  },
+  // Optional fields for specific categories:
+  packageInfo: { trackingNumber: "...", carrier: "UPS" },  // for deliveries
+  newsletterInfo: { domain: "example.com", unsubscribeUrl: "..." }  // for newsletters
+}
+```
 
-## Step 5: Write HTML and Open
+**IMPORTANT**: The `classification.reasons` array is REQUIRED for every email. It powers the suggestion badges in the UI. Without reasons, badges will be empty.
 
-1. Replace `const TRIAGE_DATA = {...};` section in template with your generated data
-2. Write to: `~/inbox-batch-triage.html`
-3. Open: `open ~/inbox-batch-triage.html`
+## Step 5: Inject Data Into Template (Mechanical)
+
+Use this Bash command to combine template + data into the output file:
+
+```bash
+python3 -c "
+template = open('TEMPLATE_PATH').read()
+data = open('/tmp/triage-data.js').read()
+start = template.find('    // BEGIN_TRIAGE_DATA')
+end = template.index('\n', template.find('// END_TRIAGE_DATA')) + 1
+if start == -1: raise Exception('BEGIN marker not found')
+output = template[:start] + data.rstrip() + '\n' + template[end:]
+with open('OUTPUT_PATH', 'w') as f:
+    f.write(output)
+print(f'Output: {output.count(chr(10))} lines')
+" && open ~/inbox-batch-triage.html
+```
+
+Replace `TEMPLATE_PATH` with the actual path from the Glob result.
+Replace `OUTPUT_PATH` with `$HOME/inbox-batch-triage.html`.
+
+**NEVER use the Write tool to write HTML.** Always use this injection script.
 
 ## Step 6: Report
 
@@ -121,5 +172,6 @@ Then run: /chief-of-staff:batch --process
 | Error | Action |
 |-------|--------|
 | No email MCP tools | STOP. Report configuration instructions. |
-| Template not found | STOP. Report paths searched. |
+| Template not found | STOP. Report paths searched. Never generate HTML from scratch. |
 | No emails in inbox | Report "No emails found in the last N days". |
+| Markers not found in template | Use fallback: match `const TRIAGE_DATA = {` to `};` before `const decisions` |
