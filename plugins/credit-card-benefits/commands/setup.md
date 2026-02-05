@@ -14,7 +14,7 @@ Initialize the benefits tracking system or configure individual cards.
 ## Data Location
 
 ```
-~/.config/credit-card-benefits/checklist.json
+~/.claude/data/credit-card-benefits/checklist.json
 ```
 
 ## Operations
@@ -24,7 +24,7 @@ Initialize the benefits tracking system or configure individual cards.
 If no checklist exists, create the config directory and initialize from template:
 
 ```bash
-mkdir -p ~/.config/credit-card-benefits
+mkdir -p ~/.claude/data/credit-card-benefits
 ```
 
 Then copy the template from the plugin's data directory to the user's config location.

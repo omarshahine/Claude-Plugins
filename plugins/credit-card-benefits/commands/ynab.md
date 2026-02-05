@@ -372,7 +372,7 @@ Next: Run /credit-card-benefits:sync to pull transactions and detect benefit usa
   - No transaction amounts or descriptions persisted
   - No sensitive financial data in config
 
-- **Migration**: Legacy tokens in `~/.config/credit-card-benefits/ynab-token` are automatically migrated to Keychain and the file is deleted
+- **Migration**: Legacy tokens in `~/.claude/data/credit-card-benefits/ynab-token` are automatically migrated to Keychain and the file is deleted
 
 ---
 

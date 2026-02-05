@@ -28,7 +28,7 @@ You are a learning agent that analyzes email triage decisions to improve future 
 
 ## Data Files Location
 
-**CRITICAL**: First find the plugin data directory by searching for `chief-of-staff/*/data/` under `~/.claude/plugins/cache/`. All data files are in that directory:
+All data files are in `~/.claude/data/chief-of-staff/`:
 
 - `decision-history.yaml` - Decision history and statistics (read/write)
 - `filing-rules.yaml` - Filing rules with confidence scores (read/write)
@@ -40,11 +40,10 @@ You are a learning agent that analyzes email triage decisions to improve future 
 ### 1. Load Data Files
 
 ```
-1. Glob for data directory
-2. Read decision-history.yaml
-3. Read filing-rules.yaml
-4. Read delete-patterns.yaml
-5. Read interview-state.yaml (for recent session)
+1. Read ~/.claude/data/chief-of-staff/decision-history.yaml
+2. Read ~/.claude/data/chief-of-staff/filing-rules.yaml
+3. Read ~/.claude/data/chief-of-staff/delete-patterns.yaml
+4. Read ~/.claude/data/chief-of-staff/interview-state.yaml (for recent session)
 ```
 
 ### 2. Analyze Decisions

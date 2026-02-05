@@ -29,7 +29,7 @@ Fetch new transactions from your configured data source and update benefit track
 
 When this command runs:
 
-1. **Load configuration** from `~/.config/credit-card-benefits/checklist.yaml`
+1. **Load configuration** from `~/.claude/data/credit-card-benefits/checklist.yaml`
 2. **Load detection patterns** from plugin's `data/benefit-patterns.yaml`
 3. **Validate YNAB token** (if using YNAB)
 4. **For each enabled card:**

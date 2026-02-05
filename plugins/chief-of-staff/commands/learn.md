@@ -27,11 +27,11 @@ Learn email filing patterns from your existing folder organization or from triag
 3. **Extracts patterns**: sender domains, email addresses, subject patterns
 4. **Calculates confidence** based on consistency
 5. **Presents rules** for user confirmation via AskUserQuestion
-6. **Saves confirmed rules** to `data/filing-rules.yaml`
+6. **Saves confirmed rules** to `~/.claude/data/chief-of-staff/filing-rules.yaml`
 
 ### From History Mode (--from-history)
 
-1. **Reads decision history** from `data/decision-history.yaml`
+1. **Reads decision history** from `~/.claude/data/chief-of-staff/decision-history.yaml`
 2. **Detects patterns** from repeated decisions (3+ occurrences)
 3. **Updates confidence scores** based on acceptance rates
 4. **Flags underperforming rules** for review

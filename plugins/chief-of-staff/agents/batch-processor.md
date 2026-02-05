@@ -73,12 +73,12 @@ Read the JSON file and validate structure:
 
 **This agent requires an email MCP server.** The provider is configured in settings.yaml.
 
-1. **Find Plugin Data Directory**:
+1. **Read Settings**:
    ```
-   Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml
+   Read: ~/.claude/data/chief-of-staff/settings.yaml
    ```
 
-2. **Read Settings and Get Tool Mappings**:
+2. **Get Tool Mappings**:
    - `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail", "gmail", "outlook")
    - `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
 
@@ -345,12 +345,9 @@ Failed items saved to batch-state.yaml for retry.
 
 **CRITICAL**: After executing actions, record all decisions to enable pattern learning.
 
-#### Find Data Directory
+#### Data Directory
 
-Use Glob to find the plugin data directory:
-```
-~/.claude/plugins/cache/*/chief-of-staff/*/data/
-```
+All data files are in `~/.claude/data/chief-of-staff/`.
 
 #### Initialize Data Files (If Missing)
 
@@ -481,6 +478,6 @@ When `--retry` flag is used:
 ## Files
 
 - Input: `inbox-triage-decisions-YYYY-MM-DD.json`
-- State: `[data-dir]/batch-state.yaml`
-- Learning: `[data-dir]/decision-history.yaml`
-- Rules: `[data-dir]/filing-rules.yaml`
+- State: `~/.claude/data/chief-of-staff/batch-state.yaml`
+- Learning: `~/.claude/data/chief-of-staff/decision-history.yaml`
+- Rules: `~/.claude/data/chief-of-staff/filing-rules.yaml`
