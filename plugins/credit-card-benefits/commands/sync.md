@@ -121,6 +121,26 @@ If using direct API:
 KEYCHAIN_SERVICE="env/YNAB_API_TOKEN"
 TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
 
+# Fallback: Check for legacy file-based token and migrate to Keychain
+LEGACY_TOKEN_FILE="$HOME/.config/credit-card-benefits/ynab-token"
+if [ -z "$TOKEN" ] && [ -f "$LEGACY_TOKEN_FILE" ]; then
+  echo "Found legacy token file - migrating to Keychain..."
+  LEGACY_TOKEN=$(cat "$LEGACY_TOKEN_FILE")
+  security delete-generic-password -s "$KEYCHAIN_SERVICE" 2>/dev/null
+  security add-generic-password -s "$KEYCHAIN_SERVICE" -a "$USER" -w "$LEGACY_TOKEN"
+
+  # Verify migration succeeded before deleting legacy file
+  VERIFY_TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
+  if [ "$VERIFY_TOKEN" = "$LEGACY_TOKEN" ]; then
+    rm "$LEGACY_TOKEN_FILE"
+    echo "✓ Token migrated to Keychain"
+    TOKEN="$LEGACY_TOKEN"
+  else
+    echo "Migration failed - using legacy token for this session"
+    TOKEN="$LEGACY_TOKEN"
+  fi
+fi
+
 if [ -z "$TOKEN" ]; then
   echo "ERROR: No YNAB token found in Keychain"
   echo "Run /credit-card-benefits:configure to set up YNAB"
@@ -178,6 +198,15 @@ Search for transactions matching ANY of these patterns:
 # Search each mapped account for annual fee transactions
 KEYCHAIN_SERVICE="env/YNAB_API_TOKEN"
 TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)
+
+# Fallback to legacy token file if Keychain is empty
+if [ -z "$TOKEN" ]; then
+  LEGACY_TOKEN_FILE="$HOME/.config/credit-card-benefits/ynab-token"
+  if [ -f "$LEGACY_TOKEN_FILE" ]; then
+    TOKEN=$(cat "$LEGACY_TOKEN_FILE")
+    echo "Using legacy token file (run /credit-card-benefits:configure to migrate)"
+  fi
+fi
 
 if [ -z "$TOKEN" ]; then
   echo "ERROR: No YNAB token found in Keychain"
