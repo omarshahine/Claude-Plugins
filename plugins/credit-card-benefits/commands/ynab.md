@@ -290,7 +290,7 @@ Repeat for each premium card type.
 
 Read existing checklist or create from template:
 ```bash
-CONFIG_FILE="$HOME/.config/credit-card-benefits/checklist.yaml"
+CONFIG_FILE="$HOME/.claude/data/credit-card-benefits/checklist.yaml"
 TEMPLATE_FILE="<plugin-path>/data/checklist-template.yaml"
 
 if [ ! -f "$CONFIG_FILE" ]; then
