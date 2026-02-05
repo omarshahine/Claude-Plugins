@@ -20,7 +20,7 @@ description: |
   user: "Process my emails one by one"
   assistant: "I'll process each email with simple numbered options using AskUserQuestion."
   </example>
-model: opus
+model: sonnet
 color: blue
 tools: "*"
 ---

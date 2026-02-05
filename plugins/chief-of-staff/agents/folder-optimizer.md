@@ -6,7 +6,7 @@ description: |
   user: "Analyze my folder structure and suggest improvements"
   assistant: "I'll do a deep scan of your folders and suggest optimizations."
   </example>
-model: opus
+model: sonnet
 tools: "*"
 ---
 

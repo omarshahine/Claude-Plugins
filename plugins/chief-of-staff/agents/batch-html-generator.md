@@ -14,66 +14,49 @@ description: |
   user: "I want to triage my inbox visually"
   assistant: "Let me use the batch-html-generator agent to generate the HTML batch triage page."
   </example>
-model: sonnet
+model: haiku
 color: blue
-tools: "*"
+tools:
+  - Glob
+  - Read
+  - Write
+  - Bash
+  - ToolSearch
+  - mcp__fastmail__list_mailboxes
+  - mcp__fastmail__list_emails
 ---
 
 # Batch HTML Generator
 
 Generate an HTML batch triage interface for visual inbox processing.
 
-## Step 1: Initialize Email Provider
+**PERFORMANCE CRITICAL**: Complete in minimal tool calls. Avoid unnecessary reads.
 
-### 1a. Find Plugin Data Directory
-```
-Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/data/settings.yaml
-```
-Extract the data directory path from the result.
+## Step 1: Fetch Emails (PARALLEL)
 
-### 1b. Read Settings and Get Tool Mappings
-Read `settings.yaml` and extract:
-- `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail", "gmail", "outlook")
-- `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
+Call BOTH tools in a SINGLE message (parallel):
 
-### 1c. Load Email Tools via ToolSearch
-```
-ToolSearch query: "+{EMAIL_PROVIDER}"
-```
-Example: If provider is "fastmail", search for `+fastmail`.
+1. `mcp__fastmail__list_mailboxes` - Get folder structure
+2. `mcp__fastmail__list_emails` with `limit: 100` - Get inbox emails
 
-### 1d. Verify Tools Available
-If ToolSearch finds no email tools, STOP and display:
-```
-⚠️ No email provider configured!
+Extract:
+- `folders` array for archive destinations
+- `emails` array for classification
+- Find Inbox mailbox ID (role: "inbox")
 
-Run `/chief-of-staff:setup` to configure your email provider.
-```
+If MCP fails → STOP immediately. Report: "Fastmail MCP not available. Run /mcp to check status."
 
-## Step 2: Fetch Mailboxes and Emails
-
-Using the tool names from `EMAIL_TOOLS` mappings:
-
-1. Call `EMAIL_TOOLS.list_mailboxes` to get folder structure
-2. Find the Inbox mailbox (role: "inbox" or name: "Inbox")
-3. Call `EMAIL_TOOLS.list_emails` with:
-   - mailboxId: inbox ID
-   - limit: from prompt parameters (default: 100)
-
-## Step 3: Find Template (REQUIRED)
+## Step 2: Find and Read Template
 
 ```
-Glob: "**/chief-of-staff/**/batch-triage.html"
-Paths: ~/.claude/plugins/cache/ then ~/GitHub/
+Glob: ~/.claude/plugins/cache/**/chief-of-staff/**/templates/batch-triage.html
 ```
+
+Read the template. Find `const TRIAGE_DATA = {` around line 698.
 
 **If not found → STOP. Report error. Never generate HTML from scratch.**
 
-## Step 4: Read Template
-
-Read the entire file. Find `const TRIAGE_DATA = {` (~line 698).
-
-## Step 5: Classify Emails
+## Step 3: Classify Emails (FAST)
 
 Classify each email from step 2 into ONE category (first match wins):
 
@@ -87,7 +70,7 @@ Classify each email from step 2 into ONE category (first match wins):
 | deleteReady | Promotional, spam-like, old tutorials | delete |
 | fyi | Everything else | archive |
 
-## Step 6: Build TRIAGE_DATA
+## Step 4: Build TRIAGE_DATA
 
 ```javascript
 const TRIAGE_DATA = {
@@ -110,14 +93,13 @@ Email structure: `{ id, from: {name, email}, subject, preview, receivedAt, sugge
 
 Use the folders from step 2 for the config.folders array.
 
-## Step 7: Replace & Save
+## Step 5: Write HTML and Open
 
-1. Find `const TRIAGE_DATA = {` in template (line 698)
-2. Replace through line 970 (`};`) with your generated data
-3. Write to scratchpad: `inbox-batch-triage.html`
-4. Open: `open <scratchpad>/inbox-batch-triage.html`
+1. Replace `const TRIAGE_DATA = {...};` section in template with your generated data
+2. Write to: `~/inbox-batch-triage.html`
+3. Open: `open ~/inbox-batch-triage.html`
 
-## Step 8: Report
+## Step 6: Report
 
 ```
 Generated batch triage interface.

@@ -14,7 +14,7 @@ description: |
   user: "/chief-of-staff:batch --process"
   assistant: "Let me use the batch-processor agent to process the decisions file."
   </example>
-model: opus
+model: sonnet
 color: green
 tools: "*"
 ---
@@ -225,57 +225,41 @@ For each calendar decision:
 3. Track success/failure
 ```
 
-### 6. Delegate Batch Actions
+### 6. Delegate Batch Actions (PARALLEL)
 
-#### Parcel (inbox-to-parcel)
+**CRITICAL REQUIREMENTS:**
+1. You MUST execute these delegations - do NOT list them as "pending"
+2. Launch ALL sub-agents in PARALLEL (single message with multiple Task calls)
+3. Do NOT wait for one to complete before launching the next
 
-If any parcel decisions exist:
+**Launch all applicable sub-agents in ONE message:**
+
 ```
-Use Task tool:
+// Single message with multiple parallel Task tool calls:
+
+Task 1 (if parcel decisions exist):
   subagent_type: "chief-of-staff:inbox-to-parcel"
   prompt: |
-    Process these packages in batch mode. For each:
-    1. Add tracking to Parcel app
-    2. Archive the email to Orders folder
+    Add these packages to Parcel app:
+    [JSON array with emailId, trackingNumber, carrier, sender]
+    After adding, archive each email to Orders folder.
 
-    Packages:
-    [JSON array of parcel decisions with emailId, trackingNumber, carrier, sender]
-
-    After adding to Parcel, archive each email to the Orders folder.
-```
-
-#### Newsletter (newsletter-unsubscriber)
-
-If any unsubscribe decisions exist:
-```
-Use Task tool:
+Task 2 (if unsubscribe decisions exist):
   subagent_type: "chief-of-staff:newsletter-unsubscriber"
   prompt: |
-    UNSUBSCRIBE from these newsletters in batch mode:
+    Unsubscribe from these newsletters:
+    [JSON array with emailId, domain, senderEmail]
+    For each: find unsubscribe link, complete form, delete email.
 
-    [JSON array of unsubscribe decisions with emailIds, domain, unsubscribeUrl]
-
-    For each:
-    1. Visit the unsubscribe URL
-    2. Complete the unsubscribe form if needed
-    3. Delete the email after successful unsubscribe
-```
-
-#### Reminder (inbox-to-reminder)
-
-If any reminder decisions exist:
-```
-Use Task tool:
+Task 3 (if reminder decisions exist):
   subagent_type: "chief-of-staff:inbox-to-reminder"
   prompt: |
-    Create these reminders in batch mode:
-
-    [JSON array of reminder decisions with emailId, title, dueDate, list, notes]
-
-    For each:
-    1. Create the reminder with the specified details
-    2. Use the steering text as additional notes if provided
+    Create these reminders:
+    [JSON array with emailId, title, dueDate, list, steering]
+    Archive emails after creating reminders.
 ```
+
+**Why parallel?** Running 3 agents sequentially takes ~4.5 min. Running in parallel takes ~1.5 min (3x faster).
 
 ### 7. Update State and Report
 
