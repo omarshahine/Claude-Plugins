@@ -1,6 +1,6 @@
 {
   "name": "travel-agent",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Travel agents for flight research and trip tracking: Google Flights, ITA Matrix, Flighty, Tripsy",
   "author": {
     "name": "Omar Shahine"
