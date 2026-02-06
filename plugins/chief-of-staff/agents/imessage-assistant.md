@@ -138,19 +138,23 @@ Messages with Lora Shahine
 `imsg` has no search command. Query the database directly:
 
 ```bash
-sqlite3 -json ~/Library/Messages/chat.db \
-  'SELECT m.rowid, m.text, m.date/1000000000 + 978307200 as unix_ts,
-   m.is_from_me, h.id as handle_id, c.chat_identifier
-   FROM message m
-   LEFT JOIN handle h ON m.handle_id = h.rowid
-   LEFT JOIN chat_message_join cmj ON m.rowid = cmj.message_id
-   LEFT JOIN chat c ON cmj.chat_id = c.rowid
-   WHERE m.text LIKE '"'"'%KEYWORD%'"'"'
-   ORDER BY m.date DESC
-   LIMIT 20'
+# Escape single quotes in the keyword for SQL by doubling them
+keyword_escaped="${KEYWORD//\'/\'\'}"
+
+sqlite3 -json ~/Library/Messages/chat.db <<EOF
+SELECT m.rowid, m.text, m.date/1000000000 + 978307200 as unix_ts,
+ m.is_from_me, h.id as handle_id, c.chat_identifier
+ FROM message m
+ LEFT JOIN handle h ON m.handle_id = h.rowid
+ LEFT JOIN chat_message_join cmj ON m.rowid = cmj.message_id
+ LEFT JOIN chat c ON cmj.chat_id = c.rowid
+ WHERE m.text LIKE '%${keyword_escaped}%'
+ ORDER BY m.date DESC
+ LIMIT 20
+EOF
 ```
 
-**CRITICAL**: Use single quotes for the outer shell string to prevent shell expansion. For the LIKE pattern, escape single quotes using the `'"'"'` idiom (end single-quote, add escaped single-quote in double-quotes, resume single-quote). Replace `KEYWORD` with the sanitized search term — double any single quotes in the keyword (`'` → `''`) before substitution.
+**CRITICAL**: Use a heredoc (without quotes) for safe variable substitution. First escape any single quotes in the search term by doubling them (`'` → `''`) for SQL compatibility, then substitute into the heredoc. This approach correctly handles keywords containing apostrophes (e.g., "can't", "don't") without shell quoting conflicts.
 
 After getting results:
 1. Resolve handle_ids to contact names
