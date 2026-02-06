@@ -83,9 +83,26 @@ def get_main_user_id(conn):
     return row[0] if row else None
 
 
+def get_superseded_flight_ids(conn):
+    """Get Flight IDs that have been superseded by ManualFlight entries.
+
+    When a ManualFlight has originalFlightId set, it means the ManualFlight
+    is a corrected/richer version of the original Flight table entry.
+    The Flight table entry should be excluded to avoid duplicates.
+    """
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT DISTINCT originalFlightId
+        FROM ManualFlight
+        WHERE originalFlightId IS NOT NULL AND originalFlightId != ''
+    """)
+    return {row[0] for row in cursor.fetchall()}
+
+
 def query_tracked_upcoming(conn, now, main_user_id, include_friends, limit):
     """Query tracked flights (Flight table) for upcoming flights."""
     cursor = conn.cursor()
+    superseded_ids = get_superseded_flight_ids(conn)
 
     if include_friends:
         where_clause = "uf.isMyFlight = 1 AND COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) > ?"
@@ -123,7 +140,8 @@ def query_tracked_upcoming(conn, now, main_user_id, include_friends, limit):
             f.distance as distance_km,
             uf.importSource as import_source,
             f.equipmentTailNumber as tail_number,
-            'tracked' as source
+            'tracked' as source,
+            f.id as flight_id
         FROM Flight f
         JOIN UserFlight uf ON f.id = uf.flightId
         JOIN Airline a ON f.airlineId = a.id
@@ -135,7 +153,9 @@ def query_tracked_upcoming(conn, now, main_user_id, include_friends, limit):
         LIMIT ?
     """, params + [limit * 2])  # Fetch extra to allow for merging
 
-    return cursor.fetchall()
+    # Filter out flights superseded by ManualFlight entries
+    rows = cursor.fetchall()
+    return [row for row in rows if row[23] not in superseded_ids]
 
 
 def query_manual_upcoming(conn, now, limit):
@@ -144,8 +164,8 @@ def query_manual_upcoming(conn, now, limit):
 
     cursor.execute("""
         SELECT
-            NULL as airline_code,
-            NULL as airline_name,
+            a.iata as airline_code,
+            a.name as airline_name,
             mf.number as flight_number,
             dep.iata as dep_code,
             dep.name as dep_airport,
@@ -170,6 +190,7 @@ def query_manual_upcoming(conn, now, limit):
         FROM ManualFlight mf
         JOIN Airport dep ON mf.departureAirportId = dep.id
         JOIN Airport arr ON mf.actualArrivalAirportId = arr.id
+        LEFT JOIN Airline a ON mf.airlineId = a.id
         WHERE mf.lastKnownDepartureDate > ?
         ORDER BY mf.lastKnownDepartureDate
         LIMIT ?
@@ -288,8 +309,9 @@ def get_flights_on_date(conn, date_str):
         return {"error": f"Invalid date format: {date_str}. Use YYYY-MM-DD"}
 
     flights = []
+    superseded_ids = get_superseded_flight_ids(conn)
 
-    # Query tracked flights
+    # Query tracked flights (exclude superseded)
     cursor.execute("""
         SELECT
             a.iata as airline_code,
@@ -302,7 +324,8 @@ def get_flights_on_date(conn, date_str):
             t.seatNumber as seat,
             t.cabinClass as cabin_class,
             f.equipmentModelName as aircraft,
-            f.equipmentTailNumber as tail_number
+            f.equipmentTailNumber as tail_number,
+            f.id as flight_id
         FROM Flight f
         JOIN UserFlight uf ON f.id = uf.flightId
         JOIN Airline a ON f.airlineId = a.id
@@ -316,6 +339,8 @@ def get_flights_on_date(conn, date_str):
     """, (start_ts, end_ts))
 
     for row in cursor.fetchall():
+        if row[11] in superseded_ids:
+            continue
         flights.append({
             "flight": f"{row[0]} {row[1]}" if row[0] else row[1],
             "route": f"{row[2]} → {row[3]}",
@@ -329,9 +354,10 @@ def get_flights_on_date(conn, date_str):
             "source": "tracked"
         })
 
-    # Query manual flights
+    # Query manual flights (with airline info)
     cursor.execute("""
         SELECT
+            a.iata as airline_code,
             mf.number as flight_number,
             dep.iata as dep_code,
             arr.iata as arr_code,
@@ -342,22 +368,24 @@ def get_flights_on_date(conn, date_str):
         FROM ManualFlight mf
         JOIN Airport dep ON mf.departureAirportId = dep.id
         JOIN Airport arr ON mf.actualArrivalAirportId = arr.id
+        LEFT JOIN Airline a ON mf.airlineId = a.id
         WHERE mf.lastKnownDepartureDate >= ?
           AND mf.lastKnownDepartureDate <= ?
         ORDER BY mf.lastKnownDepartureDate
     """, (start_ts, end_ts))
 
     for row in cursor.fetchall():
+        flight_display = f"{row[0]} {row[1]}" if row[0] and row[1] else row[1]
         flights.append({
-            "flight": row[0],
-            "route": f"{row[1]} → {row[2]}",
-            "departure": format_datetime(row[3]),
-            "arrival": format_datetime(row[4]),
+            "flight": flight_display,
+            "route": f"{row[2]} → {row[3]}",
+            "departure": format_datetime(row[4]),
+            "arrival": format_datetime(row[5]),
             "confirmation": None,
             "seat": None,
             "cabin_class": None,
-            "aircraft": row[5],
-            "tail_number": row[6],
+            "aircraft": row[6],
+            "tail_number": row[7],
             "source": "manual"
         })
 
@@ -464,7 +492,10 @@ def get_flights_by_year(conn, year):
     # route_key -> flight dict (for route-level dedup that prefers tail numbers)
     route_map = {}
 
-    # Query tracked flights (exclude cancelled)
+    # Get Flight IDs superseded by ManualFlight entries
+    superseded_ids = get_superseded_flight_ids(conn)
+
+    # Query tracked flights (exclude cancelled and superseded)
     user_filter = ""
     params = [start_ts, end_ts]
     if main_user_id:
@@ -495,7 +526,8 @@ def get_flights_by_year(conn, year):
             f.distance as distance_km,
             uf.importSource as import_source,
             f.equipmentTailNumber as tail_number,
-            'tracked' as source
+            'tracked' as source,
+            f.id as flight_id
         FROM Flight f
         JOIN UserFlight uf ON f.id = uf.flightId
         JOIN Airline a ON f.airlineId = a.id
@@ -515,6 +547,11 @@ def get_flights_by_year(conn, year):
     """, params)
 
     for row in cursor.fetchall():
+        # Skip flights superseded by ManualFlight entries
+        flight_id = row[23]
+        if flight_id in superseded_ids:
+            continue
+
         flight = process_flight_row(row)
         dep_date = convert_date(flight["_departure_ts"])
 
@@ -532,11 +569,11 @@ def get_flights_by_year(conn, year):
         else:
             route_map[route_key] = flight
 
-    # Query manual flights
+    # Query manual flights (with airline info)
     cursor.execute("""
         SELECT
-            NULL as airline_code,
-            NULL as airline_name,
+            a.iata as airline_code,
+            a.name as airline_name,
             mf.number as flight_number,
             dep.iata as dep_code,
             dep.name as dep_airport,
@@ -561,6 +598,7 @@ def get_flights_by_year(conn, year):
         FROM ManualFlight mf
         JOIN Airport dep ON mf.departureAirportId = dep.id
         JOIN Airport arr ON mf.actualArrivalAirportId = arr.id
+        LEFT JOIN Airline a ON mf.airlineId = a.id
         WHERE mf.lastKnownDepartureDate >= ?
           AND mf.lastKnownDepartureDate <= ?
         ORDER BY mf.lastKnownDepartureDate
@@ -607,10 +645,11 @@ def get_recent_flights(conn, limit=20):
     """Get recent/past flights from both tables."""
     cursor = conn.cursor()
     now = datetime.now().timestamp()
+    superseded_ids = get_superseded_flight_ids(conn)
 
     flights = []
 
-    # Query tracked flights
+    # Query tracked flights (exclude superseded)
     cursor.execute("""
         SELECT
             a.iata as airline_code,
@@ -621,7 +660,8 @@ def get_recent_flights(conn, limit=20):
             f.equipmentModelName as aircraft,
             f.distance as distance_km,
             f.equipmentTailNumber as tail_number,
-            'tracked' as source
+            'tracked' as source,
+            f.id as flight_id
         FROM Flight f
         JOIN UserFlight uf ON f.id = uf.flightId
         JOIN Airline a ON f.airlineId = a.id
@@ -635,6 +675,8 @@ def get_recent_flights(conn, limit=20):
     """, (now, limit * 2))
 
     for row in cursor.fetchall():
+        if row[9] in superseded_ids:
+            continue
         flights.append({
             "flight": f"{row[0]} {row[1]}" if row[0] else row[1],
             "route": f"{row[2]} → {row[3]}",
@@ -646,9 +688,10 @@ def get_recent_flights(conn, limit=20):
             "_ts": row[4]
         })
 
-    # Query manual flights
+    # Query manual flights (with airline info)
     cursor.execute("""
         SELECT
+            a.iata as airline_code,
             mf.number as flight_number,
             dep.iata as dep_code,
             arr.iata as arr_code,
@@ -660,21 +703,23 @@ def get_recent_flights(conn, limit=20):
         FROM ManualFlight mf
         JOIN Airport dep ON mf.departureAirportId = dep.id
         JOIN Airport arr ON mf.actualArrivalAirportId = arr.id
+        LEFT JOIN Airline a ON mf.airlineId = a.id
         WHERE mf.lastKnownDepartureDate < ?
         ORDER BY mf.lastKnownDepartureDate DESC
         LIMIT ?
     """, (now, limit * 2))
 
     for row in cursor.fetchall():
+        flight_display = f"{row[0]} {row[1]}" if row[0] and row[1] else row[1]
         flights.append({
-            "flight": row[0],
-            "route": f"{row[1]} → {row[2]}",
-            "date": convert_date(row[3]),
-            "aircraft": row[4],
-            "distance_km": row[5],
-            "tail_number": row[6],
-            "source": row[7],
-            "_ts": row[3]
+            "flight": flight_display,
+            "route": f"{row[2]} → {row[3]}",
+            "date": convert_date(row[4]),
+            "aircraft": row[5],
+            "distance_km": row[6],
+            "tail_number": row[7],
+            "source": row[8],
+            "_ts": row[4]
         })
 
     # Sort by date descending and limit
