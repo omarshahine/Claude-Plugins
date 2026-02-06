@@ -50,6 +50,12 @@ SCRIPT=$(find ~/.claude/plugins -path "*/travel-agent/*/scripts/query_flights.py
 python3 "$SCRIPT" stats
 ```
 
+### Get All Flights in a Year
+```bash
+SCRIPT=$(find ~/.claude/plugins -path "*/travel-agent/*/scripts/query_flights.py" 2>/dev/null | head -1)
+python3 "$SCRIPT" year YYYY
+```
+
 ### Get Recent/Past Flights
 ```bash
 SCRIPT=$(find ~/.claude/plugins -path "*/travel-agent/*/scripts/query_flights.py" 2>/dev/null | head -1)

@@ -448,6 +448,161 @@ def get_flight_stats(conn):
     }
 
 
+def get_flights_by_year(conn, year):
+    """Get all flights in a given year from both tables.
+
+    Filters out cancelled flights and deduplicates codeshare/reimport entries
+    by preferring the entry with a tail number for the same route+date.
+    """
+    cursor = conn.cursor()
+    main_user_id = get_main_user_id(conn)
+
+    start_ts = datetime(year, 1, 1).timestamp()
+    end_ts = datetime(year, 12, 31, 23, 59, 59).timestamp()
+
+    flights = []
+    # route_key -> flight dict (for route-level dedup that prefers tail numbers)
+    route_map = {}
+
+    # Query tracked flights (exclude cancelled)
+    user_filter = ""
+    params = [start_ts, end_ts]
+    if main_user_id:
+        user_filter = "AND uf.userId = ? AND uf.importSource != 'CONNECTED_FRIEND'"
+        params = [start_ts, end_ts, main_user_id]
+
+    cursor.execute(f"""
+        SELECT
+            a.iata as airline_code,
+            a.name as airline_name,
+            f.number as flight_number,
+            dep.iata as dep_code,
+            dep.name as dep_airport,
+            dep.city as dep_city,
+            arr.iata as arr_code,
+            arr.name as arr_airport,
+            arr.city as arr_city,
+            COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) as departure,
+            COALESCE(f.lastKnownArrivalDate, f.arrivalScheduleGateOriginal) as arrival,
+            t.pnr as confirmation,
+            t.seatNumber as seat,
+            t.cabinClass as cabin_class,
+            f.equipmentModelName as aircraft,
+            f.departureTerminal as dep_terminal,
+            f.departureGate as dep_gate,
+            f.arrivalTerminal as arr_terminal,
+            f.arrivalGate as arr_gate,
+            f.distance as distance_km,
+            uf.importSource as import_source,
+            f.equipmentTailNumber as tail_number,
+            'tracked' as source
+        FROM Flight f
+        JOIN UserFlight uf ON f.id = uf.flightId
+        JOIN Airline a ON f.airlineId = a.id
+        JOIN Airport dep ON f.departureAirportId = dep.id
+        JOIN Airport arr ON f.actualArrivalAirportId = arr.id
+        LEFT JOIN Ticket t ON f.id = t.flightId AND uf.userId = t.userId
+        WHERE uf.isMyFlight = 1
+          AND COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) >= ?
+          AND COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) <= ?
+          AND (f.isCancelled IS NULL OR f.isCancelled = 0)
+          AND NOT (
+            (f.equipmentTailNumber IS NULL OR f.equipmentTailNumber = '')
+            AND (f.hasOfficialData IS NULL OR f.hasOfficialData = 0)
+          )
+          {user_filter}
+        ORDER BY departure
+    """, params)
+
+    for row in cursor.fetchall():
+        flight = process_flight_row(row)
+        dep_date = convert_date(flight["_departure_ts"])
+
+        # Route-level dedup key: same date + same dep/arr airports
+        route_key = f"{dep_date}|{flight['departure']['airport_code']}|{flight['arrival']['airport_code']}"
+        has_tail = bool(flight.get("tail_number"))
+
+        if route_key in route_map:
+            existing = route_map[route_key]
+            existing_has_tail = bool(existing.get("tail_number"))
+            # Prefer the entry with a tail number (actually operated)
+            if has_tail and not existing_has_tail:
+                route_map[route_key] = flight
+            # If both have tails (or both don't), keep the first one
+        else:
+            route_map[route_key] = flight
+
+    # Query manual flights
+    cursor.execute("""
+        SELECT
+            NULL as airline_code,
+            NULL as airline_name,
+            mf.number as flight_number,
+            dep.iata as dep_code,
+            dep.name as dep_airport,
+            dep.city as dep_city,
+            arr.iata as arr_code,
+            arr.name as arr_airport,
+            arr.city as arr_city,
+            mf.lastKnownDepartureDate as departure,
+            mf.lastKnownArrivalDate as arrival,
+            NULL as confirmation,
+            NULL as seat,
+            NULL as cabin_class,
+            mf.equipmentModelName as aircraft,
+            mf.departureTerminal as dep_terminal,
+            mf.departureGate as dep_gate,
+            mf.arrivalTerminal as arr_terminal,
+            mf.arrivalGate as arr_gate,
+            mf.distance as distance_km,
+            'MANUAL' as import_source,
+            mf.equipmentTailNumber as tail_number,
+            'manual' as source
+        FROM ManualFlight mf
+        JOIN Airport dep ON mf.departureAirportId = dep.id
+        JOIN Airport arr ON mf.actualArrivalAirportId = arr.id
+        WHERE mf.lastKnownDepartureDate >= ?
+          AND mf.lastKnownDepartureDate <= ?
+        ORDER BY mf.lastKnownDepartureDate
+    """, (start_ts, end_ts))
+
+    for row in cursor.fetchall():
+        flight = process_flight_row(row)
+        dep_date = convert_date(flight["_departure_ts"])
+
+        route_key = f"{dep_date}|{flight['departure']['airport_code']}|{flight['arrival']['airport_code']}"
+        has_tail = bool(flight.get("tail_number"))
+
+        if route_key in route_map:
+            existing = route_map[route_key]
+            existing_has_tail = bool(existing.get("tail_number"))
+            if has_tail and not existing_has_tail:
+                route_map[route_key] = flight
+        else:
+            route_map[route_key] = flight
+
+    # Build final list from route_map
+    flights = list(route_map.values())
+
+    # Sort chronologically
+    flights.sort(key=lambda f: f["_departure_ts"] or 0)
+
+    # Compute summary stats
+    total_km = sum(f.get("distance_km") or 0 for f in flights)
+
+    # Remove internal sort key
+    for f in flights:
+        del f["_departure_ts"]
+
+    return {
+        "year": year,
+        "flights": flights,
+        "count": len(flights),
+        "total_distance_km": total_km,
+        "total_distance_miles": int(total_km * 0.621371) if total_km else 0
+    }
+
+
 def get_recent_flights(conn, limit=20):
     """Get recent/past flights from both tables."""
     cursor = conn.cursor()
@@ -574,11 +729,20 @@ def main():
                 result = search_by_confirmation(conn, sys.argv[2])
         elif command == "stats" or command == "--stats":
             result = get_flight_stats(conn)
+        elif command == "year" or command == "--year":
+            if len(sys.argv) < 3:
+                result = {"error": "Usage: query_flights.py year YYYY"}
+            else:
+                try:
+                    year = int(sys.argv[2])
+                    result = get_flights_by_year(conn, year)
+                except ValueError:
+                    result = {"error": f"Invalid year: {sys.argv[2]}. Use YYYY format"}
         elif command == "recent" or command == "--recent":
             limit = int(sys.argv[2]) if len(sys.argv) > 2 else 20
             result = get_recent_flights(conn, limit)
         else:
-            result = {"error": f"Unknown command: {command}. Use: list, next, date, pnr, stats, recent"}
+            result = {"error": f"Unknown command: {command}. Use: list, next, date, year, pnr, stats, recent"}
 
         conn.close()
         print(json.dumps(result, indent=2))
