@@ -13,8 +13,9 @@ This script queries both tables to get the complete flight history.
 import json
 import sqlite3
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 # Flighty database location (macOS)
 DEFAULT_DB_PATH = Path.home() / "Library/Containers/com.flightyapp.flighty/Data/Documents/MainFlightyDatabase.db"
@@ -28,25 +29,43 @@ def get_db_path():
     return db_path, None
 
 
-def convert_timestamp(ts):
-    """Convert Unix timestamp to ISO format (local time)."""
+def convert_timestamp(ts, tz_name=None):
+    """Convert Unix timestamp to ISO format in the given timezone."""
     if ts is None:
         return None
-    return datetime.fromtimestamp(ts).isoformat()
+    dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+    if tz_name:
+        try:
+            dt = dt.astimezone(ZoneInfo(tz_name))
+        except (KeyError, Exception):
+            pass
+    return dt.isoformat()
 
 
-def convert_date(ts):
-    """Convert Unix timestamp to date string."""
+def convert_date(ts, tz_name=None):
+    """Convert Unix timestamp to date string in the given timezone."""
     if ts is None:
         return None
-    return datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
+    dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+    if tz_name:
+        try:
+            dt = dt.astimezone(ZoneInfo(tz_name))
+        except (KeyError, Exception):
+            pass
+    return dt.strftime("%Y-%m-%d")
 
 
-def format_datetime(ts):
-    """Format timestamp for display."""
+def format_datetime(ts, tz_name=None):
+    """Format timestamp for display in the given timezone."""
     if ts is None:
         return None
-    return datetime.fromtimestamp(ts).strftime("%b %d, %Y %I:%M %p")
+    dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+    if tz_name:
+        try:
+            dt = dt.astimezone(ZoneInfo(tz_name))
+        except (KeyError, Exception):
+            pass
+    return dt.strftime("%b %d, %Y %I:%M %p")
 
 
 def calculate_duration(departure, arrival):
@@ -63,18 +82,18 @@ def days_until(ts):
     """Calculate days until a timestamp."""
     if ts is None:
         return None
-    target = datetime.fromtimestamp(ts)
-    delta = target - datetime.now()
+    target = datetime.fromtimestamp(ts, tz=timezone.utc)
+    delta = target - datetime.now(tz=timezone.utc)
     return delta.days
 
 
 def get_main_user_id(conn):
-    """Identify the main user (not a connected friend)."""
+    """Identify the main user (device owner with the most flights)."""
     cursor = conn.cursor()
     cursor.execute("""
         SELECT userId
         FROM UserFlight
-        WHERE importSource != 'CONNECTED_FRIEND' AND importSource IS NOT NULL AND importSource != ''
+        WHERE deleted IS NULL
         GROUP BY userId
         ORDER BY COUNT(*) DESC
         LIMIT 1
@@ -121,10 +140,10 @@ def query_tracked_upcoming(conn, now, main_user_id, include_friends, limit):
             a.iata as airline_code,
             a.name as airline_name,
             f.number as flight_number,
-            dep.iata as dep_code,
+            COALESCE(dep.iata, dep.icao) as dep_code,
             dep.name as dep_airport,
             dep.city as dep_city,
-            arr.iata as arr_code,
+            COALESCE(arr.iata, arr.icao) as arr_code,
             arr.name as arr_airport,
             arr.city as arr_city,
             COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) as departure,
@@ -132,7 +151,7 @@ def query_tracked_upcoming(conn, now, main_user_id, include_friends, limit):
             t.pnr as confirmation,
             t.seatNumber as seat,
             t.cabinClass as cabin_class,
-            f.equipmentModelName as aircraft,
+            COALESCE(at.name, f.equipmentModelName) as aircraft,
             f.departureTerminal as dep_terminal,
             f.departureGate as dep_gate,
             f.arrivalTerminal as arr_terminal,
@@ -141,12 +160,14 @@ def query_tracked_upcoming(conn, now, main_user_id, include_friends, limit):
             uf.importSource as import_source,
             f.equipmentTailNumber as tail_number,
             'tracked' as source,
-            f.id as flight_id
+            f.id as flight_id,
+            dep.timeZoneIdentifier as dep_tz
         FROM Flight f
         JOIN UserFlight uf ON f.id = uf.flightId
         JOIN Airline a ON f.airlineId = a.id
         JOIN Airport dep ON f.departureAirportId = dep.id
-        JOIN Airport arr ON f.actualArrivalAirportId = arr.id
+        JOIN Airport arr ON f.scheduledArrivalAirportId = arr.id
+        LEFT JOIN AircraftType at ON f.equipmentModelId = at.id
         LEFT JOIN Ticket t ON f.id = t.flightId AND uf.userId = t.userId
         WHERE {where_clause}
         ORDER BY departure
@@ -158,19 +179,25 @@ def query_tracked_upcoming(conn, now, main_user_id, include_friends, limit):
     return [row for row in rows if row[23] not in superseded_ids]
 
 
-def query_manual_upcoming(conn, now, limit):
+def query_manual_upcoming(conn, now, main_user_id, limit):
     """Query manual flights (ManualFlight table) for upcoming flights."""
     cursor = conn.cursor()
 
-    cursor.execute("""
+    user_filter = ""
+    params = [now]
+    if main_user_id:
+        user_filter = "AND umf.userId = ?"
+        params.append(main_user_id)
+
+    cursor.execute(f"""
         SELECT
             a.iata as airline_code,
             a.name as airline_name,
             mf.number as flight_number,
-            dep.iata as dep_code,
+            COALESCE(dep.iata, dep.icao) as dep_code,
             dep.name as dep_airport,
             dep.city as dep_city,
-            arr.iata as arr_code,
+            COALESCE(arr.iata, arr.icao) as arr_code,
             arr.name as arr_airport,
             arr.city as arr_city,
             mf.lastKnownDepartureDate as departure,
@@ -178,7 +205,7 @@ def query_manual_upcoming(conn, now, limit):
             NULL as confirmation,
             NULL as seat,
             NULL as cabin_class,
-            mf.equipmentModelName as aircraft,
+            COALESCE(at.name, mf.equipmentModelName) as aircraft,
             mf.departureTerminal as dep_terminal,
             mf.departureGate as dep_gate,
             mf.arrivalTerminal as arr_terminal,
@@ -186,21 +213,39 @@ def query_manual_upcoming(conn, now, limit):
             mf.distance as distance_km,
             'MANUAL' as import_source,
             mf.equipmentTailNumber as tail_number,
-            'manual' as source
+            'manual' as source,
+            NULL as flight_id,
+            dep.timeZoneIdentifier as dep_tz
         FROM ManualFlight mf
+        JOIN UserManualFlight umf ON mf.id = umf.flightId
         JOIN Airport dep ON mf.departureAirportId = dep.id
-        JOIN Airport arr ON mf.actualArrivalAirportId = arr.id
+        JOIN Airport arr ON mf.scheduledArrivalAirportId = arr.id
         LEFT JOIN Airline a ON mf.airlineId = a.id
-        WHERE mf.lastKnownDepartureDate > ?
+        LEFT JOIN AircraftType at ON mf.equipmentModelId = at.id
+        WHERE umf.isMyFlight = 1
+          AND umf.deleted IS NULL
+          AND mf.lastKnownDepartureDate > ?
+          {user_filter}
         ORDER BY mf.lastKnownDepartureDate
         LIMIT ?
-    """, (now, limit * 2))
+    """, params + [limit * 2])
 
     return cursor.fetchall()
 
 
 def process_flight_row(row):
-    """Process a flight row into a dictionary."""
+    """Process a flight row into a dictionary.
+
+    Row layout (indices 0-24):
+      0: airline_code, 1: airline_name, 2: flight_number,
+      3: dep_code, 4: dep_airport, 5: dep_city,
+      6: arr_code, 7: arr_airport, 8: arr_city,
+      9: departure_ts, 10: arrival_ts,
+      11: confirmation, 12: seat, 13: cabin_class, 14: aircraft,
+      15: dep_terminal, 16: dep_gate, 17: arr_terminal, 18: arr_gate,
+      19: distance_km, 20: import_source, 21: tail_number, 22: source,
+      23: flight_id, 24: dep_tz
+    """
     cabin_class = row[13]
     if cabin_class:
         cabin_display = cabin_class.replace("premiumEconomy", "Premium Economy").replace("privateJet", "Private Jet").title()
@@ -209,9 +254,18 @@ def process_flight_row(row):
 
     departure_ts = row[9]
     arrival_ts = row[10]
+    dep_tz = row[24] if len(row) > 24 else None
+
+    source = row[22]
+    # Manual flight numbers already include the airline/operator prefix (e.g., "EJA 431")
+    # Tracked flight numbers are just the numeric part (e.g., "123") and need the IATA code prepended
+    if source == 'manual':
+        flight_display = row[2]
+    else:
+        flight_display = f"{row[0]} {row[2]}" if row[0] and row[2] else row[2]
 
     return {
-        "flight": f"{row[0]} {row[2]}" if row[0] and row[2] else row[2],
+        "flight": flight_display,
         "airline": row[1],
         "flight_number": row[2],
         "route": f"{row[3]} → {row[6]}",
@@ -219,8 +273,8 @@ def process_flight_row(row):
             "airport_code": row[3],
             "airport_name": row[4],
             "city": row[5],
-            "datetime": convert_timestamp(departure_ts),
-            "display": format_datetime(departure_ts),
+            "datetime": convert_timestamp(departure_ts, dep_tz),
+            "display": format_datetime(departure_ts, dep_tz),
             "terminal": row[15],
             "gate": row[16]
         },
@@ -244,7 +298,8 @@ def process_flight_row(row):
         "import_source": row[20],
         "tail_number": row[21],
         "source": row[22],
-        "_departure_ts": departure_ts  # For sorting
+        "_departure_ts": departure_ts,  # For sorting
+        "_dep_tz": dep_tz  # For timezone-aware date display
     }
 
 
@@ -255,7 +310,7 @@ def list_upcoming_flights(conn, limit=20, include_friends=False):
 
     # Get flights from both tables
     tracked_rows = query_tracked_upcoming(conn, now, main_user_id, include_friends, limit)
-    manual_rows = query_manual_upcoming(conn, now, limit)
+    manual_rows = query_manual_upcoming(conn, now, main_user_id, limit)
 
     # Process and combine
     flights = []
@@ -263,8 +318,8 @@ def list_upcoming_flights(conn, limit=20, include_friends=False):
 
     for row in tracked_rows:
         flight = process_flight_row(row)
-        # Dedup key: date + route + flight number
-        dep_date = convert_date(flight["_departure_ts"])
+        # Dedup key: date (in departure timezone) + route + flight number
+        dep_date = convert_date(flight["_departure_ts"], flight.get("_dep_tz"))
         key = f"{dep_date}|{flight['departure']['airport_code']}|{flight['arrival']['airport_code']}|{flight['flight_number']}"
         if key not in seen_keys:
             seen_keys.add(key)
@@ -272,7 +327,7 @@ def list_upcoming_flights(conn, limit=20, include_friends=False):
 
     for row in manual_rows:
         flight = process_flight_row(row)
-        dep_date = convert_date(flight["_departure_ts"])
+        dep_date = convert_date(flight["_departure_ts"], flight.get("_dep_tz"))
         key = f"{dep_date}|{flight['departure']['airport_code']}|{flight['arrival']['airport_code']}|{flight['flight_number']}"
         if key not in seen_keys:
             seen_keys.add(key)
@@ -282,9 +337,10 @@ def list_upcoming_flights(conn, limit=20, include_friends=False):
     flights.sort(key=lambda f: f["_departure_ts"] or 0)
     flights = flights[:limit]
 
-    # Remove internal sort key
+    # Remove internal keys
     for f in flights:
         del f["_departure_ts"]
+        f.pop("_dep_tz", None)
 
     return {"flights": flights, "count": len(flights)}
 
@@ -298,53 +354,76 @@ def get_next_flight(conn):
 
 
 def get_flights_on_date(conn, date_str):
-    """Get flights on a specific date (YYYY-MM-DD format)."""
+    """Get flights on a specific date (YYYY-MM-DD format).
+
+    Uses a wide UTC window (target date -1 day to +1 day) then filters
+    in Python using each flight's departure airport timezone to handle
+    international flights correctly.
+    """
     cursor = conn.cursor()
+    main_user_id = get_main_user_id(conn)
 
     try:
         target_date = datetime.strptime(date_str, "%Y-%m-%d")
-        start_ts = target_date.timestamp()
-        end_ts = (target_date.replace(hour=23, minute=59, second=59)).timestamp()
+        # Use wide window to catch all timezone possibilities
+        start_ts = (target_date.replace(hour=0, minute=0, second=0)).timestamp() - 86400
+        end_ts = (target_date.replace(hour=23, minute=59, second=59)).timestamp() + 86400
     except ValueError:
         return {"error": f"Invalid date format: {date_str}. Use YYYY-MM-DD"}
 
     flights = []
     superseded_ids = get_superseded_flight_ids(conn)
 
+    # Build user filter
+    user_filter = ""
+    params = [start_ts, end_ts]
+    if main_user_id:
+        user_filter = "AND uf.userId = ?"
+        params.append(main_user_id)
+
     # Query tracked flights (exclude superseded)
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT
             a.iata as airline_code,
             f.number as flight_number,
-            dep.iata as dep_code,
-            arr.iata as arr_code,
+            COALESCE(dep.iata, dep.icao) as dep_code,
+            COALESCE(arr.iata, arr.icao) as arr_code,
             COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) as departure,
             COALESCE(f.lastKnownArrivalDate, f.arrivalScheduleGateOriginal) as arrival,
             t.pnr as confirmation,
             t.seatNumber as seat,
             t.cabinClass as cabin_class,
-            f.equipmentModelName as aircraft,
+            COALESCE(at.name, f.equipmentModelName) as aircraft,
             f.equipmentTailNumber as tail_number,
-            f.id as flight_id
+            f.id as flight_id,
+            dep.timeZoneIdentifier as dep_tz
         FROM Flight f
         JOIN UserFlight uf ON f.id = uf.flightId
         JOIN Airline a ON f.airlineId = a.id
         JOIN Airport dep ON f.departureAirportId = dep.id
-        JOIN Airport arr ON f.actualArrivalAirportId = arr.id
+        JOIN Airport arr ON f.scheduledArrivalAirportId = arr.id
+        LEFT JOIN AircraftType at ON f.equipmentModelId = at.id
         LEFT JOIN Ticket t ON f.id = t.flightId AND uf.userId = t.userId
         WHERE uf.isMyFlight = 1
           AND COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) >= ?
           AND COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) <= ?
+          {user_filter}
         ORDER BY departure
-    """, (start_ts, end_ts))
+    """, params)
 
     for row in cursor.fetchall():
         if row[11] in superseded_ids:
             continue
+        dep_ts = row[4]
+        dep_tz = row[12]
+        # Filter by local date at departure airport
+        local_date = convert_date(dep_ts, dep_tz)
+        if local_date != date_str:
+            continue
         flights.append({
             "flight": f"{row[0]} {row[1]}" if row[0] else row[1],
             "route": f"{row[2]} → {row[3]}",
-            "departure": format_datetime(row[4]),
+            "departure": format_datetime(dep_ts, dep_tz),
             "arrival": format_datetime(row[5]),
             "confirmation": row[6],
             "seat": row[7],
@@ -354,32 +433,49 @@ def get_flights_on_date(conn, date_str):
             "source": "tracked"
         })
 
-    # Query manual flights (with airline info)
-    cursor.execute("""
+    # Query manual flights (filtered by user)
+    manual_user_filter = ""
+    manual_params = [start_ts, end_ts]
+    if main_user_id:
+        manual_user_filter = "AND umf.userId = ?"
+        manual_params.append(main_user_id)
+
+    cursor.execute(f"""
         SELECT
             a.iata as airline_code,
             mf.number as flight_number,
-            dep.iata as dep_code,
-            arr.iata as arr_code,
+            COALESCE(dep.iata, dep.icao) as dep_code,
+            COALESCE(arr.iata, arr.icao) as arr_code,
             mf.lastKnownDepartureDate as departure,
             mf.lastKnownArrivalDate as arrival,
-            mf.equipmentModelName as aircraft,
-            mf.equipmentTailNumber as tail_number
+            COALESCE(at.name, mf.equipmentModelName) as aircraft,
+            mf.equipmentTailNumber as tail_number,
+            dep.timeZoneIdentifier as dep_tz
         FROM ManualFlight mf
+        JOIN UserManualFlight umf ON mf.id = umf.flightId
         JOIN Airport dep ON mf.departureAirportId = dep.id
-        JOIN Airport arr ON mf.actualArrivalAirportId = arr.id
+        JOIN Airport arr ON mf.scheduledArrivalAirportId = arr.id
         LEFT JOIN Airline a ON mf.airlineId = a.id
-        WHERE mf.lastKnownDepartureDate >= ?
+        LEFT JOIN AircraftType at ON mf.equipmentModelId = at.id
+        WHERE umf.isMyFlight = 1
+          AND umf.deleted IS NULL
+          AND mf.lastKnownDepartureDate >= ?
           AND mf.lastKnownDepartureDate <= ?
+          {manual_user_filter}
         ORDER BY mf.lastKnownDepartureDate
-    """, (start_ts, end_ts))
+    """, manual_params)
 
     for row in cursor.fetchall():
-        flight_display = f"{row[0]} {row[1]}" if row[0] and row[1] else row[1]
+        dep_ts = row[4]
+        dep_tz = row[8]
+        local_date = convert_date(dep_ts, dep_tz)
+        if local_date != date_str:
+            continue
+        # Manual flight numbers already include the operator prefix
         flights.append({
-            "flight": flight_display,
+            "flight": row[1],
             "route": f"{row[2]} → {row[3]}",
-            "departure": format_datetime(row[4]),
+            "departure": format_datetime(dep_ts, dep_tz),
             "arrival": format_datetime(row[5]),
             "confirmation": None,
             "seat": None,
@@ -400,19 +496,21 @@ def search_by_confirmation(conn, pnr):
         SELECT
             a.iata as airline_code,
             f.number as flight_number,
-            dep.iata as dep_code,
-            arr.iata as arr_code,
+            COALESCE(dep.iata, dep.icao) as dep_code,
+            COALESCE(arr.iata, arr.icao) as arr_code,
             COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) as departure,
             COALESCE(f.lastKnownArrivalDate, f.arrivalScheduleGateOriginal) as arrival,
             t.pnr as confirmation,
             t.seatNumber as seat,
             t.cabinClass as cabin_class,
-            f.equipmentModelName as aircraft
+            COALESCE(at.name, f.equipmentModelName) as aircraft,
+            dep.timeZoneIdentifier as dep_tz
         FROM Flight f
         JOIN UserFlight uf ON f.id = uf.flightId
         JOIN Airline a ON f.airlineId = a.id
         JOIN Airport dep ON f.departureAirportId = dep.id
-        JOIN Airport arr ON f.actualArrivalAirportId = arr.id
+        JOIN Airport arr ON f.scheduledArrivalAirportId = arr.id
+        LEFT JOIN AircraftType at ON f.equipmentModelId = at.id
         JOIN Ticket t ON f.id = t.flightId AND uf.userId = t.userId
         WHERE t.pnr LIKE ?
         ORDER BY departure
@@ -420,10 +518,11 @@ def search_by_confirmation(conn, pnr):
 
     flights = []
     for row in cursor.fetchall():
+        dep_tz = row[10]
         flights.append({
             "flight": f"{row[0]} {row[1]}",
             "route": f"{row[2]} → {row[3]}",
-            "departure": format_datetime(row[4]),
+            "departure": format_datetime(row[4], dep_tz),
             "arrival": format_datetime(row[5]),
             "confirmation": row[6],
             "seat": row[7],
@@ -435,12 +534,19 @@ def search_by_confirmation(conn, pnr):
 
 
 def get_flight_stats(conn):
-    """Get flight statistics from both tables."""
+    """Get flight statistics from both tables (filtered by primary user)."""
     cursor = conn.cursor()
-    now = datetime.now().timestamp()
+    now = datetime.now(tz=timezone.utc).timestamp()
+    main_user_id = get_main_user_id(conn)
 
     # Stats from tracked flights
-    cursor.execute("""
+    user_filter = ""
+    params = [now]
+    if main_user_id:
+        user_filter = "AND uf.userId = ?"
+        params.append(main_user_id)
+
+    cursor.execute(f"""
         SELECT
             COUNT(*) as total_flights,
             SUM(CASE WHEN COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) > ? THEN 1 ELSE 0 END) as upcoming,
@@ -448,17 +554,29 @@ def get_flight_stats(conn):
         FROM Flight f
         JOIN UserFlight uf ON f.id = uf.flightId
         WHERE uf.isMyFlight = 1
-    """, (now,))
+          AND uf.deleted IS NULL
+          {user_filter}
+    """, params)
     tracked = cursor.fetchone()
 
-    # Stats from manual flights
-    cursor.execute("""
+    # Stats from manual flights (filtered by user)
+    manual_filter = ""
+    manual_params = [now]
+    if main_user_id:
+        manual_filter = "AND umf.userId = ?"
+        manual_params.append(main_user_id)
+
+    cursor.execute(f"""
         SELECT
             COUNT(*) as total_flights,
-            SUM(CASE WHEN lastKnownDepartureDate > ? THEN 1 ELSE 0 END) as upcoming,
-            SUM(distance) as total_km
-        FROM ManualFlight
-    """, (now,))
+            SUM(CASE WHEN mf.lastKnownDepartureDate > ? THEN 1 ELSE 0 END) as upcoming,
+            SUM(mf.distance) as total_km
+        FROM ManualFlight mf
+        JOIN UserManualFlight umf ON mf.id = umf.flightId
+        WHERE umf.isMyFlight = 1
+          AND umf.deleted IS NULL
+          {manual_filter}
+    """, manual_params)
     manual = cursor.fetchone()
 
     total_flights = (tracked[0] or 0) + (manual[0] or 0)
@@ -507,10 +625,10 @@ def get_flights_by_year(conn, year):
             a.iata as airline_code,
             a.name as airline_name,
             f.number as flight_number,
-            dep.iata as dep_code,
+            COALESCE(dep.iata, dep.icao) as dep_code,
             dep.name as dep_airport,
             dep.city as dep_city,
-            arr.iata as arr_code,
+            COALESCE(arr.iata, arr.icao) as arr_code,
             arr.name as arr_airport,
             arr.city as arr_city,
             COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) as departure,
@@ -518,7 +636,7 @@ def get_flights_by_year(conn, year):
             t.pnr as confirmation,
             t.seatNumber as seat,
             t.cabinClass as cabin_class,
-            f.equipmentModelName as aircraft,
+            COALESCE(at.name, f.equipmentModelName) as aircraft,
             f.departureTerminal as dep_terminal,
             f.departureGate as dep_gate,
             f.arrivalTerminal as arr_terminal,
@@ -527,21 +645,19 @@ def get_flights_by_year(conn, year):
             uf.importSource as import_source,
             f.equipmentTailNumber as tail_number,
             'tracked' as source,
-            f.id as flight_id
+            f.id as flight_id,
+            dep.timeZoneIdentifier as dep_tz
         FROM Flight f
         JOIN UserFlight uf ON f.id = uf.flightId
         JOIN Airline a ON f.airlineId = a.id
         JOIN Airport dep ON f.departureAirportId = dep.id
-        JOIN Airport arr ON f.actualArrivalAirportId = arr.id
+        JOIN Airport arr ON f.scheduledArrivalAirportId = arr.id
+        LEFT JOIN AircraftType at ON f.equipmentModelId = at.id
         LEFT JOIN Ticket t ON f.id = t.flightId AND uf.userId = t.userId
         WHERE uf.isMyFlight = 1
+          AND uf.deleted IS NULL
           AND COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) >= ?
           AND COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) <= ?
-          AND (f.isCancelled IS NULL OR f.isCancelled = 0)
-          AND NOT (
-            (f.equipmentTailNumber IS NULL OR f.equipmentTailNumber = '')
-            AND (f.hasOfficialData IS NULL OR f.hasOfficialData = 0)
-          )
           {user_filter}
         ORDER BY departure
     """, params)
@@ -553,7 +669,7 @@ def get_flights_by_year(conn, year):
             continue
 
         flight = process_flight_row(row)
-        dep_date = convert_date(flight["_departure_ts"])
+        dep_date = convert_date(flight["_departure_ts"], flight.get("_dep_tz"))
 
         # Route-level dedup key: same date + same dep/arr airports
         route_key = f"{dep_date}|{flight['departure']['airport_code']}|{flight['arrival']['airport_code']}"
@@ -569,16 +685,22 @@ def get_flights_by_year(conn, year):
         else:
             route_map[route_key] = flight
 
-    # Query manual flights (with airline info)
-    cursor.execute("""
+    # Query manual flights (filtered by user)
+    manual_user_filter = ""
+    manual_params = [start_ts, end_ts]
+    if main_user_id:
+        manual_user_filter = "AND umf.userId = ?"
+        manual_params.append(main_user_id)
+
+    cursor.execute(f"""
         SELECT
             a.iata as airline_code,
             a.name as airline_name,
             mf.number as flight_number,
-            dep.iata as dep_code,
+            COALESCE(dep.iata, dep.icao) as dep_code,
             dep.name as dep_airport,
             dep.city as dep_city,
-            arr.iata as arr_code,
+            COALESCE(arr.iata, arr.icao) as arr_code,
             arr.name as arr_airport,
             arr.city as arr_city,
             mf.lastKnownDepartureDate as departure,
@@ -586,7 +708,7 @@ def get_flights_by_year(conn, year):
             NULL as confirmation,
             NULL as seat,
             NULL as cabin_class,
-            mf.equipmentModelName as aircraft,
+            COALESCE(at.name, mf.equipmentModelName) as aircraft,
             mf.departureTerminal as dep_terminal,
             mf.departureGate as dep_gate,
             mf.arrivalTerminal as arr_terminal,
@@ -594,19 +716,26 @@ def get_flights_by_year(conn, year):
             mf.distance as distance_km,
             'MANUAL' as import_source,
             mf.equipmentTailNumber as tail_number,
-            'manual' as source
+            'manual' as source,
+            NULL as flight_id,
+            dep.timeZoneIdentifier as dep_tz
         FROM ManualFlight mf
+        JOIN UserManualFlight umf ON mf.id = umf.flightId
         JOIN Airport dep ON mf.departureAirportId = dep.id
-        JOIN Airport arr ON mf.actualArrivalAirportId = arr.id
+        JOIN Airport arr ON mf.scheduledArrivalAirportId = arr.id
         LEFT JOIN Airline a ON mf.airlineId = a.id
-        WHERE mf.lastKnownDepartureDate >= ?
+        LEFT JOIN AircraftType at ON mf.equipmentModelId = at.id
+        WHERE umf.isMyFlight = 1
+          AND umf.deleted IS NULL
+          AND mf.lastKnownDepartureDate >= ?
           AND mf.lastKnownDepartureDate <= ?
+          {manual_user_filter}
         ORDER BY mf.lastKnownDepartureDate
-    """, (start_ts, end_ts))
+    """, manual_params)
 
     for row in cursor.fetchall():
         flight = process_flight_row(row)
-        dep_date = convert_date(flight["_departure_ts"])
+        dep_date = convert_date(flight["_departure_ts"], flight.get("_dep_tz"))
 
         route_key = f"{dep_date}|{flight['departure']['airport_code']}|{flight['arrival']['airport_code']}"
         has_tail = bool(flight.get("tail_number"))
@@ -628,9 +757,10 @@ def get_flights_by_year(conn, year):
     # Compute summary stats
     total_km = sum(f.get("distance_km") or 0 for f in flights)
 
-    # Remove internal sort key
+    # Remove internal keys
     for f in flights:
         del f["_departure_ts"]
+        f.pop("_dep_tz", None)
 
     return {
         "year": year,
@@ -642,45 +772,57 @@ def get_flights_by_year(conn, year):
 
 
 def get_recent_flights(conn, limit=20):
-    """Get recent/past flights from both tables."""
+    """Get recent/past flights from both tables (filtered by primary user)."""
     cursor = conn.cursor()
-    now = datetime.now().timestamp()
+    now = datetime.now(tz=timezone.utc).timestamp()
+    main_user_id = get_main_user_id(conn)
     superseded_ids = get_superseded_flight_ids(conn)
 
     flights = []
 
+    # Build user filter
+    user_filter = ""
+    params = [now]
+    if main_user_id:
+        user_filter = "AND uf.userId = ?"
+        params.append(main_user_id)
+
     # Query tracked flights (exclude superseded)
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT
             a.iata as airline_code,
             f.number as flight_number,
-            dep.iata as dep_code,
-            arr.iata as arr_code,
+            COALESCE(dep.iata, dep.icao) as dep_code,
+            COALESCE(arr.iata, arr.icao) as arr_code,
             COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) as departure,
-            f.equipmentModelName as aircraft,
+            COALESCE(at.name, f.equipmentModelName) as aircraft,
             f.distance as distance_km,
             f.equipmentTailNumber as tail_number,
             'tracked' as source,
-            f.id as flight_id
+            f.id as flight_id,
+            dep.timeZoneIdentifier as dep_tz
         FROM Flight f
         JOIN UserFlight uf ON f.id = uf.flightId
         JOIN Airline a ON f.airlineId = a.id
         JOIN Airport dep ON f.departureAirportId = dep.id
-        JOIN Airport arr ON f.actualArrivalAirportId = arr.id
+        JOIN Airport arr ON f.scheduledArrivalAirportId = arr.id
+        LEFT JOIN AircraftType at ON f.equipmentModelId = at.id
         WHERE uf.isMyFlight = 1
-          AND uf.isArchived = 0
+          AND uf.deleted IS NULL
           AND COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) < ?
+          {user_filter}
         ORDER BY departure DESC
         LIMIT ?
-    """, (now, limit * 2))
+    """, params + [limit * 2])
 
     for row in cursor.fetchall():
         if row[9] in superseded_ids:
             continue
+        dep_tz = row[10]
         flights.append({
             "flight": f"{row[0]} {row[1]}" if row[0] else row[1],
             "route": f"{row[2]} → {row[3]}",
-            "date": convert_date(row[4]),
+            "date": convert_date(row[4], dep_tz),
             "aircraft": row[5],
             "distance_km": row[6],
             "tail_number": row[7],
@@ -688,33 +830,46 @@ def get_recent_flights(conn, limit=20):
             "_ts": row[4]
         })
 
-    # Query manual flights (with airline info)
-    cursor.execute("""
+    # Query manual flights (filtered by user)
+    manual_filter = ""
+    manual_params = [now]
+    if main_user_id:
+        manual_filter = "AND umf.userId = ?"
+        manual_params.append(main_user_id)
+
+    cursor.execute(f"""
         SELECT
             a.iata as airline_code,
             mf.number as flight_number,
-            dep.iata as dep_code,
-            arr.iata as arr_code,
+            COALESCE(dep.iata, dep.icao) as dep_code,
+            COALESCE(arr.iata, arr.icao) as arr_code,
             mf.lastKnownDepartureDate as departure,
-            mf.equipmentModelName as aircraft,
+            COALESCE(at.name, mf.equipmentModelName) as aircraft,
             mf.distance as distance_km,
             mf.equipmentTailNumber as tail_number,
-            'manual' as source
+            'manual' as source,
+            dep.timeZoneIdentifier as dep_tz
         FROM ManualFlight mf
+        JOIN UserManualFlight umf ON mf.id = umf.flightId
         JOIN Airport dep ON mf.departureAirportId = dep.id
-        JOIN Airport arr ON mf.actualArrivalAirportId = arr.id
+        JOIN Airport arr ON mf.scheduledArrivalAirportId = arr.id
         LEFT JOIN Airline a ON mf.airlineId = a.id
-        WHERE mf.lastKnownDepartureDate < ?
+        LEFT JOIN AircraftType at ON mf.equipmentModelId = at.id
+        WHERE umf.isMyFlight = 1
+          AND umf.deleted IS NULL
+          AND mf.lastKnownDepartureDate < ?
+          {manual_filter}
         ORDER BY mf.lastKnownDepartureDate DESC
         LIMIT ?
-    """, (now, limit * 2))
+    """, manual_params + [limit * 2])
 
     for row in cursor.fetchall():
-        flight_display = f"{row[0]} {row[1]}" if row[0] and row[1] else row[1]
+        dep_tz = row[9]
+        # Manual flight numbers already include the operator prefix
         flights.append({
-            "flight": flight_display,
+            "flight": row[1],
             "route": f"{row[2]} → {row[3]}",
-            "date": convert_date(row[4]),
+            "date": convert_date(row[4], dep_tz),
             "aircraft": row[5],
             "distance_km": row[6],
             "tail_number": row[7],
