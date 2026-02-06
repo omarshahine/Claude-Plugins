@@ -36,19 +36,23 @@ Read and send iMessages with automatic contact name resolution.
 
 ## Implementation
 
-Parse the arguments from `{{ ARGUMENTS }}` and route to the imessage-assistant agent:
+**IMPORTANT: Run directly in main agent, NOT as a sub-agent.**
+
+The send operation requires `AskUserQuestion` for user confirmation. Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. Therefore, this command MUST run directly in the main agent context.
+
+**Workflow:**
+
+Load the imessage-assistant agent instructions as guidance and execute the logic directly in the main agent.
+
+Parse the arguments from `{{ ARGUMENTS }}`:
 
 {{ ARGUMENTS }}
 
-Use the Task tool to invoke the imessage-assistant agent with the appropriate prompt:
-
-```
-subagent_type: "chief-of-staff:imessage-assistant"
-```
-
 **Routing logic:**
 
-- No args or `chats` → prompt: "List recent iMessage conversations with resolved contact names. Show the last 20 chats."
-- `read <name> [flags]` → prompt: "Read message history with <name>. [Apply --limit N if specified, default 20] [Apply --since DATE if specified]"
-- `search <keyword> [flags]` → prompt: "Search all iMessage conversations for '<keyword>'. [Apply --limit N if specified, default 20]"
-- `send <name> <message>` → prompt: "Send an iMessage to <name> with the text: <message>. You MUST confirm with the user before sending."
+- No args or `chats` → List recent iMessage conversations with resolved contact names (last 20 chats)
+- `read <name> [flags]` → Read message history with the specified contact (apply --limit N if specified, default 20; apply --since DATE if specified)
+- `search <keyword> [flags]` → Search all iMessage conversations for the keyword (apply --limit N if specified, default 20)
+- `send <name> <message>` → Send an iMessage to the contact with the specified text. You MUST confirm with the user via AskUserQuestion before sending.
+
+**Reference:** See `agents/imessage-assistant.md` for detailed implementation guidance on contact resolution, message formatting, and safety requirements.
