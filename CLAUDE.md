@@ -279,17 +279,27 @@ chief-of-staff/
    - `user-preferences.yaml` - Sender overrides, never-file lists
 
 4. **MCP Dependencies**:
-   - Fastmail MCP (required) - Email access
+   - Email MCP (required, user-configured) - Fastmail, Gmail, or Outlook
    - Parcel API MCP (optional) - Package tracking
-   - Apple PIM MCP (optional) - Reminders
+   - Apple PIM MCP (optional) - Reminders, Contacts
    - Playwright plugin (optional) - Newsletter unsubscribe web forms
+   - imsg CLI (optional) - iMessage read/send (`brew install steipete/tap/imsg`)
+
+5. **Provider-Agnostic Email Access** (CRITICAL):
+   - NEVER hardcode `mcp__fastmail__*` or any provider-specific tool names in agents or commands
+   - Always read `settings.yaml` first to get `EMAIL_PROVIDER` and `EMAIL_TOOLS` mappings
+   - Load tools dynamically: `ToolSearch("+{EMAIL_PROVIDER}")`
+   - Reference tools as `EMAIL_TOOLS.list_emails`, `EMAIL_TOOLS.bulk_move`, etc.
+   - See `templates/email-provider-init.md` for the standard initialization pattern
+   - Exception: agent `allowedTools` frontmatter can't be dynamic — use `tools: "*"` or a broad tool list
 
 **Adding Sub-Agents:**
 
 1. Create agent file in `agents/`
 2. Use `chief-of-staff:` prefix in Task tool calls
 3. Reference data files with `chief-of-staff/*/data/` paths
-4. Update SKILL.md with new agent info
+4. Follow the provider-agnostic email pattern (see point 5 above)
+5. Update SKILL.md with new agent info
 
 **Private Extensions:**
 
