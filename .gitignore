@@ -39,6 +39,9 @@ venv/
 # Claude Code
 .claude/cache/
 
+# Playwright MCP runtime artifacts
+.playwright-mcp/
+
 # Plugin data folders contain user-specific files (symlinked to private repo)
 # But we want to track .example.yaml templates and .gitignore
 /plugins/*/data/*

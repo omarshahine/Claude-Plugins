@@ -12,8 +12,8 @@ Agent-Plugins/
 │   ├── chief-of-staff/        # THE MAIN ORCHESTRATOR PLUGIN
 │   │   ├── .claude-plugin/
 │   │   │   └── plugin.json
-│   │   ├── agents/            # 12 sub-agents (inbox-interviewer, inbox-to-parcel, etc.)
-│   │   ├── commands/          # 13 slash commands (triage, parcel, reminders, etc.)
+│   │   ├── agents/            # 13 sub-agents (inbox-interviewer, inbox-to-parcel, etc.)
+│   │   ├── commands/          # 14 slash commands (triage, parcel, reminders, etc.)
 │   │   ├── skills/
 │   │   │   └── chief-of-staff/
 │   │   │       └── SKILL.md   # Core orchestrator knowledge
@@ -226,7 +226,8 @@ chief-of-staff/
 │   ├── folder-optimizer.md        # Suggest folder reorganization
 │   ├── decision-learner.md        # Learn from triage decisions
 │   ├── batch-html-generator.md    # Visual batch triage interface
-│   └── batch-processor.md         # Execute batch triage decisions
+│   ├── batch-processor.md         # Execute batch triage decisions
+│   └── imessage-assistant.md      # Read and send iMessages via CLI
 ├── commands/
 │   ├── setup.md                   # Configure email provider
 │   ├── daily.md                   # Full daily orchestration
@@ -240,7 +241,8 @@ chief-of-staff/
 │   ├── learn.md                   # Bootstrap filing rules
 │   ├── analyze.md                 # Analyze Trash/Archive
 │   ├── optimize.md                # Suggest folder improvements
-│   └── rules.md                   # View/manage filing rules
+│   ├── rules.md                   # View/manage filing rules
+│   └── imessage.md                # Read, search, send iMessages
 ├── skills/chief-of-staff/SKILL.md # Core knowledge
 ├── data/                          # User data (gitignored)
 │   ├── .gitignore

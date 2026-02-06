@@ -6,6 +6,8 @@ description: |
   - User wants to create reminders from emails
   - User mentions newsletters or unsubscribing
   - User asks about their daily routine or productivity workflow
+  - User asks about iMessages, text messages, or SMS
+  - User wants to read, search, or send a text/iMessage
   - User summons their persona by name (e.g., "Friday", "Max", "Jarvis")
 ---
 
@@ -61,6 +63,7 @@ The summon command (`/friday`, etc.) provides:
 | `/friday status` | `/chief-of-staff:status` |
 | `/friday daily` | `/chief-of-staff:daily` |
 | `/friday reminders` | `/chief-of-staff:reminders` |
+| `/friday imessage` | `/chief-of-staff:imessage` |
 
 ## Architecture
 
@@ -80,6 +83,7 @@ Chief-of-Staff contains these sub-agents:
 | `decision-learner` | Learn from triage decisions |
 | `batch-html-generator` | Visual batch triage interface |
 | `batch-processor` | Execute batch triage decisions |
+| `imessage-assistant` | Read and send iMessages via CLI |
 
 ## Commands
 
@@ -98,6 +102,7 @@ Chief-of-Staff contains these sub-agents:
 | `/chief-of-staff:optimize` | Suggest folder reorganization |
 | `/chief-of-staff:batch` | Visual HTML batch interface |
 | `/chief-of-staff:rules` | View/manage filing rules |
+| `/chief-of-staff:imessage` | Read, search, and send iMessages |
 
 ## Data Files
 
@@ -144,6 +149,7 @@ Chief-of-Staff integrates with:
 - **Parcel API MCP** - Package tracking (bundled)
 - **Playwright MCP** - Newsletter unsubscribe web forms (bundled)
 - **Apple PIM MCP** - Reminders and calendar (optional, separate plugin)
+- **imsg CLI** - iMessage access (required for imessage-assistant, `brew install steipete/tap/imsg`)
 
 ## Email Provider Setup (Required)
 

@@ -92,23 +92,39 @@ Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The tr
 
 **Workflow:**
 
-1. Load Fastmail MCP tools via ToolSearch (`+fastmail`)
-2. Fetch inbox emails with `get_recent_emails` (limit: 50) or `list_emails` (limit: 50)
-3. For each email, use `AskUserQuestion` to present options:
+1. **Load context BEFORE presenting emails:**
+   a. Load Fastmail MCP tools via ToolSearch (`+fastmail`)
+   b. Load Parcel MCP tools via ToolSearch (`+parcel deliveries`)
+   c. Read `~/.claude/data/chief-of-staff/filing-rules.yaml` for filing suggestions
+   d. Read `~/.claude/data/chief-of-staff/delete-patterns.yaml` for delete suggestions
+   e. Fetch current Parcel deliveries via `get_deliveries` (include_delivered: true)
+   f. Fetch inbox emails with `get_recent_emails` (limit: 50) or `list_emails` (limit: 50)
+
+2. **PHASE 1 - COLLECT:** For each email, use `AskUserQuestion` to present options:
    - Include email summary in the question text
    - Provide 4 options: Archive, Delete, Keep, Reminder (or contextual alternatives)
-   - For newsletters with unsubscribe: offer "Unsubscribe + Delete" option
-4. Collect all decisions in memory
-5. Execute operations in this order:
+   - For newsletters with `$canunsubscribe` keyword: offer "Unsubscribe + Delete" option
+   - For shipping emails: cross-reference Parcel deliveries. If already tracked, note "Already in Parcel" and suggest "Archive to Orders". If not tracked, offer "Add to Parcel + Archive"
+   - For emails matching delete patterns: show "(Recommended)" with pattern match note
+   - For emails matching filing rules: show folder suggestion with confidence
+
+3. **PHASE 2 - EXECUTE:** Collect all decisions, then execute in this order:
    a. **Unsubscribes FIRST** - Delegate to `chief-of-staff:newsletter-unsubscriber` sub-agent
       (must happen before delete so emails are still accessible)
    b. **Parcel tracking** - Delegate to `chief-of-staff:inbox-to-parcel` sub-agent
    c. **Reminders** - Create via `mcp__apple-pim__reminder_create`
    d. **Archives** - `bulk_move` grouped by folder
    e. **Deletes** - `bulk_delete` for all deletions (including unsubscribed emails)
-6. Report summary
+
+4. **PHASE 3 - LEARN (mandatory):** After execution, update data files:
+   a. **decision-history.yaml** - Append ALL decisions with: date, emailId, action, senderDomain, senderEmail (if available), folder (if archived), category, accepted (true if user followed the system suggestion, false if user chose a different action), and notes for pattern matches
+   b. **delete-patterns.yaml** - Bump `match_count` for any confirmed delete patterns. For new domains deleted 2+ times in this session, add as new patterns with confidence 0.75 and source "triage"
+   c. **Update statistics** - Increment total_decisions, by_action counts, total_sessions
+   d. Report summary
 
 **IMPORTANT: Unsubscribes must run BEFORE deletes.** The unsubscriber needs to fetch email content to find unsubscribe links. If emails are deleted first, the links are lost.
+
+**IMPORTANT: Phase 3 (LEARN) is NOT optional.** Every triage session must persist decisions to data files. This is how the system improves suggestions over time.
 
 **Question format:**
 ```
