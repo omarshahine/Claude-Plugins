@@ -22,8 +22,6 @@ tools:
   - Write
   - Bash
   - ToolSearch
-  - mcp__fastmail__list_mailboxes
-  - mcp__fastmail__list_emails
 ---
 
 # Batch HTML Generator
@@ -35,15 +33,24 @@ Generate an HTML batch triage interface by injecting classified email data into 
 - You ONLY produce a JSON data file, then use a script to inject it into the template.
 - The template contains ALL the UI logic (dropdowns, progress bars, buttons, etc.)
 
+## Step 0: Initialize Email Provider
+
+1. Read `~/.claude/data/chief-of-staff/settings.yaml`
+2. Extract `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail")
+3. Extract `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
+4. Load email tools via ToolSearch: `+{EMAIL_PROVIDER}`
+
+If no settings.yaml or no tools found → STOP. Report: "Run `/chief-of-staff:setup` to configure email."
+
 ## Step 1: Fetch Emails and Find Template (PARALLEL)
 
 Call ALL THREE in a SINGLE message (parallel):
 
-1. `mcp__fastmail__list_mailboxes` - Get folder structure
-2. `mcp__fastmail__list_emails` with `limit: 100` - Get inbox emails
+1. `EMAIL_TOOLS.list_mailboxes` - Get folder structure
+2. `EMAIL_TOOLS.list_emails` with `limit: 100` - Get inbox emails
 3. `Glob: ~/.claude/plugins/cache/**/chief-of-staff/**/templates/batch-triage.html`
 
-If MCP fails → STOP immediately. Report: "Fastmail MCP not available. Run /mcp to check status."
+If MCP fails → STOP immediately. Report: "Email MCP not available. Run /mcp to check status."
 If template not found → STOP. Report: "Template not found. Try reinstalling chief-of-staff plugin."
 
 ## Step 2: Read Template Path
@@ -105,7 +112,7 @@ The file must start with `// BEGIN_TRIAGE_DATA` and end with `// END_TRIAGE_DATA
 
 ```javascript
 {
-  id: "email-id-from-fastmail",
+  id: "email-id-from-provider",
   from: { name: "Sender Name", email: "sender@example.com" },
   subject: "Email subject line",
   preview: "First 150 chars of email body...",
