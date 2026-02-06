@@ -93,12 +93,13 @@ Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The tr
 **Workflow:**
 
 1. **Load context BEFORE presenting emails:**
-   a. Load Fastmail MCP tools via ToolSearch (`+fastmail`)
-   b. Load Parcel MCP tools via ToolSearch (`+parcel deliveries`)
-   c. Read `~/.claude/data/chief-of-staff/filing-rules.yaml` for filing suggestions
-   d. Read `~/.claude/data/chief-of-staff/delete-patterns.yaml` for delete suggestions
-   e. Fetch current Parcel deliveries via `get_deliveries` (include_delivered: true)
-   f. Fetch inbox emails with `get_recent_emails` (limit: 50) or `list_emails` (limit: 50)
+   a. Read `~/.claude/data/chief-of-staff/settings.yaml` to get `EMAIL_PROVIDER` and `EMAIL_TOOLS` mappings
+   b. Load email MCP tools via ToolSearch (`+{EMAIL_PROVIDER}`, e.g. `+fastmail`)
+   c. Load Parcel MCP tools via ToolSearch (`+parcel deliveries`)
+   d. Read `~/.claude/data/chief-of-staff/filing-rules.yaml` for filing suggestions
+   e. Read `~/.claude/data/chief-of-staff/delete-patterns.yaml` for delete suggestions
+   f. Fetch current Parcel deliveries via Parcel `get_deliveries` (include_delivered: true)
+   g. Fetch inbox emails with `EMAIL_TOOLS.list_emails` (limit: 50) using the Inbox mailbox ID
 
 2. **PHASE 1 - COLLECT:** For each email, use `AskUserQuestion` to present options:
    - Include email summary in the question text
@@ -113,8 +114,8 @@ Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The tr
       (must happen before delete so emails are still accessible)
    b. **Parcel tracking** - Delegate to `chief-of-staff:inbox-to-parcel` sub-agent
    c. **Reminders** - Create via `mcp__apple-pim__reminder_create`
-   d. **Archives** - `bulk_move` grouped by folder
-   e. **Deletes** - `bulk_delete` for all deletions (including unsubscribed emails)
+   d. **Archives** - `EMAIL_TOOLS.bulk_move` grouped by folder
+   e. **Deletes** - `EMAIL_TOOLS.bulk_delete` for all deletions (including unsubscribed emails)
 
 4. **PHASE 3 - LEARN (mandatory):** After execution, update data files:
    a. **decision-history.yaml** - Append ALL decisions with: date, emailId, action, senderDomain, senderEmail (if available), folder (if archived), category, accepted (true if user followed the system suggestion, false if user chose a different action), and notes for pattern matches
