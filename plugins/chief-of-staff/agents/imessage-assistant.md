@@ -137,20 +137,23 @@ Messages with Lora Shahine
 
 `imsg` has no search command. Query the database directly:
 
+Use a **heredoc** to avoid shell/SQL quoting conflicts:
+
 ```bash
-sqlite3 -json ~/Library/Messages/chat.db \
-  'SELECT m.rowid, m.text, m.date/1000000000 + 978307200 as unix_ts,
-   m.is_from_me, h.id as handle_id, c.chat_identifier
-   FROM message m
-   LEFT JOIN handle h ON m.handle_id = h.rowid
-   LEFT JOIN chat_message_join cmj ON m.rowid = cmj.message_id
-   LEFT JOIN chat c ON cmj.chat_id = c.rowid
-   WHERE m.text LIKE '"'"'%KEYWORD%'"'"'
-   ORDER BY m.date DESC
-   LIMIT 20'
+sqlite3 -json ~/Library/Messages/chat.db <<'QUERY'
+SELECT m.rowid, m.text, m.date/1000000000 + 978307200 as unix_ts,
+  m.is_from_me, h.id as handle_id, c.chat_identifier
+FROM message m
+LEFT JOIN handle h ON m.handle_id = h.rowid
+LEFT JOIN chat_message_join cmj ON m.rowid = cmj.message_id
+LEFT JOIN chat c ON cmj.chat_id = c.rowid
+WHERE m.text LIKE '%KEYWORD%'
+ORDER BY m.date DESC
+LIMIT 20
+QUERY
 ```
 
-**CRITICAL**: Use single quotes for the outer shell string to prevent shell expansion. For the LIKE pattern, escape single quotes using the `'"'"'` idiom (end single-quote, add escaped single-quote in double-quotes, resume single-quote). Replace `KEYWORD` with the sanitized search term — double any single quotes in the keyword (`'` → `''`) before substitution.
+**CRITICAL**: The `<<'QUERY'` heredoc (with quotes around the delimiter) prevents all shell expansion inside the SQL. Replace `KEYWORD` with the search term after doubling any single quotes for SQL escaping (`'` becomes `''`). This avoids all shell metacharacter issues.
 
 After getting results:
 1. Resolve handle_ids to contact names
