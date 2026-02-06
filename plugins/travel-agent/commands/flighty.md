@@ -19,6 +19,7 @@ Query the Flighty app database for flight tracking information.
 | `list` | List upcoming flights |
 | `next` | Get next upcoming flight |
 | `date YYYY-MM-DD` | Flights on a specific date |
+| `year YYYY` | All flights in a given year |
 | `pnr CODE` | Search by confirmation code |
 | `stats` | Flight statistics |
 | `recent` | Past flights |
@@ -28,6 +29,7 @@ Query the Flighty app database for flight tracking information.
 - `/travel-agent:flighty list`
 - `/travel-agent:flighty next`
 - `/travel-agent:flighty date 2026-04-01`
+- `/travel-agent:flighty year 2025`
 - `/travel-agent:flighty pnr ABC123`
 
 ## Instructions
