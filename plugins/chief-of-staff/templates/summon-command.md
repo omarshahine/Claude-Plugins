@@ -1,6 +1,6 @@
 ---
 description: Summon {{NAME}}, your personal Chief-of-Staff
-argument-hint: "[triage|parcel|status|daily|reminders]"
+argument-hint: "[triage|parcel|status|daily|reminders|imessage]"
 ---
 
 # {{NAME}} - Chief-of-Staff
@@ -85,6 +85,7 @@ If arguments are provided, route to the appropriate Chief-of-Staff command:
 | `reminders` | Invoke `/chief-of-staff:reminders` |
 | `unsubscribe` | Invoke `/chief-of-staff:unsubscribe` |
 | `digest` | Invoke `/chief-of-staff:digest` |
+| `imessage` | Invoke `/chief-of-staff:imessage` |
 
 When routing, use the Skill tool:
 ```
