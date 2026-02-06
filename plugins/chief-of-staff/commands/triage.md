@@ -117,7 +117,7 @@ Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The tr
    e. **Deletes** - `bulk_delete` for all deletions (including unsubscribed emails)
 
 4. **PHASE 3 - LEARN (mandatory):** After execution, update data files:
-   a. **decision-history.yaml** - Append ALL decisions with: date, emailId, action, senderDomain, senderEmail (if available), folder (if archived), category, accepted: true, and notes for pattern matches
+   a. **decision-history.yaml** - Append ALL decisions with: date, emailId, action, senderDomain, senderEmail (if available), folder (if archived), category, accepted (true if user followed the system suggestion, false if user chose a different action), and notes for pattern matches
    b. **delete-patterns.yaml** - Bump `match_count` for any confirmed delete patterns. For new domains deleted 2+ times in this session, add as new patterns with confidence 0.75 and source "triage"
    c. **Update statistics** - Increment total_decisions, by_action counts, total_sessions
    d. Report summary
