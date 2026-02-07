@@ -134,6 +134,34 @@ The file must start with `// BEGIN_TRIAGE_DATA` and end with `// END_TRIAGE_DATA
 
 **IMPORTANT**: The `classification.reasons` array is REQUIRED for every email. It powers the suggestion badges in the UI. Without reasons, badges will be empty.
 
+### Rule Suggestions
+
+Before writing TRIAGE_DATA, detect opportunities for filing rules:
+
+1. Read `~/.claude/data/chief-of-staff/decision-history.yaml` and `~/.claude/data/chief-of-staff/filing-rules.yaml`
+2. For each inbox email, extract `senderDomain` from `from.email` (e.g., `user@example.com` → `example.com`)
+3. Search `decision-history.yaml` → `history.recent_decisions` for entries matching that domain where:
+   - `actual_action` is `"archive"` with a non-empty `actual_folder`
+   - The same `actual_folder` was chosen **3 or more times** for that domain
+4. Check `filing-rules.yaml` → `rules.sender_domain` to confirm no rule already exists for this domain
+5. If both conditions met (3+ manual filings AND no existing rule), add `ruleSuggestion` to the email object
+
+**ruleSuggestion schema:**
+
+```javascript
+ruleSuggestion: {
+  domain: "seattleacademy.org",        // sender domain
+  targetFolder: "SAAS",                // most common destination folder name
+  targetFolderId: "P4k",              // mailbox ID for that folder
+  matchCount: 4,                       // number of times filed to this folder
+  message: "Filed to SAAS 4 times"     // human-readable description
+}
+```
+
+The HTML template renders this as a teal-colored banner with a checkbox (checked by default). The user can uncheck it to skip rule creation. The batch-processor reads `createRule` and `ruleSuggestion` from the submitted decisions JSON.
+
+**Handling missing senderDomain in history:** Older decision history entries may lack `senderDomain`. If missing, skip those entries for pattern matching. Coverage improves over time as new sessions always record `senderDomain`.
+
 ## Step 5: Inject Data Into Template (Mechanical)
 
 Use this Bash command to combine template + data into the output file:
