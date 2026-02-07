@@ -437,6 +437,43 @@ Rules updated: 3
 New patterns detected: 1
 ```
 
+### 9. Process Rule Creation Requests
+
+After recording decisions, check for any decisions with `createRule: true` and a `ruleSuggestion` object.
+
+```
+For each decision where createRule === true:
+1. Read ~/.claude/data/chief-of-staff/filing-rules.yaml
+2. Check that no existing rule in rules.sender_domain already covers this domain
+3. If no existing rule, append to rules.sender_domain:
+   - domain: "[ruleSuggestion.domain]"
+     target_folder: "[ruleSuggestion.targetFolder]"
+     target_folder_id: "[ruleSuggestion.targetFolderId]"
+     confidence: 0.80
+     match_count: [ruleSuggestion.matchCount]
+     source: "batch_triage"
+     note: "Auto-suggested from [matchCount] manual filings"
+4. Update metadata.total_rules count
+5. Update metadata.last_learned timestamp
+6. Write updated YAML back
+7. Track in summary
+```
+
+If the domain already has a rule, skip creation and note in summary: "Rule for [domain] already exists."
+
+#### Rule Summary
+
+Include in the final report:
+```
+RULES CREATED
+-------------
+New rules: 2
+  - seattleacademy.org → SAAS (4 manual filings)
+  - ellimanpm.com → DHT (3 manual filings)
+Skipped: 1 (already exists)
+  - chase.com → Financial Alerts
+```
+
 ## Error Handling
 
 ### Inline Action Failures
