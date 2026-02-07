@@ -50,6 +50,31 @@ def format_flight(flight) -> dict:
     }
 
 
+def build_google_flights_url(
+    from_airport: str,
+    to_airport: str,
+    date: str,
+    return_date: Optional[str] = None,
+    seat: str = "economy",
+    trip_type: str = "one-way"
+) -> str:
+    """Build a Google Flights search URL using natural language query."""
+    seat_map = {
+        "economy": "economy",
+        "premium-economy": "premium+economy",
+        "business": "business+class",
+        "first": "first+class",
+    }
+    seat_text = seat_map.get(seat, seat)
+
+    if trip_type == "round-trip" and return_date:
+        query = f"Flights+from+{from_airport}+to+{to_airport}+on+{date}+return+{return_date}+{seat_text}"
+    else:
+        query = f"Flights+from+{from_airport}+to+{to_airport}+on+{date}+{seat_text}+one+way"
+
+    return f"https://www.google.com/travel/flights?q={query}"
+
+
 def search_flights(
     from_airport: str,
     to_airport: str,
@@ -110,6 +135,9 @@ def search_flights(
                     "total": adults + children + infants_in_seat + infants_on_lap
                 }
             },
+            "google_flights_url": build_google_flights_url(
+                from_airport, to_airport, date, return_date, seat, trip
+            ),
             "price_level": getattr(result, 'current_price', None),
             "flights": flights,
             "count": len(flights)
@@ -118,11 +146,17 @@ def search_flights(
         error_msg = str(e)
         if "Connect" in error_msg or "tunnel" in error_msg:
             error_msg = "Network connection failed. Check internet connectivity."
-        return {"error": error_msg, "search": {
-            "from": from_airport,
-            "to": to_airport,
-            "date": date
-        }}
+        return {
+            "error": error_msg,
+            "google_flights_url": build_google_flights_url(
+                from_airport, to_airport, date, return_date, seat, trip_type
+            ),
+            "search": {
+                "from": from_airport,
+                "to": to_airport,
+                "date": date
+            }
+        }
 
 
 def search_multi_city(
@@ -174,6 +208,12 @@ def search_multi_city(
 
         flights = [format_flight(f) for f in result.flights]
 
+        # Build URL from first leg for multi-city (best we can do)
+        first_leg = legs[0]
+        multi_url = build_google_flights_url(
+            first_leg[0], legs[-1][1], first_leg[2], seat=seat
+        )
+
         return {
             "search": {
                 "type": "multi-city",
@@ -187,6 +227,7 @@ def search_multi_city(
                     "total": adults + children + infants_in_seat + infants_on_lap
                 }
             },
+            "google_flights_url": multi_url,
             "price_level": getattr(result, 'current_price', None),
             "flights": flights,
             "count": len(flights)

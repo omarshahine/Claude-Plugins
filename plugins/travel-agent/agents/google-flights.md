@@ -108,7 +108,7 @@ python plugins/travel-agent/agents/scripts/search_flights.py multi \
 
 ## Output Format
 
-The script returns JSON with flight results:
+The script returns JSON with flight results including a Google Flights URL:
 
 ```json
 {
@@ -122,6 +122,7 @@ The script returns JSON with flight results:
       "total": 2
     }
   },
+  "google_flights_url": "https://www.google.com/travel/flights?q=Flights+from+SEA+to+HKG+on+2025-06-15+business+class+one+way",
   "price_level": "typical",
   "flights": [
     {
@@ -139,6 +140,8 @@ The script returns JSON with flight results:
 ```
 
 ## Presenting Results
+
+**ALWAYS include the Google Flights URL** from the JSON output so the user can open the search directly in their browser to book.
 
 Present results to users in a clear markdown table:
 
@@ -159,6 +162,8 @@ Present results to users in a clear markdown table:
 **Total for 2 travelers:** ~$7,308 - $9,046
 
 ⭐ = Best flight (price/convenience balance)
+
+**[Search on Google Flights](https://www.google.com/travel/flights?q=...)**
 ```
 
 ## Example Workflows
