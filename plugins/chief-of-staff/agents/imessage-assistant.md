@@ -8,7 +8,7 @@ description: |
   - Another agent needs to send or read an iMessage
 
   <example>
-  user: "What did Sarah text me about the move-out date?"
+  user: "What did Alex text me about the move-out date?"
   assistant: "I'll use the imessage-assistant agent to look up recent messages with Alex."
   </example>
 
