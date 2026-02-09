@@ -2,7 +2,7 @@
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": ["-y", "@playwright/mcp", "--headless", "--browser", "chrome"]
+      "args": ["-y", "@playwright/mcp@latest", "--extension"]
     },
     "parcel": {
       "command": "${CLAUDE_PLUGIN_ROOT}/scripts/parcel-server.sh"
