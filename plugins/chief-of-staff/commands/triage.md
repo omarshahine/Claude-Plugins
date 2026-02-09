@@ -66,6 +66,7 @@ Say a number or action name.
 | 2, "delete", "trash" | Delete the email |
 | 3, "reminder" | Create a reminder |
 | 4, "keep", "skip", "next" | Keep in inbox |
+| 5, "flag" | Flag for follow-up (contextual) |
 | "parcel", "package" | Add to Parcel (when detected) |
 | "unsubscribe" | Unsubscribe (for newsletters) |
 | "stop", "done" | End collection, start execution |
@@ -77,7 +78,25 @@ Based on your filing rules and patterns:
 - **Newsletters**: "Delete + Unsubscribe (Recommended)"
 - **Filing matches**: "Archive to [Folder] (XX% match)"
 - **Delete candidates**: "Delete (matches [pattern])"
-- **Action items**: "Reminder (Recommended)"
+- **Action items**: "Flag (Recommended)" or "Reminder (Recommended)"
+
+### Contextual Flag Option
+
+The **Flag** option appears ONLY when the email signals action is needed. Do NOT show Flag on every email — it replaces one of the standard 4 options when contextually appropriate.
+
+**Show Flag when ANY of these are true:**
+- Subject contains "ACTION REQUIRED", "action needed", "please review", "please sign", "response needed", "RSVP"
+- Email is a direct personal reply expecting a response (someone asking a question)
+- Email contains a deadline or due date in the preview
+- Email is from a known contact and appears to be a conversation awaiting your input
+- Subject contains "Re:" and the sender is asking a question or requesting something
+
+**Do NOT show Flag when:**
+- Email is a newsletter, marketing, or automated notification
+- Email is a shipping/order confirmation
+- Email is a calendar invite or acceptance/decline
+- Email is spam or clearly deletable
+- Email is informational with no action needed
 
 ## Prerequisites
 
@@ -103,8 +122,13 @@ Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The tr
 
 2. **PHASE 1 - COLLECT:** For each email, use `AskUserQuestion` to present options:
    - Include email summary in the question text
-   - Provide 4 options: Archive, Delete, Keep, Reminder (or contextual alternatives)
-   - For newsletters with `$canunsubscribe` keyword: offer "Unsubscribe + Delete" option
+   - Provide up to 4 options from the contextual set (AskUserQuestion max is 4 options)
+   - **Base options** (always available): Archive, Delete, Keep
+   - **Contextual options** (replace one base option when relevant):
+     - **Flag**: Show when email signals action needed (see "Contextual Flag Option" above). Replaces Reminder or Keep depending on context.
+     - **Reminder**: Show when there's a specific deadline or timed follow-up
+     - **Unsubscribe + Delete**: Show for newsletters with `$canunsubscribe` keyword
+     - **Add to Parcel + Archive**: Show for untracked shipping emails
    - For shipping emails: cross-reference Parcel deliveries. If already tracked, note "Already in Parcel" and suggest "Archive to Orders". If not tracked, offer "Add to Parcel + Archive"
    - For emails matching delete patterns: show "(Recommended)" with pattern match note
    - For emails matching filing rules: show folder suggestion with confidence
@@ -114,8 +138,9 @@ Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The tr
       (must happen before delete so emails are still accessible)
    b. **Parcel tracking** - Delegate to `chief-of-staff:inbox-to-parcel` sub-agent
    c. **Reminders** - Create via `mcp__apple-pim__reminder_create`
-   d. **Archives** - `EMAIL_TOOLS.bulk_move` grouped by folder
-   e. **Deletes** - `EMAIL_TOOLS.bulk_delete` for all deletions (including unsubscribed emails)
+   d. **Flags** - `EMAIL_TOOLS.bulk_flag` for all flagged emails (keeps in inbox, marks for follow-up)
+   e. **Archives** - `EMAIL_TOOLS.bulk_move` grouped by folder
+   f. **Deletes** - `EMAIL_TOOLS.bulk_delete` for all deletions (including unsubscribed emails)
 
 4. **PHASE 3 - LEARN (mandatory):** After execution, update data files:
    a. **decision-history.yaml** - Append ALL decisions with: date, emailId, action, senderDomain, senderEmail (if available), folder (if archived), category, accepted (true if user followed the system suggestion, false if user chose a different action), and notes for pattern matches
