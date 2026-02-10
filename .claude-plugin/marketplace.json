@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Personal plugin marketplace for Claude Code",
-    "version": "1.8.1",
+    "version": "1.8.2",
     "pluginRoot": "./plugins"
   },
   "plugins": [
@@ -39,9 +39,9 @@
         "source": "github",
         "repo": "omarshahine/Apple-PIM-Agent-Plugin"
       },
-      "description": "Native macOS integration for Calendar, Reminders, and Contacts using EventKit and Contacts frameworks",
-      "version": "1.0.2",
-      "keywords": ["calendar", "reminders", "contacts", "eventkit", "macos", "pim", "scheduling"],
+      "description": "Native macOS integration for Calendar, Reminders, Contacts, and Mail using EventKit, Contacts, and JXA frameworks",
+      "version": "2.1.0",
+      "keywords": ["calendar", "reminders", "contacts", "mail", "eventkit", "jxa", "macos", "pim", "scheduling"],
       "category": "productivity"
     },
     {

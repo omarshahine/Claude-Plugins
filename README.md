@@ -17,7 +17,7 @@ Install the main orchestrator plugin:
 /plugin install chief-of-staff@omarshahine-agent-plugins
 
 # Related plugins (optional, enhance COS capabilities)
-/plugin install apple-pim@omarshahine-agent-plugins         # Calendar, Reminders, Contacts
+/plugin install apple-pim@omarshahine-agent-plugins         # Calendar, Reminders, Contacts, Mail
 /plugin install travel-agent@omarshahine-agent-plugins      # Flight research & tracking
 /plugin install credit-card-benefits@omarshahine-agent-plugins  # Credit card benefit tracking
 /plugin install rename-agent@omarshahine-agent-plugins      # AI-powered file renaming
@@ -35,11 +35,11 @@ Install the main orchestrator plugin:
 |                  "One Plugin to Rule Them All"                        |
 |                                                                       |
 |   Built-in Sub-Agents:              Related Plugins:                  |
-|   - inbox-interviewer               - apple-pim (Calendar/Reminders)  |
-|   - inbox-to-parcel                 - travel-agent (Flights/Trips)    |
-|   - inbox-to-reminder               - credit-card-benefits            |
-|   - newsletter-unsubscriber         - rename-agent                    |
-|   - digest-generator                                                  |
+|   - inbox-interviewer               - apple-pim (Calendar/Reminders/  |
+|   - inbox-to-parcel                       Contacts/Mail)              |
+|   - inbox-to-reminder               - travel-agent (Flights/Trips)    |
+|   - newsletter-unsubscriber         - credit-card-benefits            |
+|   - digest-generator                - rename-agent                    |
 |   - organization-analyzer                                             |
 |   - pattern-learner                                                   |
 |   - folder-optimizer                                                  |
@@ -318,13 +318,20 @@ Query Tripsy app's local database for trip information.
 
 ## apple-pim
 
-Native macOS integration for Calendar, Reminders, and Contacts.
+Native macOS integration for Calendar, Reminders, Contacts, and Mail using Apple's EventKit, Contacts, and JXA frameworks. Built with Swift CLIs wrapped by a Node.js MCP server.
+
+**Source:** [omarshahine/Apple-PIM-Agent-Plugin](https://github.com/omarshahine/Apple-PIM-Agent-Plugin)
+
+> This plugin is sourced from an external GitHub repo - see the link above for full documentation, architecture details, and development instructions.
 
 ### Features
 
-- Full CRUD operations for events, reminders, and contacts
-- Natural language dates ("tomorrow 2pm", "next Tuesday")
-- MCP server for direct tool access
+- Full CRUD for events, reminders, contacts, and mail messages
+- 32 MCP tools across 4 domains (Calendar, Reminders, Contacts, Mail)
+- Batch operations for creating multiple events or reminders at once
+- Natural language dates ("tomorrow 2pm", "next Tuesday", "in 2 hours")
+- Recurrence rules (daily, weekly, monthly, yearly with patterns)
+- Configurable per-domain enable/disable and calendar/list filtering
 - Used by `chief-of-staff:reminders` for creating reminders from emails
 
 ### Installation
@@ -336,7 +343,7 @@ Native macOS integration for Calendar, Reminders, and Contacts.
 ~/.claude/plugins/cache/omarshahine-agent-plugins/apple-pim/setup.sh
 ```
 
-Restart Claude Code to load the MCP server.
+Restart Claude Code to load the MCP server, then grant macOS permissions when prompted (Calendar, Reminders, Contacts). For mail, also grant Automation permission for Mail.app.
 
 ### Usage
 
@@ -347,6 +354,7 @@ Restart Claude Code to load the MCP server.
 /apple-pim:reminders items --list "Shopping"
 /apple-pim:reminders create "Buy milk" --due "tomorrow"
 /apple-pim:contacts search "John"
+/apple-pim:mail messages --mailbox "INBOX" --filter unread
 ```
 
 **Natural language (via pim-assistant agent):**
@@ -355,22 +363,26 @@ Schedule a meeting with the team for next Tuesday at 2pm
 Remind me to call the dentist tomorrow
 What's on my calendar this week?
 Find John's phone number
+Show me unread emails in my inbox
 ```
 
 ### Commands
 
 | Command | Description |
 |---------|-------------|
-| `/apple-pim:calendars` | Manage calendar events |
-| `/apple-pim:reminders` | Manage reminders |
-| `/apple-pim:contacts` | Manage contacts |
+| `/apple-pim:calendars` | Manage calendar events (list, search, create, update, delete) |
+| `/apple-pim:reminders` | Manage reminders (list, search, create, complete, update, delete) |
+| `/apple-pim:contacts` | Manage contacts (list, search, get details, create, update, delete) |
+| `/apple-pim:mail` | Manage Mail.app messages (list, search, read, flag, move, delete) |
+| `/apple-pim:configure` | Interactive setup - enable/disable domains, filter calendars/lists |
 
 ### Requirements
 
-- macOS 14+ (Sonoma) recommended
-- Xcode Command Line Tools
+- macOS 13+ (Ventura or later)
+- Swift 5.9+ (Xcode 15+ or Command Line Tools)
 - Node.js 18+
-- Grant Calendar, Reminders, and Contacts access when prompted
+- Mail.app must be running for mail commands
+- Grant Calendar, Reminders, Contacts, and Automation permissions when prompted
 
 ---
 
@@ -476,7 +488,7 @@ Receipt, Bill, Tax Document, Bank Statement, Invoice, Contract, Medical, Insuran
 |--------|-------------|--------------|
 | **chief-of-staff** | Email orchestrator with learning | `/chief-of-staff:triage`, `/chief-of-staff:daily` |
 | travel-agent | Flight research & tracking | Natural language queries |
-| apple-pim | Calendar, Reminders, Contacts | `/apple-pim:calendars`, `/apple-pim:reminders` |
+| [apple-pim](https://github.com/omarshahine/Apple-PIM-Agent-Plugin) | Calendar, Reminders, Contacts, Mail | `/apple-pim:calendars`, `/apple-pim:reminders`, `/apple-pim:mail` |
 | credit-card-benefits | Benefit tracking | `/credit-card-benefits:status` |
 | rename-agent | File renaming | `/rename-agent:rename` |
 
