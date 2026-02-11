@@ -461,17 +461,80 @@ For each decision where createRule === true:
 
 If the domain already has a rule, skip creation and note in summary: "Rule for [domain] already exists."
 
+### 10. Create Fastmail Server-Side Rules
+
+After creating local filing rules, also create **actual Fastmail sieve rules** so matching emails are automatically filed server-side (before they hit the inbox).
+
+**IMPORTANT**: Fastmail has no rules API. Rules can ONLY be created via browser automation (Playwright).
+
+```
+For each decision where createRule === true AND local rule was created:
+
+1. Read existing Fastmail rules reference:
+   ~/.claude/data/chief-of-staff/fastmail-rules-reference.json
+
+2. Check if the domain is already covered by an existing Fastmail rule:
+   - Search all rules' "search" fields for the domain
+   - If found, skip and note: "Fastmail rule for [domain] already exists in rule '[name]'"
+
+3. If no existing Fastmail rule covers this domain, build rule spec:
+   - name: "[targetFolder] - [domain]"
+   - search: "from:[domain]"
+     (use "from:domain.com" which matches *@domain.com and subdomains in Fastmail)
+   - fileIn: "[targetFolder]" (the folder display name, e.g., "Wildwood")
+   - skipInbox: true
+   - stop: true
+   - markRead: false
+   - discard: false
+
+4. Delegate to Playwright agent to create the rule:
+
+   Use Task tool:
+     subagent_type: "chief-of-staff-private:fastmail-rules-manager"
+     prompt: |
+       Create a new Fastmail rule with these details:
+       - Name: "[name]"
+       - Search: "[search]"
+       - File In: "[fileIn folder name]"
+       - Skip Inbox: true
+       - Stop Processing: true
+       - Mark Read: false
+
+       Steps:
+       1. Navigate to https://app.fastmail.com/settings/filters
+       2. Click "New rule" or "+ Add rule"
+       3. Set the rule name
+       4. Set the search/conditions field
+       5. Select the target folder from the dropdown
+       6. Enable "Skip inbox" and "Stop processing"
+       7. Save the rule
+       8. Take a snapshot to confirm the save
+
+5. On success, append the new rule to the reference JSON file
+6. On failure, log the error but continue with other rules
+```
+
+**Why both local and Fastmail rules?**
+- **Local rules** (filing-rules.yaml): Used by the triage classifier to pre-sort emails in the batch HTML
+- **Fastmail rules** (sieve filters): Auto-file emails server-side so they never appear in the inbox
+
 #### Rule Summary
 
 Include in the final report:
 ```
 RULES CREATED
 -------------
-New rules: 2
-  - seattleacademy.org → SAAS (4 manual filings)
-  - ellimanpm.com → DHT (3 manual filings)
-Skipped: 1 (already exists)
-  - chase.com → Financial Alerts
+Local filing rules: 2
+  - seattleacademy.org -> SAAS (4 manual filings)
+  - ellimanpm.com -> DHT (3 manual filings)
+
+Fastmail server-side rules: 1
+  - ellimanpm.com -> DHT (created via Playwright)
+Skipped: 1
+  - seattleacademy.org -> already in Fastmail rule "School"
+
+Local only (no Fastmail rule): 0
+Failed: 0
 ```
 
 ## Error Handling
