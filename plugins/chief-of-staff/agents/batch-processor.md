@@ -261,7 +261,35 @@ Task 3 (if reminder decisions exist):
 
 **Why parallel?** Running 3 agents sequentially takes ~4.5 min. Running in parallel takes ~1.5 min (3x faster).
 
-### 7. Update State and Report
+### 7. Update Newsletter Allowlist
+
+After processing all decisions, check for newsletters the user chose to **keep** (not unsubscribe). These should be added to the allowlist so the newsletter-unsubscriber won't suggest them again.
+
+```
+For each decision where:
+  - params.domain exists (email was classified as a newsletter)
+  - action is NOT "unsubscribe"
+
+1. Read ~/.claude/data/chief-of-staff/newsletter-lists.yaml
+2. For each kept newsletter domain:
+   - Check if domain is already in allowlist → skip if yes
+   - Append domain to allowlist array
+3. Write updated file back
+4. Track added domains for summary
+```
+
+**Include in final report:**
+```
+NEWSLETTER ALLOWLIST
+--------------------
+Added to allowlist: 2
+  - stratechery.com (kept)
+  - morningbrew.com (archived)
+Skipped (already allowlisted): 1
+  - daringfireball.net
+```
+
+### 8. Update State and Report
 
 #### Update batch-state.yaml
 
@@ -341,7 +369,7 @@ Failed: 2
 Failed items saved to batch-state.yaml for retry.
 ```
 
-### 8. Record Decisions for Learning
+### 9. Record Decisions for Learning
 
 **CRITICAL**: After executing actions, record all decisions to enable pattern learning.
 
@@ -437,7 +465,7 @@ Rules updated: 3
 New patterns detected: 1
 ```
 
-### 9. Process Rule Creation Requests
+### 10. Process Rule Creation Requests
 
 After recording decisions, check for any decisions with `createRule: true` and a `ruleSuggestion` object.
 
@@ -461,7 +489,7 @@ For each decision where createRule === true:
 
 If the domain already has a rule, skip creation and note in summary: "Rule for [domain] already exists."
 
-### 10. Create Fastmail Server-Side Rules
+### 11. Create Fastmail Server-Side Rules
 
 After creating local filing rules, also create **actual Fastmail sieve rules** so matching emails are automatically filed server-side (before they hit the inbox).
 

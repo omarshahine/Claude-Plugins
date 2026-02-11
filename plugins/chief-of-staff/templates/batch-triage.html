@@ -1366,7 +1366,7 @@
       const output = {
         sessionId: TRIAGE_DATA.sessionId,
         submittedAt: new Date().toISOString(),
-        decisions: Object.values(decisions).filter(d => d.action !== 'keep' || d.steering)
+        decisions: Object.values(decisions).filter(d => d.action !== 'keep' || d.steering || d.params?.domain)
       };
 
       const filename = `inbox-triage-decisions-${new Date().toISOString().split('T')[0]}.json`;

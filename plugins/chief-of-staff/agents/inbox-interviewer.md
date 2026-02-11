@@ -608,6 +608,26 @@ Creating 1 reminder...
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
+### Update Newsletter Allowlist
+
+After executing all decisions, check for newsletters the user chose to **keep** rather than unsubscribe. Add these to the allowlist so the newsletter-unsubscriber won't suggest them again.
+
+```
+For each decision where:
+  - suggestion.action was "unsubscribe" (email was detected as a newsletter)
+  - decision.action is NOT "unsubscribe" (user chose to keep/archive/delete/etc.)
+
+1. Read ~/.claude/data/chief-of-staff/newsletter-lists.yaml
+2. For each kept newsletter:
+   - Extract sender domain from decision.from.domain
+   - Check if domain is already in allowlist → skip if yes
+   - Append domain to allowlist array
+3. Write updated file back
+4. Report: "Added [domain] to newsletter allowlist"
+```
+
+This ensures newsletters the user explicitly chose to keep during triage are never flagged for unsubscription in future.
+
 ---
 
 ## PHASE 3: Learning
