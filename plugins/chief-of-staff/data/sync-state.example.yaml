@@ -1,0 +1,10 @@
+# JMAP Change Tracking State
+# Used for incremental inbox sync (only fetch new emails since last triage)
+# Copy to sync-state.yaml (auto-created on first triage run)
+
+inbox:
+  query_state: null       # JMAP opaque state token from Email/queryChanges
+  last_sync: null         # ISO timestamp of last successful fetch
+  mailbox_id: null        # Inbox mailbox ID (state is tied to this specific mailbox)
+  seen_email_ids: []      # Email IDs already triaged but still in inbox ("keep" decisions)
+                          # Capped at 500 entries; oldest pruned first

@@ -20,6 +20,7 @@ providers:
         get_email: mcp__fastmail__get_email
         search_emails: mcp__fastmail__search_emails
         advanced_search: mcp__fastmail__advanced_search
+        get_inbox_updates: mcp__fastmail__get_inbox_updates  # JMAP incremental sync
         move_email: mcp__fastmail__move_email
         bulk_move: mcp__fastmail__bulk_move
         bulk_delete: mcp__fastmail__bulk_delete
@@ -38,6 +39,7 @@ providers:
         get_email: mcp__gmail__get_message
         search_emails: mcp__gmail__search_messages
         advanced_search: mcp__gmail__search_messages   # Gmail search is already advanced
+        get_inbox_updates: null                        # Not available for Gmail (uses list_emails fallback)
         move_email: mcp__gmail__modify_labels          # Gmail moves via label changes
         bulk_move: mcp__gmail__batch_modify_labels
         bulk_delete: mcp__gmail__batch_trash
@@ -56,6 +58,7 @@ providers:
         get_email: mcp__outlook__get_message
         search_emails: mcp__outlook__search_messages
         advanced_search: mcp__outlook__search_messages
+        get_inbox_updates: null                        # Not available for Outlook (uses list_emails fallback)
         move_email: mcp__outlook__move_message
         bulk_move: mcp__outlook__batch_move
         bulk_delete: mcp__outlook__batch_delete

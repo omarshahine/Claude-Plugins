@@ -240,9 +240,14 @@ For each calendar decision:
 Task 1 (if parcel decisions exist):
   subagent_type: "chief-of-staff:inbox-to-parcel"
   prompt: |
-    Add these packages to Parcel app:
-    [JSON array with emailId, trackingNumber, carrier, sender]
+    Process in batch mode:
+    [JSON array — one entry per addToParcel decision with: emailId, trackingNumber, carrier, sender]
     After adding, archive each email to Orders folder.
+
+    IMPORTANT: Include ALL addToParcel decisions in this array, even if multiple
+    emails are from the same sender. Different emails may have different tracking
+    numbers (e.g., two shipments from the same retailer). Do NOT deduplicate by
+    sender — include every decision as a separate array entry.
 
 Task 2 (if unsubscribe decisions exist):
   subagent_type: "chief-of-staff:newsletter-unsubscriber"
@@ -287,6 +292,30 @@ Added to allowlist: 2
   - morningbrew.com (archived)
 Skipped (already allowlisted): 1
   - daringfireball.net
+```
+
+### 7.5. Update Sync State (seen_email_ids)
+
+After processing all decisions, update the incremental sync state so "keep" emails aren't re-shown next time.
+
+```
+1. Read ~/.claude/data/chief-of-staff/sync-state.yaml (if exists)
+   - If missing, skip this step (sync state is managed by the generator)
+
+2. For each decision where action == "keep":
+   - Add emailId to sync_state.inbox.seen_email_ids
+
+3. For each decision where action != "keep" (archived, deleted, etc.):
+   - Remove emailId from sync_state.inbox.seen_email_ids (if present)
+   - These emails are no longer in the inbox, so they don't need tracking
+
+4. Cap seen_email_ids at 500 entries (prune oldest if over limit)
+
+5. Write updated sync-state.yaml
+
+IMPORTANT: Do NOT update query_state here.
+The query_state was already saved by the batch-html-generator when it fetched emails.
+Updating it here would skip emails that arrived between generation and processing.
 ```
 
 ### 8. Update State and Report
