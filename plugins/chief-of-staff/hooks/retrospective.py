@@ -77,7 +77,7 @@ def main():
 
             sessions_m = re.search(r'total_sessions:\s*(\d+)', content)
             decisions_m = re.search(r'total_decisions:\s*(\d+)', content)
-            rate_m = re.search(r'acceptance_rate:\s*([\d.]+)', content)
+            accepted_m = re.search(r'suggestions_accepted:\s*(\d+)', content)
 
             if sessions_m and decisions_m:
                 sessions = int(sessions_m.group(1))
@@ -89,13 +89,17 @@ def main():
                         " - good time to run `/chief-of-staff:learn`"
                     )
 
-            if rate_m:
-                rate = float(rate_m.group(1))
-                if 0 < rate < 0.5:
-                    findings.append(
-                        f"Suggestion acceptance is {rate:.0%}"
-                        " - `/chief-of-staff:learn` may improve accuracy"
-                    )
+            # Compute acceptance rate from raw counters (batch flow updates these)
+            if accepted_m and decisions_m:
+                accepted = int(accepted_m.group(1))
+                decisions = int(decisions_m.group(1))
+                if decisions > 0:
+                    rate = accepted / decisions
+                    if 0 < rate < 0.5:
+                        findings.append(
+                            f"Suggestion acceptance is {rate:.0%}"
+                            " - `/chief-of-staff:learn` may improve accuracy"
+                        )
     except Exception:
         pass  # Don't let history errors prevent output of batch-state findings
 

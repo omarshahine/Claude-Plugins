@@ -84,6 +84,10 @@ ELSE:
 **Filter already-seen emails:**
 ```
 emails = result.added.filter(e => e.id NOT IN seen_email_ids)
+
+# Remove stale IDs (emails that left the inbox)
+IF result.removed exists:
+  Remove result.removed IDs from seen_email_ids
 ```
 
 **If incremental returned 0 new emails:**
@@ -234,8 +238,10 @@ inbox:
   query_state: "[result.queryState from fetch]"  # Save for next incremental call
   last_sync: "[current ISO timestamp]"
   mailbox_id: "[inbox mailbox ID used]"
-  seen_email_ids: [preserve existing list]        # Don't modify here; batch-processor updates this
+  seen_email_ids: [preserve existing list, but remove any IDs from result.removed]
 ```
+
+**IMPORTANT**: If `result.removed` exists (from incremental fetch), remove those IDs from `seen_email_ids` - they left the inbox and should not be tracked anymore.
 
 If `result.queryState` is null (legacy fallback), leave `query_state` as null.
 
