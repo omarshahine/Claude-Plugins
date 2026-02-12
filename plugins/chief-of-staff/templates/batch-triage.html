@@ -21,6 +21,7 @@
       --accent-red: #f85149;
       --accent-purple: #a371f7;
       --accent-teal: #39d2c0;
+      --accent-pink: #f778ba;
       --border-color: #30363d;
       --border-subtle: #21262d;
       --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
@@ -125,6 +126,7 @@
     .dot-reply { background: var(--accent-green); }
     .dot-keep { background: var(--text-muted); }
     .dot-rule { background: var(--accent-teal); }
+    .dot-custom { background: var(--accent-pink); }
 
     .progress-bar {
       height: 6px;
@@ -145,6 +147,7 @@
     .segment-parcel { background: var(--accent-purple); }
     .segment-unsubscribe { background: var(--accent-orange); }
     .segment-reply { background: var(--accent-green); }
+    .segment-custom { background: var(--accent-pink); }
     .segment-keep { background: var(--text-muted); }
 
     /* Buttons */
@@ -275,6 +278,7 @@
     .email-card.action-addToParcel { border-left: 3px solid var(--accent-purple); }
     .email-card.action-unsubscribe { border-left: 3px solid var(--accent-orange); }
     .email-card.action-reply { border-left: 3px solid var(--accent-green); }
+    .email-card.action-custom { border-left: 3px solid var(--accent-pink); }
     .email-card.action-keep { border-left: 3px solid var(--text-muted); }
 
     .email-top {
@@ -1020,20 +1024,23 @@
         { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
-        { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' }
+        { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
+        { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
       ],
       deliveries: [
         { value: 'addToParcel', label: 'Add to Parcel', icon: '\ud83d\udce6', recommended: true },
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
         { value: 'reminder', label: 'Reminder', icon: '\u23f0' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
-        { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' }
+        { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
+        { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
       ],
       newsletters: [
         { value: 'unsubscribe', label: 'Unsubscribe + Delete', icon: '\ud83d\udeab', recommended: true },
         { value: 'delete', label: 'Delete Only', icon: '\ud83d\uddd1\ufe0f' },
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
-        { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' }
+        { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
+        { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
       ],
       financial: [
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5', recommended: true },
@@ -1041,26 +1048,30 @@
         { value: 'calendar', label: 'Calendar', icon: '\ud83d\udcc5' },
         { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
-        { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' }
+        { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
+        { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
       ],
       archiveReady: [
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5', recommended: true },
         { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
-        { value: 'reminder', label: 'Reminder', icon: '\u23f0' }
+        { value: 'reminder', label: 'Reminder', icon: '\u23f0' },
+        { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
       ],
       deleteReady: [
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f', recommended: true },
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
-        { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' }
+        { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
+        { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
       ],
       fyi: [
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5', recommended: true },
         { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
-        { value: 'reminder', label: 'Reminder', icon: '\u23f0' }
+        { value: 'reminder', label: 'Reminder', icon: '\u23f0' },
+        { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
       ]
     };
 
@@ -1264,6 +1275,19 @@
         replyDraft.classList.toggle('visible', action === 'reply');
       }
 
+      // Handle custom action - focus steering and change placeholder
+      const steeringInput = card.querySelector('.steering-input input');
+      if (steeringInput) {
+        if (action === 'custom') {
+          steeringInput.placeholder = 'Describe what to do with this email...';
+          steeringInput.style.borderColor = 'var(--accent-pink)';
+          setTimeout(() => steeringInput.focus(), 50);
+        } else {
+          steeringInput.placeholder = 'Add notes...';
+          steeringInput.style.borderColor = '';
+        }
+      }
+
       updateStats();
       updateProgressBar();
     }
@@ -1317,6 +1341,12 @@
           const replyDraft = document.getElementById(`reply-draft-${email.id}`);
           if (replyDraft) {
             replyDraft.classList.toggle('visible', action === 'reply');
+          }
+
+          const steeringInput = card.querySelector('.steering-input input');
+          if (steeringInput) {
+            steeringInput.placeholder = action === 'custom' ? 'Describe what to do with this email...' : 'Add notes...';
+            steeringInput.style.borderColor = action === 'custom' ? 'var(--accent-pink)' : '';
           }
         }
       });
@@ -1397,7 +1427,7 @@
     }
 
     function updateStats() {
-      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, parcel: 0, unsubscribe: 0, calendar: 0, reply: 0, rules: 0 };
+      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, parcel: 0, unsubscribe: 0, calendar: 0, reply: 0, custom: 0, rules: 0 };
 
       Object.values(decisions).forEach(d => {
         stats.total++;
@@ -1409,6 +1439,7 @@
         else if (d.action === 'unsubscribe') stats.unsubscribe++;
         else if (d.action === 'calendar') stats.calendar++;
         else if (d.action === 'reply') stats.reply++;
+        else if (d.action === 'custom') stats.custom++;
         if (d.createRule) stats.rules++;
       });
 
@@ -1418,13 +1449,14 @@
       if (stats.unsubscribe > 0) parts.push(`${stats.unsubscribe} unsub`);
       if (stats.parcel > 0) parts.push(`${stats.parcel} parcel`);
       if (stats.reminder > 0) parts.push(`${stats.reminder} reminder`);
+      if (stats.custom > 0) parts.push(`${stats.custom} custom`);
       if (stats.rules > 0) parts.push(`${stats.rules} rules`);
 
       document.getElementById('stats').textContent = parts.join(' \u2022 ') || `${stats.total} emails`;
     }
 
     function updateProgressBar() {
-      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, parcel: 0, unsubscribe: 0, reply: 0 };
+      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, parcel: 0, unsubscribe: 0, reply: 0, custom: 0 };
 
       Object.values(decisions).forEach(d => {
         stats.total++;
@@ -1435,6 +1467,7 @@
         else if (d.action === 'addToParcel') stats.parcel++;
         else if (d.action === 'unsubscribe') stats.unsubscribe++;
         else if (d.action === 'reply') stats.reply++;
+        else if (d.action === 'custom') stats.custom++;
       });
 
       const decided = stats.total - stats.keep;
@@ -1454,6 +1487,7 @@
         { class: 'segment-parcel', width: (stats.parcel / stats.total) * 100 },
         { class: 'segment-reminder', width: (stats.reminder / stats.total) * 100 },
         { class: 'segment-reply', width: (stats.reply / stats.total) * 100 },
+        { class: 'segment-custom', width: (stats.custom / stats.total) * 100 },
         { class: 'segment-keep', width: (stats.keep / stats.total) * 100 }
       ];
 
@@ -1470,6 +1504,7 @@
       if (stats.reminder > 0) countItems.push(`<span class="progress-count"><span class="dot dot-reminder"></span>${stats.reminder}</span>`);
       if (stats.parcel > 0) countItems.push(`<span class="progress-count"><span class="dot dot-parcel"></span>${stats.parcel}</span>`);
       if (stats.reply > 0) countItems.push(`<span class="progress-count"><span class="dot dot-reply"></span>${stats.reply}</span>`);
+      if (stats.custom > 0) countItems.push(`<span class="progress-count"><span class="dot dot-custom"></span>${stats.custom}</span>`);
       const ruleCount = Object.values(decisions).filter(d => d.createRule).length;
       if (ruleCount > 0) countItems.push(`<span class="progress-count"><span class="dot dot-rule"></span>${ruleCount} rules</span>`);
       counts.innerHTML = countItems.join('');

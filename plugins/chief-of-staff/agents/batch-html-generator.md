@@ -153,7 +153,7 @@ The file must start with `// BEGIN_TRIAGE_DATA` and end with `// END_TRIAGE_DATA
   preview: "First 150 chars of email body...",
   receivedAt: "2026-02-05T10:00:00Z",
   suggestion: {
-    action: "archive",           // one of: reply, reminder, calendar, archive, delete, addToParcel, unsubscribe, keep
+    action: "archive",           // one of: reply, reminder, calendar, archive, delete, addToParcel, unsubscribe, keep, custom
     folder: "Financial",         // optional: suggested folder name for archive action
     folderId: "actual-mailbox-id" // optional: actual mailbox ID for archive action
   },

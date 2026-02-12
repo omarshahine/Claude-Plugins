@@ -60,7 +60,7 @@ Read the JSON file and validate structure:
   decisions: [
     {
       emailId: "email-abc123",
-      action: "archive|delete|keep|reminder|calendar|reply|addToParcel|unsubscribe",
+      action: "archive|delete|keep|reminder|calendar|reply|addToParcel|unsubscribe|custom",
       params: { ... },
       steering: "optional notes",
       replyDraft: "optional full reply text drafted in batch UI"
@@ -113,6 +113,7 @@ Organize decisions into groups for efficient processing:
     keep: [...],         // No action (or flag if specified)
     reply: [...]         // Execute with reply_to_email
   },
+  custom: [...],           // Free-form user instructions (steering = instruction)
   delegated: {
     parcel: [...],       // Delegate to inbox-to-parcel
     unsubscribe: [...],  // Delegate to newsletter-unsubscriber
@@ -224,6 +225,36 @@ For each calendar decision:
    - notes: "From: [sender]\nSubject: [subject]"
 3. Track success/failure
 ```
+
+#### Custom (Free-Form Instructions)
+
+Custom actions use the steering text as the primary instruction. The steering IS the instruction.
+
+```
+For each custom decision:
+1. If steering is empty/missing, skip with warning:
+   "Custom action skipped for [subject] — no instructions provided"
+2. Fetch full email content: EMAIL_TOOLS.get_email(emailId)
+3. Read steering text as the user's primary instruction
+4. Interpret and execute using available tools:
+   - Forward/send → EMAIL_TOOLS.send_email (summarize original in body)
+   - Draft reply → EMAIL_TOOLS.reply_to_email (sendImmediately: false)
+   - Create reminder → Apple PIM tools (ToolSearch: +apple-pim)
+   - Calendar event → Apple PIM calendar tools
+   - Summarize → Generate summary and include in report
+   - Multiple actions → execute sequentially
+5. After executing, archive the original email UNLESS the
+   instruction explicitly says otherwise (e.g., "keep in inbox", "delete")
+6. Track success/failure
+```
+
+**Error handling:** If the instruction is ambiguous or cannot be executed, log the failure with the steering text and include in the batch report for manual retry.
+
+**Example steering instructions:**
+- "Forward to omar@example.com with a summary" → Summarize email, send via send_email
+- "Create a reminder for Friday to follow up" → Create reminder via Apple PIM
+- "Draft a reply declining the invitation" → Create draft reply
+- "Summarize and move to Travel folder" → Generate summary in report, move to Travel
 
 ### 6. Delegate Batch Actions (PARALLEL)
 
@@ -340,6 +371,7 @@ results:
     unsubscribe: { attempted: 8, successful: 6, failed: 2 }
     reminder: { attempted: 3, successful: 3 }
     calendar: { attempted: 1, successful: 1 }
+    custom: { attempted: 2, successful: 2 }
     keep: { attempted: 1, successful: 1 }
 
 failures:
@@ -371,6 +403,7 @@ Archive: 10 emails archived
 Delete: 4 emails deleted
 Keep: 1 email kept (flagged)
 Reply: 0 drafts created
+Custom: 2 custom actions executed
 
 DELEGATED BATCHES
 -----------------
