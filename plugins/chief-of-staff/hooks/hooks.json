@@ -1,0 +1,18 @@
+{
+  "description": "Post-triage retrospective analysis",
+  "hooks": {
+    "SubagentStop": [
+      {
+        "matcher": "chief-of-staff:batch-processor",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/retrospective.py",
+            "timeout": 15,
+            "statusMessage": "Running triage retrospective..."
+          }
+        ]
+      }
+    ]
+  }
+}
