@@ -123,6 +123,7 @@ Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The tr
    f. Read `~/.claude/data/chief-of-staff/sync-state.yaml` for incremental sync state
    g. Fetch current Parcel deliveries via Parcel `get_deliveries` (include_delivered: true)
    h. **Fetch inbox emails with incremental sync** (see `agents/inbox-interviewer.md` and `templates/email-incremental-fetch.md`):
+      - If `--reset`: Clear sync state (set `query_state`, `last_sync`, `mailbox_id` to null, `seen_email_ids` to [])
       - If `EMAIL_TOOLS.get_inbox_updates` exists + sync state has `query_state` + not `--reset`:
         → Call `EMAIL_TOOLS.get_inbox_updates(sinceQueryState, mailboxId)` for incremental
       - Else if `EMAIL_TOOLS.get_inbox_updates` exists:
