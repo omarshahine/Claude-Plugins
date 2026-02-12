@@ -161,6 +161,7 @@ For each decision:
 2. **Fetch emails using incremental sync** (see `templates/email-incremental-fetch.md`):
    - Check if `EMAIL_TOOLS.get_inbox_updates` exists (not null)
    - Read `sync-state.yaml` for previous `query_state` and `seen_email_ids`
+   - If `--reset`: Clear sync state completely (set `query_state`, `last_sync`, `mailbox_id` to null, `seen_email_ids` to `[]`)
    - If incremental available + state exists + not `--reset`:
      → Call `EMAIL_TOOLS.get_inbox_updates(sinceQueryState, mailboxId)`
    - Else if incremental available:

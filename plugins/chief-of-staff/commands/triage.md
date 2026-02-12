@@ -123,6 +123,7 @@ Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The tr
    f. Read `~/.claude/data/chief-of-staff/sync-state.yaml` for incremental sync state
    g. Fetch current Parcel deliveries via Parcel `get_deliveries` (include_delivered: true)
    h. **Fetch inbox emails with incremental sync** (see `agents/inbox-interviewer.md` and `templates/email-incremental-fetch.md`):
+      - If `--reset`: Clear sync state completely (set `query_state`, `last_sync`, `mailbox_id` to null, `seen_email_ids` to `[]`)
       - If `EMAIL_TOOLS.get_inbox_updates` exists + sync state has `query_state` + not `--reset`:
         → Call `EMAIL_TOOLS.get_inbox_updates(sinceQueryState, mailboxId)` for incremental
       - Else if `EMAIL_TOOLS.get_inbox_updates` exists:
@@ -164,6 +165,15 @@ Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The tr
 **IMPORTANT: Unsubscribes must run BEFORE deletes.** The unsubscriber needs to fetch email content to find unsubscribe links. If emails are deleted first, the links are lost.
 
 **IMPORTANT: Phase 3 (LEARN) is NOT optional.** Every triage session must persist decisions to data files. This is how the system improves suggestions over time.
+
+5. **PHASE 4 - RETROSPECTIVE (quick check):** After Phase 3, do a quick retrospective:
+   a. Check if any actions in Phase 2 failed — if so, note them in the summary
+   b. Check `decision-history.yaml` statistics:
+      - If `total_sessions` is a multiple of 5, suggest: "Consider running `/chief-of-staff:learn` to refine filing rules"
+      - If `acceptance_rate` < 50%, suggest: "Suggestion accuracy is low — `/chief-of-staff:learn` may help"
+   c. Include any retrospective findings in the final summary (after the action counts)
+
+**Note:** For batch triage (`/chief-of-staff:batch`), the retrospective runs automatically via a SubagentStop hook on the batch-processor agent.
 
 **Question format:**
 ```

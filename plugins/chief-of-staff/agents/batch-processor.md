@@ -305,9 +305,13 @@ After processing all decisions, update the incremental sync state so "keep" emai
 2. For each decision where action == "keep":
    - Add emailId to sync_state.inbox.seen_email_ids
 
-3. Cap seen_email_ids at 500 entries (prune oldest if over limit)
+3. For each decision where action != "keep" (archived, deleted, etc.):
+   - Remove emailId from sync_state.inbox.seen_email_ids (if present)
+   - These emails are no longer in the inbox, so they don't need tracking
 
-4. Write updated sync-state.yaml
+4. Cap seen_email_ids at 500 entries (prune oldest if over limit)
+
+5. Write updated sync-state.yaml
 
 IMPORTANT: Do NOT update query_state here.
 The query_state was already saved by the batch-html-generator when it fetched emails.
