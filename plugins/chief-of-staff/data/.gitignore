@@ -8,6 +8,7 @@ delete-patterns.yaml
 decision-history.yaml
 interview-state.yaml
 batch-state.yaml
+sync-state.yaml
 newsletter-lists.yaml
 newsletter-lists.local.yaml
 shipping-patterns.json

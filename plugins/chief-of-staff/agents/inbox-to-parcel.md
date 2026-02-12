@@ -30,12 +30,16 @@ When the prompt contains `Process in batch mode:` followed by a JSON array, oper
 
 **Batch Mode Workflow:**
 1. Parse the JSON array from the prompt
-2. Call `get_deliveries` with `filter_mode=active` to get existing tracking numbers (dedup)
+2. Call `get_deliveries` with `filter_mode=active` to get existing tracking numbers (dedup set)
 3. For each item in the batch:
-   a. Check if `trackingNumber` already exists in Parcel → skip if yes
-   b. If tracking number is missing/incomplete, use `get_email` to fetch full content and extract it
-   c. Call `add_delivery` with the tracking number and carrier code
-   d. Move the email to Orders folder using `move_email`
+   a. **RESOLVE tracking number first** — if `trackingNumber` is missing, null, empty, or looks incomplete (< 8 chars), call `get_email` with the `emailId` to fetch full email content and extract the real tracking number + carrier using the patterns from `shipping-patterns.json`
+   b. **THEN dedup check** — check if the resolved tracking number exists in the dedup set → if yes, skip and report: `"Skipped [tracking] from [sender] — already in Parcel (matched existing delivery)"`
+   c. Call `add_delivery` with the resolved tracking number and carrier code
+   d. **Add the tracking number to the dedup set** (prevents within-batch duplicates if multiple emails reference the same shipment)
+   e. Move the email to Orders folder using `move_email`
+
+**IMPORTANT — process EVERY item in the batch array. Never skip items because they share the same sender as another item. Two emails from the same sender (e.g., "Beyond Power") may have DIFFERENT tracking numbers for different packages.**
+
 4. Return a summary in this format:
 ```
 Parcel Batch Complete
@@ -45,9 +49,12 @@ Added to Parcel: X packages
 - [sender]: [tracking] ([carrier])
 
 Already in Parcel: Y skipped
-- [sender]: [tracking]
+- [sender]: [tracking] (matched existing: [existing_tracking])
 
-Archived to Orders: Z emails
+Failed: Z errors
+- [sender]: [error reason]
+
+Archived to Orders: N emails
 ```
 
 **Do NOT ask the user any questions in batch mode - just process and report.**

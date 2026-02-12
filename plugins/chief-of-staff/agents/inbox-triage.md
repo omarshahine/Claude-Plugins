@@ -64,11 +64,19 @@ All data files are in `~/.claude/data/chief-of-staff/`:
 
 **Tool Usage**: Use `EMAIL_TOOLS` mappings (list_mailboxes, advanced_search, move_email, bulk_move) for all email operations.
 
-### Phase 2: Inbox Scan
+### Phase 2: Inbox Scan (with Incremental Sync)
 
-1. Determine scan range (from last_email_date or last 7 days)
-2. Fetch inbox emails using advanced_search
+1. **Load sync state**: Read `~/.claude/data/chief-of-staff/sync-state.yaml` (if exists)
+2. **Fetch emails using incremental sync** (see `templates/email-incremental-fetch.md`):
+   - If `EMAIL_TOOLS.get_inbox_updates` exists + sync state has `query_state`:
+     → Call `EMAIL_TOOLS.get_inbox_updates(sinceQueryState, mailboxId)` for delta
+   - Else if `EMAIL_TOOLS.get_inbox_updates` exists:
+     → Call `EMAIL_TOOLS.get_inbox_updates()` for full fetch with state capture
+   - Else:
+     → Fallback to `advanced_search` (current behavior)
+   - Filter out `seen_email_ids` from results
 3. Skip emails in never-file list
+4. After processing, update `sync-state.yaml` with new `query_state`, `last_sync`, and "keep" email IDs in `seen_email_ids`
 
 ### Phase 3: Rule Matching
 

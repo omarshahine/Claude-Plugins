@@ -33,12 +33,16 @@ Generate an HTML batch triage interface by injecting classified email data into 
 - You ONLY produce a JSON data file, then use a script to inject it into the template.
 - The template contains ALL the UI logic (dropdowns, progress bars, buttons, etc.)
 
-## Step 0: Initialize Email Provider
+## Step 0: Initialize Email Provider and Sync State
 
 1. Read `~/.claude/data/chief-of-staff/settings.yaml`
 2. Extract `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail")
 3. Extract `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
 4. Load email tools via ToolSearch: `+{EMAIL_PROVIDER}`
+5. Check if `EMAIL_TOOLS.get_inbox_updates` exists (not null) → `HAS_INCREMENTAL = true`
+6. Read `~/.claude/data/chief-of-staff/sync-state.yaml` (if exists)
+   - Extract `query_state`, `last_sync`, `mailbox_id`, `seen_email_ids`
+   - If file doesn't exist, use defaults: all null, empty array
 
 If no settings.yaml or no tools found → STOP. Report: "Run `/chief-of-staff:setup` to configure email."
 
@@ -47,8 +51,44 @@ If no settings.yaml or no tools found → STOP. Report: "Run `/chief-of-staff:se
 Call ALL THREE in a SINGLE message (parallel):
 
 1. `EMAIL_TOOLS.list_mailboxes` - Get folder structure
-2. `EMAIL_TOOLS.list_emails` with `limit: 100` - Get inbox emails
+2. **Incremental fetch** (see below) - Get inbox emails
 3. `Glob: ~/.claude/plugins/cache/**/chief-of-staff/**/templates/batch-triage.html`
+
+### Incremental Fetch Logic (Step 1.2)
+
+Check flags passed from the `/chief-of-staff:batch` command:
+
+- `--reset` → Clear sync-state.yaml completely, then do full fetch
+- `--full` → Do full fetch this time but save new state
+
+**Choose fetch method:**
+
+```
+IF HAS_INCREMENTAL AND query_state exists AND NOT --reset AND NOT --full:
+  # Incremental: only new emails since last triage
+  result = EMAIL_TOOLS.get_inbox_updates(sinceQueryState: query_state, mailboxId: mailbox_id)
+  IF result.isFullQuery: sync_mode = "full (server fallback)"
+  ELSE: sync_mode = "incremental"
+
+ELIF HAS_INCREMENTAL:
+  # Full query via get_inbox_updates (captures queryState)
+  result = EMAIL_TOOLS.get_inbox_updates(limit: 100)
+  sync_mode = "full"
+
+ELSE:
+  # Fallback for non-JMAP providers
+  result = { added: EMAIL_TOOLS.list_emails(limit: 100), queryState: null }
+  sync_mode = "legacy"
+```
+
+**Filter already-seen emails:**
+```
+emails = result.added.filter(e => e.id NOT IN seen_email_ids)
+```
+
+**If incremental returned 0 new emails:**
+Report: "No new emails since [last_sync timestamp]. Run with --full to re-fetch all."
+STOP.
 
 If MCP fails → STOP immediately. Report: "Email MCP not available. Run /mcp to check status."
 If template not found → STOP. Report: "Template not found. Try reinstalling chief-of-staff plugin."
@@ -185,10 +225,26 @@ Replace `OUTPUT_PATH` with `$HOME/inbox-batch-triage.html`.
 
 **NEVER use the Write tool to write HTML.** Always use this injection script.
 
+## Step 5.5: Save Sync State
+
+After successful template injection, update `~/.claude/data/chief-of-staff/sync-state.yaml`:
+
+```yaml
+inbox:
+  query_state: "[result.queryState from fetch]"  # Save for next incremental call
+  last_sync: "[current ISO timestamp]"
+  mailbox_id: "[inbox mailbox ID used]"
+  seen_email_ids: [preserve existing list]        # Don't modify here; batch-processor updates this
+```
+
+If `result.queryState` is null (legacy fallback), leave `query_state` as null.
+
 ## Step 6: Report
 
 ```
 Generated batch triage interface.
+Sync: [incremental — 8 new emails | full — 45 emails | legacy — 45 emails]
+
 - Top of Mind: X
 - Deliveries: X
 - Newsletters: X

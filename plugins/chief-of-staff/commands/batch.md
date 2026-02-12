@@ -1,6 +1,6 @@
 ---
 description: Visual HTML batch triage interface
-argument-hint: "[--generate | --process | --retry]"
+argument-hint: "[--generate | --process | --retry | --reset | --full]"
 ---
 
 # /chief-of-staff:batch
@@ -10,10 +10,12 @@ Generate or process a visual HTML batch triage interface.
 ## Usage
 
 ```
-/chief-of-staff:batch              # Generate HTML interface
+/chief-of-staff:batch              # Generate HTML interface (incremental if state exists)
 /chief-of-staff:batch --generate   # Same as above
 /chief-of-staff:batch --process    # Process downloaded decisions
 /chief-of-staff:batch --retry      # Retry failed items from last batch
+/chief-of-staff:batch --reset      # Clear sync state, full fetch
+/chief-of-staff:batch --full       # One-time full fetch, save new state
 ```
 
 ## Arguments
@@ -21,6 +23,8 @@ Generate or process a visual HTML batch triage interface.
 - **--generate** (default): Create the HTML batch triage page
 - **--process**: Process decisions from downloaded JSON file
 - **--retry**: Retry only failed items from previous batch
+- **--reset**: Clear sync state completely, do full fetch (starts fresh)
+- **--full**: One-time full fetch but save new state for future incremental calls
 - **--days N**: Override lookback period (default: 7)
 - **--limit N**: Override email limit (default: 100)
 
@@ -28,7 +32,10 @@ Generate or process a visual HTML batch triage interface.
 
 ### Generate Mode
 
-1. Fetches inbox emails from last 7 days
+1. **Incremental sync**: Fetches only NEW inbox emails since last triage (or all on first run)
+   - Uses JMAP `queryChanges` for Fastmail; falls back to `list_emails` for other providers
+   - `--reset` clears state and re-fetches everything
+   - `--full` does a one-time full fetch but saves state for next time
 2. Classifies into categories (Top of Mind, Deliveries, Newsletters, etc.)
 3. Generates standalone HTML file with embedded data
 4. Opens in browser for review
@@ -114,6 +121,11 @@ Use the Task tool with:
     Parameters:
     - Look back: [days] days (default: 7)
     - Limit: [N] emails (default: 100)
+    - Sync mode: [--reset | --full | (default: incremental if state exists)]
+
+    If --reset was passed: Clear sync-state.yaml before fetching. Full re-fetch.
+    If --full was passed: Do full fetch this time, save new state for future incremental.
+    Otherwise: Use incremental sync if sync-state.yaml has query_state.
 
     IMPORTANT: If email MCP fails, report the error immediately.
     Do NOT generate sample data or placeholder HTML.

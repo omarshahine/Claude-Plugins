@@ -152,12 +152,23 @@ For each decision:
 3. **Load tools**: ToolSearch with +[provider] (e.g., +fastmail)
 4. **Load data files**: filing-rules, delete-patterns, user-preferences
 5. **Load patterns**: shipping-patterns.json, newsletter-patterns.json
-6. **Check resume**: If interview-state.yaml has active session, offer to continue
+6. **Load sync state**: Read `sync-state.yaml` (if exists) for incremental fetch
+7. **Check resume**: If interview-state.yaml has active session, offer to continue
 
 ### Fetch and Group Emails
 
 1. **Get mailboxes**: Find Inbox ID with list_mailboxes
-2. **Fetch emails**: Use advanced_search with mailboxId=Inbox
+2. **Fetch emails using incremental sync** (see `templates/email-incremental-fetch.md`):
+   - Check if `EMAIL_TOOLS.get_inbox_updates` exists (not null)
+   - Read `sync-state.yaml` for previous `query_state` and `seen_email_ids`
+   - If incremental available + state exists + not `--reset`:
+     → Call `EMAIL_TOOLS.get_inbox_updates(sinceQueryState, mailboxId)`
+   - Else if incremental available:
+     → Call `EMAIL_TOOLS.get_inbox_updates(limit: 50)` (full query, captures state)
+   - Else:
+     → Fallback to `EMAIL_TOOLS.advanced_search` with `mailboxId=Inbox`
+   - Filter out `seen_email_ids` from results
+   - If incremental returned 0 new emails: Report "No new emails since [last_sync]" and STOP
 3. **Group by threadId**: Present each thread once (most recent message)
 
 ### Question Format
@@ -606,6 +617,22 @@ Creating 1 reminder...
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✓ All 12 decisions executed!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Update Sync State
+
+After executing all decisions, update `~/.claude/data/chief-of-staff/sync-state.yaml`:
+
+```
+1. Save query_state from the fetch result (if available)
+2. Set last_sync to current ISO timestamp
+3. Set mailbox_id to the Inbox ID used
+4. For each "keep" decision (email stays in inbox):
+   - Add email.id to seen_email_ids
+5. Remove any IDs from seen_email_ids that were in the "removed" list
+   from the incremental fetch result
+6. Cap seen_email_ids at 500 entries (prune oldest)
+7. Write sync-state.yaml
 ```
 
 ### Update Newsletter Allowlist

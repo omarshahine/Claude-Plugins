@@ -1,6 +1,6 @@
 ---
 description: Interactive voice-friendly inbox triage with questions-first flow
-argument-hint: "[--resume | --fresh]"
+argument-hint: "[--resume | --fresh | --reset]"
 ---
 
 # /chief-of-staff:triage
@@ -10,10 +10,13 @@ Fast, voice-friendly inbox triage that collects ALL decisions first (rapid Q&A),
 ## Usage
 
 ```
-/chief-of-staff:triage           # Start new or resume existing session
+/chief-of-staff:triage           # Start new or resume (incremental if state exists)
 /chief-of-staff:triage --resume  # Explicitly resume previous session
-/chief-of-staff:triage --fresh   # Start fresh (ignore previous session)
+/chief-of-staff:triage --fresh   # Start fresh (ignore previous session state)
+/chief-of-staff:triage --reset   # Clear sync state, full fetch (re-shows all emails)
 ```
+
+Note: `--fresh` clears the interview state (collected decisions). `--reset` clears the sync state (JMAP query token + seen emails). Use `--reset` when you want to re-triage emails you previously kept.
 
 ## Three-Phase Flow
 
@@ -117,8 +120,17 @@ Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The tr
    c. Load Parcel MCP tools via ToolSearch (`+parcel deliveries`)
    d. Read `~/.claude/data/chief-of-staff/filing-rules.yaml` for filing suggestions
    e. Read `~/.claude/data/chief-of-staff/delete-patterns.yaml` for delete suggestions
-   f. Fetch current Parcel deliveries via Parcel `get_deliveries` (include_delivered: true)
-   g. Fetch inbox emails with `EMAIL_TOOLS.list_emails` (limit: 50) using the Inbox mailbox ID
+   f. Read `~/.claude/data/chief-of-staff/sync-state.yaml` for incremental sync state
+   g. Fetch current Parcel deliveries via Parcel `get_deliveries` (include_delivered: true)
+   h. **Fetch inbox emails with incremental sync** (see `agents/inbox-interviewer.md` and `templates/email-incremental-fetch.md`):
+      - If `EMAIL_TOOLS.get_inbox_updates` exists + sync state has `query_state` + not `--reset`:
+        → Call `EMAIL_TOOLS.get_inbox_updates(sinceQueryState, mailboxId)` for incremental
+      - Else if `EMAIL_TOOLS.get_inbox_updates` exists:
+        → Call `EMAIL_TOOLS.get_inbox_updates(limit: 50)` for full query with state capture
+      - Else:
+        → Fallback to `EMAIL_TOOLS.list_emails(limit: 50)` using the Inbox mailbox ID
+      - Filter out `seen_email_ids` from results
+      - If incremental returned 0 new emails: Report "No new emails since [last_sync]" and STOP
 
 2. **PHASE 1 - COLLECT:** For each email, use `AskUserQuestion` to present options:
    - Include email summary in the question text
@@ -143,10 +155,11 @@ Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The tr
    f. **Deletes** - `EMAIL_TOOLS.bulk_delete` for all deletions (including unsubscribed emails)
 
 4. **PHASE 3 - LEARN (mandatory):** After execution, update data files:
-   a. **decision-history.yaml** - Append ALL decisions with: date, emailId, action, senderDomain, senderEmail (if available), folder (if archived), category, accepted (true if user followed the system suggestion, false if user chose a different action), and notes for pattern matches
-   b. **delete-patterns.yaml** - Bump `match_count` for any confirmed delete patterns. For new domains deleted 2+ times in this session, add as new patterns with confidence 0.75 and source "triage"
-   c. **Update statistics** - Increment total_decisions, by_action counts, total_sessions
-   d. Report summary
+   a. **sync-state.yaml** - Save new `query_state`, `last_sync`, `mailbox_id`. Add "keep" email IDs to `seen_email_ids`. Cap at 500.
+   b. **decision-history.yaml** - Append ALL decisions with: date, emailId, action, senderDomain, senderEmail (if available), folder (if archived), category, accepted (true if user followed the system suggestion, false if user chose a different action), and notes for pattern matches
+   c. **delete-patterns.yaml** - Bump `match_count` for any confirmed delete patterns. For new domains deleted 2+ times in this session, add as new patterns with confidence 0.75 and source "triage"
+   d. **Update statistics** - Increment total_decisions, by_action counts, total_sessions
+   e. Report summary
 
 **IMPORTANT: Unsubscribes must run BEFORE deletes.** The unsubscriber needs to fetch email content to find unsubscribe links. If emails are deleted first, the links are lost.
 
