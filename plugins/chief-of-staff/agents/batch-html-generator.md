@@ -234,8 +234,12 @@ inbox:
   query_state: "[result.queryState from fetch]"  # Save for next incremental call
   last_sync: "[current ISO timestamp]"
   mailbox_id: "[inbox mailbox ID used]"
-  seen_email_ids: [preserve existing list]        # Don't modify here; batch-processor updates this
+  seen_email_ids: [existing list minus removed IDs]  # Prune, don't add; batch-processor adds "keep" IDs
 ```
+
+**Prune removed IDs:** If the incremental fetch returned a `removed` list (emails that left the inbox),
+remove those IDs from `seen_email_ids`. This prevents stale entries from accumulating and pushing out
+valid "keep" IDs when the 500-entry cap is reached. Do NOT add new IDs here — that's the batch-processor's job.
 
 If `result.queryState` is null (legacy fallback), leave `query_state` as null.
 
