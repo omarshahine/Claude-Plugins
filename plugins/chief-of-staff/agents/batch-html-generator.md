@@ -16,12 +16,7 @@ description: |
   </example>
 model: sonnet
 color: blue
-tools:
-  - Glob
-  - Read
-  - Write
-  - Bash
-  - ToolSearch
+tools: "*"
 ---
 
 # Batch HTML Generator
