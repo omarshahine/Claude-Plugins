@@ -54,3 +54,4 @@ plugins/*/mcp-server/*/dist/
 plugins/*/mcp-server/*/node_modules/
 # BUT track bundle/ folders (self-contained bundles for distribution)
 !plugins/*/mcp-server/*/bundle/
+notes.md

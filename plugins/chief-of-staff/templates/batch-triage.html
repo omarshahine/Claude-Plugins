@@ -728,7 +728,7 @@
     <div class="modal">
       <h2>✅ Decisions Saved</h2>
       <p style="margin-bottom: 0.5rem;">A JSON file was downloaded to your <strong>Downloads</strong> folder:</p>
-      <code style="margin-bottom: 1rem; font-size: 0.75rem; color: var(--text-secondary);" id="downloadedFilename">inbox-triage-decisions-YYYY-MM-DD.json</code>
+      <code style="margin-bottom: 1rem; font-size: 0.75rem; color: var(--text-secondary);" id="downloadedFilename">inbox-triage-decisions-YYYYMMDD-HHmmss.json</code>
       <p>Now run this command in Claude Code to execute your decisions:</p>
       <code>/chief-of-staff:batch --process</code>
       <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.75rem;">The command will automatically find and process the downloaded file.</p>
@@ -1399,7 +1399,9 @@
         decisions: Object.values(decisions).filter(d => d.action !== 'keep' || d.steering || d.params?.domain)
       };
 
-      const filename = `inbox-triage-decisions-${new Date().toISOString().split('T')[0]}.json`;
+      const now = new Date();
+      const ts = now.toISOString().replace(/[-:]/g, '').replace('T', '-').split('.')[0];
+      const filename = `inbox-triage-decisions-${ts}.json`;
       const blob = new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

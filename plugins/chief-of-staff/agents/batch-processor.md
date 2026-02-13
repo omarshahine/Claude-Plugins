@@ -259,9 +259,10 @@ For each custom decision:
 ### 6. Delegate Batch Actions (PARALLEL)
 
 **CRITICAL REQUIREMENTS:**
-1. You MUST execute these delegations - do NOT list them as "pending"
+1. You MUST actually call the Task tool to launch these sub-agents. Do NOT just "record" or "queue" them — EXECUTE them NOW
 2. Launch ALL sub-agents in PARALLEL (single message with multiple Task calls)
 3. Do NOT wait for one to complete before launching the next
+4. If you skip launching a sub-agent, the action WILL NOT HAPPEN. There is no background queue.
 
 **Launch all applicable sub-agents in ONE message:**
 
@@ -296,6 +297,21 @@ Task 3 (if reminder decisions exist):
 ```
 
 **Why parallel?** Running 3 agents sequentially takes ~4.5 min. Running in parallel takes ~1.5 min (3x faster).
+
+### 6b. Inline Cleanup for Delegated Actions
+
+**CRITICAL**: After launching sub-agents, immediately clean up emails from inbox. Do NOT wait for sub-agents to finish — they may fail or skip the cleanup step.
+
+```
+For unsubscribe decisions:
+  Collect all emailIds from unsubscribe decisions.
+  Call EMAIL_TOOLS.bulk_delete(emailIds) to remove them from inbox.
+  This ensures emails leave inbox even if the newsletter-unsubscriber
+  fails to process them.
+
+For addToParcel decisions:
+  (Already handled — inbox-to-parcel archives to Orders folder)
+```
 
 ### 7. Update Newsletter Allowlist
 
@@ -667,7 +683,7 @@ When `--retry` flag is used:
 
 ## Files
 
-- Input: `inbox-triage-decisions-YYYY-MM-DD.json`
+- Input: `inbox-triage-decisions-YYYYMMDD-HHmmss.json`
 - State: `~/.claude/data/chief-of-staff/batch-state.yaml`
 - Learning: `~/.claude/data/chief-of-staff/decision-history.yaml`
 - Rules: `~/.claude/data/chief-of-staff/filing-rules.yaml`
