@@ -74,12 +74,35 @@ Don't poll for parked/ground aircraft — it wastes API calls and the data won't
 `--json` returns raw structured data including lat/lon coordinates. Use this when:
 - You need to parse the response programmatically
 - The user wants specific fields (e.g., "what altitude is it at?")
-- You're feeding data into another tool or generating a map link
+- You're feeding data into another tool or generating a map
 
-To give the user a quick visual, construct a Google Maps link from the lat/lon:
+To give the user a quick visual, generate a map with `flight-map.py`:
+```bash
+python3 scripts/flight-map.py {TAIL}
 ```
-https://www.google.com/maps?q={latitude},{longitude}
+
+## Visual Map
+
+`scripts/flight-map.py` generates a self-contained HTML flight tracker map using Leaflet + OpenStreetMap.
+
+```bash
+# Generate map and open in browser
+python3 scripts/flight-map.py N12345
+
+# Save to a specific file
+python3 scripts/flight-map.py N12345 --output map.html
+
+# Generate without opening browser
+python3 scripts/flight-map.py N12345 --no-open
 ```
+
+The map shows:
+- Dark basemap (CARTO dark tiles) with aircraft icon rotated to heading
+- Info panel with route, altitude, speed, heading, departure/ETA
+- Recent flights table (if available)
+- Auto-adjusting zoom (z6 for cruise, z10 for low altitude, z13 on ground)
+
+If the aircraft is not found, it renders a styled "not tracked" card instead.
 
 ## Limitations
 
