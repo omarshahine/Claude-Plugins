@@ -212,11 +212,11 @@ output = template[:start] + data.rstrip() + '\n' + template[end:]
 with open('OUTPUT_PATH', 'w') as f:
     f.write(output)
 print(f'Output: {output.count(chr(10))} lines')
-" && open ~/inbox-batch-triage.html
+" && open /tmp/inbox-batch-triage.html
 ```
 
 Replace `TEMPLATE_PATH` with the actual path from the Glob result.
-Replace `OUTPUT_PATH` with `$HOME/inbox-batch-triage.html`.
+Replace `OUTPUT_PATH` with `/tmp/inbox-batch-triage.html`.
 
 **NEVER use the Write tool to write HTML.** Always use this injection script.
 
