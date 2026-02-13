@@ -63,6 +63,24 @@ When not found (`status: "not_found"`):
 {"tail": "N12345", "status": "not_found", "message": "Not currently airborne or not tracked"}
 ```
 
+## When to Use --poll
+
+Use `--poll 30` when tracking an in-flight aircraft over time. It re-queries every N seconds and prints updated position, altitude, and speed. Useful for "let me know when it lands" — watch for `on_ground: true` or a "Landed" status.
+
+Don't poll for parked/ground aircraft — it wastes API calls and the data won't change.
+
+## When to Use --json
+
+`--json` returns raw structured data including lat/lon coordinates. Use this when:
+- You need to parse the response programmatically
+- The user wants specific fields (e.g., "what altitude is it at?")
+- You're feeding data into another tool or generating a map link
+
+To give the user a quick visual, construct a Google Maps link from the lat/lon:
+```
+https://www.google.com/maps?q={latitude},{longitude}
+```
+
 ## Limitations
 
 - **Live only**: FlightRadar24 tracks aircraft with active ADS-B transponders. Parked/powered-down aircraft return "not_found".
