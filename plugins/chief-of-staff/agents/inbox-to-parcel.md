@@ -141,7 +141,7 @@ When searching for emails:
 
 ### Step 1: GET EXISTING DELIVERIES FIRST (BLOCKING REQUIREMENT)
 
-Your VERY FIRST action must be to call the get_deliveries tool with filter_mode: "active"
+After loading Parcel tools (via ToolSearch), your first Parcel API action must be to call the get_deliveries tool with filter_mode: "active"
 
 From the response, extract ALL tracking numbers and store them in memory:
 ```
@@ -319,7 +319,7 @@ After successfully processing emails:
 
 ### Token-Efficient Approach (Recommended)
 
-1. **FIRST: Get Existing Deliveries** (MANDATORY - do this before anything else):
+1. **FIRST: Get Existing Deliveries** (MANDATORY - do this immediately after loading Parcel tools):
    - Call get_deliveries with `filter_mode=active`
    - Parse response and extract all `tracking_number` values
    - Store in a set for O(1) lookup
