@@ -46,3 +46,23 @@ history:
   #   successful: 30
   #   failed: 2
   []
+
+# Pending (carry-forward) emails from last generated HTML
+# Tracks emails that were presented in batch HTML but not yet processed.
+# Cleared when the batch processor completes, or when generator detects
+# that the session was already processed.
+pending:
+  # session_id: "batch-2026-02-14-001"    # Session that generated these emails
+  # generated_at: "2026-02-14T10:00:00Z"  # When the HTML was generated
+  # emails:                                # Raw email data (re-classified on carry-forward)
+  #   - id: "email-abc123"
+  #     from: { name: "John", email: "john@example.com" }
+  #     subject: "Meeting tomorrow"
+  #     preview: "Hey, about the meeting..."
+  #     receivedAt: "2026-02-13T10:00:00Z"
+  #   - id: "email-def456"
+  #     from: { name: "Jane", email: "jane@example.com" }
+  #     subject: "Invoice attached"
+  #     preview: "Please find the invoice..."
+  #     receivedAt: "2026-02-13T14:30:00Z"
+  null

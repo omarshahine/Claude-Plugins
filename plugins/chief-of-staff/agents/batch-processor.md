@@ -420,6 +420,19 @@ Updating it here would skip emails that arrived between generation and processin
 
 ### 8. Update State and Report
 
+#### Clear Pending Carry-Forward
+
+After processing decisions, clear the pending buffer so carried-forward emails don't reappear:
+
+```
+1. Read ~/.claude/data/chief-of-staff/batch-state.yaml
+2. Set pending: null (or remove the pending section)
+3. Write back to batch-state.yaml (along with session/results updates below)
+```
+
+This is belt-and-suspenders — the generator also checks session status to detect already-processed
+pending data, but clearing explicitly here is safer and avoids edge cases.
+
 #### Update batch-state.yaml
 
 ```yaml

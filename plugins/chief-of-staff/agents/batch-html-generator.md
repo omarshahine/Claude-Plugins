@@ -44,6 +44,17 @@ Generate an HTML batch triage interface by injecting classified email data into 
 
 If no settings.yaml or no tools found → STOP. Report: "Run `/chief-of-staff:setup` to configure email."
 
+## Step 0.5: Load Carry-Forward Emails
+
+1. Read `~/.claude/data/chief-of-staff/batch-state.yaml` (if exists)
+2. Check if `pending` exists and has emails:
+   - If `pending.session_id` matches `session.sessionId` AND `session.status` is one of `completed`, `partial`:
+     → The pending was already processed. Clear carry-forward: `carry_forward_emails = []`
+   - Otherwise:
+     → Set `carry_forward_emails = pending.emails` (may be null/empty — treat as `[]`)
+3. If `--reset` or `--full` flag is set:
+   → Clear carry-forward: `carry_forward_emails = []` (full re-fetch makes carry-forward redundant)
+
 ## Step 1: Fetch Emails and Find Template (PARALLEL)
 
 Call ALL THREE in a SINGLE message (parallel):
@@ -84,7 +95,19 @@ ELSE:
 emails = result.added.filter(e => e.id NOT IN seen_email_ids)
 ```
 
-**If incremental returned 0 new emails:**
+**Merge carry-forward emails:**
+```
+IF carry_forward_emails is not empty:
+  # Deduplicate: new delta wins over carry-forward (prefer fresh data)
+  new_ids = Set(emails.map(e => e.id))
+  carried = carry_forward_emails.filter(e => e.id NOT IN new_ids)
+  emails = [...emails, ...carried]
+  carry_forward_count = carried.length
+ELSE:
+  carry_forward_count = 0
+```
+
+**If 0 emails after merge (no new AND no carry-forward):**
 Report: "No new emails since [last_sync timestamp]. Run with --full to re-fetch all."
 STOP.
 
@@ -285,11 +308,35 @@ valid "keep" IDs when the 500-entry cap is reached. Do NOT add new IDs here — 
 
 If `result.queryState` is null (legacy fallback), leave `query_state` as null.
 
+## Step 5.6: Save Pending Emails
+
+After saving sync state, save ALL emails presented in this session to `batch-state.yaml → pending`.
+This enables carry-forward if the user never runs `--process` or some decisions are lost.
+
+```yaml
+pending:
+  session_id: "[sessionId from Step 4]"
+  generated_at: "[current ISO timestamp]"
+  emails:
+    # Save raw email data for each presented email (all categories combined)
+    - id: "[email id]"
+      from: { name: "[sender name]", email: "[sender email]" }
+      subject: "[subject line]"
+      preview: "[first 150 chars]"
+      receivedAt: "[original timestamp]"
+```
+
+**Rules:**
+- Include ALL emails from ALL categories (topOfMind, deliveries, newsletters, etc.)
+- Save raw data only — no classifications (carry-forward emails get re-classified with current rules)
+- Cap at 200 emails (if more, keep the 200 most recent by `receivedAt`)
+- Write to `~/.claude/data/chief-of-staff/batch-state.yaml` under the `pending:` key
+
 ## Step 6: Report
 
 ```
 Generated batch triage interface.
-Sync: [incremental — 8 new emails | full — 45 emails | legacy — 45 emails]
+Sync: [incremental — 8 new + 5 carried forward | full — 45 emails | legacy — 45 emails]
 
 - Actionable: X (route-matched emails)
 - Top of Mind: X

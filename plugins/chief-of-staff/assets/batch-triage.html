@@ -1444,7 +1444,7 @@
       const output = {
         sessionId: TRIAGE_DATA.sessionId,
         submittedAt: new Date().toISOString(),
-        decisions: Object.values(decisions).filter(d => d.action !== 'keep' || d.steering || d.params?.domain || d.routeInfo)
+        decisions: Object.values(decisions)
       };
 
       const now = new Date();
