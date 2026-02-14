@@ -140,7 +140,7 @@ All data is stored in the plugin's `data/` directory:
 | `interview-state.yaml` | Resume state for triage sessions |
 | `batch-state.yaml` | HTML batch triage session state |
 | `newsletter-lists.yaml` | Allowlist and unsubscribed senders |
-| `email-action-routes.yaml` | Action routes mapping emails to skills/agents |
+| `email-action-routes.yaml` | Action routes mapping emails to agents |
 
 ## Pattern Files
 

@@ -20,7 +20,7 @@ View, add, remove, and toggle email action routes. Action routes map specific em
 ## What It Shows
 
 1. **Active Routes** by type (sender_email, sender_domain, subject_pattern, combined)
-2. **Route targets** — which plugin:agent or plugin:skill handles the email
+2. **Route targets** — which plugin:agent handles the email
 3. **Confidence scores** and match counts
 4. **Post-action** — what happens to the email after processing
 5. **Disabled Routes** — routes that are toggled off
@@ -62,14 +62,33 @@ Actions:
 
 This command reads and displays data files directly:
 
-1. Read `~/.claude/data/chief-of-staff/email-action-routes.yaml`
-   - If file doesn't exist, report: "No routes configured. Run `/chief-of-staff:routes --add` to create one, or routes will be auto-populated when you install plugins with route definitions."
-2. Format and display tables (grouped by route type)
+1. Check if `~/.claude/data/chief-of-staff/email-action-routes.yaml` exists
+   - If missing, initialize from example:
+     - Read `plugins/chief-of-staff/data/email-action-routes.example.yaml`
+     - Write to `~/.claude/data/chief-of-staff/email-action-routes.yaml`
+     - Report: "Initialized routes configuration from template."
+   - If example also missing, create minimal valid structure:
+     ```yaml
+     metadata:
+       last_updated: null
+       total_routes: 0
+     thresholds:
+       suggest_minimum: 0.80
+       auto_route_minimum: 0.95
+       deprecate_below: 0.50
+     routes:
+       sender_email: []
+       sender_domain: []
+       subject_pattern: []
+       combined: []
+     ```
+2. Read the routes file
+3. Format and display tables (grouped by route type)
 3. For `--add`: Use AskUserQuestion for interactive creation:
    - Match type (sender_email, sender_domain, subject_pattern, combined)
    - Match value (email address, domain, regex pattern)
    - Optional refinements (subject_pattern, attachment_required)
-   - Target plugin and agent/skill name
+   - Target plugin and agent name
    - Route label and description
    - Whether to pass attachments
    - Post-action (archive/delete/keep/none)
