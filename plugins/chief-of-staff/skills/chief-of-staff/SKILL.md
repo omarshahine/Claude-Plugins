@@ -169,8 +169,11 @@ COLLECT → EXECUTE → LEARN
 Chief-of-Staff integrates with:
 
 - **Email MCP** - Email provider (required, user-configured separately)
-- **Parcel API MCP** - Package tracking (bundled)
-- **Playwright MCP** - Newsletter unsubscribe web forms (bundled)
+- **Parcel API MCP** - Package tracking (loaded via `ToolSearch "+parcel"`)
+- **Playwright** - Browser automation for web forms and tracking extraction
+  - MCP plugin (default): `playwright@claude-plugins-official` or bundled in chief-of-staff (loaded via `ToolSearch "+playwright browser"`)
+  - CLI alternative: `brew install nicholasgriffintn/tap/playwright-cli`
+  - Configure in settings.yaml `providers.playwright.active`: `mcp` | `cli`
 - **Apple PIM MCP** - Reminders and calendar (optional, separate plugin)
 - **imsg CLI** - iMessage access (required for imessage-assistant, `brew install steipete/tap/imsg`)
 

@@ -36,6 +36,31 @@ If ToolSearch finds no email tools, STOP and display:
 Run `/chief-of-staff:setup` to configure your email provider.
 ```
 
+## Browser Automation Initialization
+
+Browser automation is required for web-based unsubscribes.
+
+Check settings.yaml `providers.playwright.active` (default: `"mcp"` if not set):
+
+**If "mcp":**
+```
+ToolSearch query: "+playwright browser"
+```
+Use discovered MCP tools for web unsubscribe forms (`browser_navigate`, `browser_snapshot`, `browser_click`, `browser_type`, `browser_fill_form`, `browser_close`).
+
+**If "cli":**
+Use `playwright-cli` via Bash for web unsubscribe forms (`playwright-cli open <url>`, `playwright-cli snapshot`, `playwright-cli click <ref>`, `playwright-cli type <ref> <text>`, `playwright-cli close`).
+
+**If no Playwright configured or tools not found:**
+Web-based unsubscribes will fail. Only mailto-based unsubscribes will work. Display:
+```
+Playwright not configured. Web unsubscribe requires browser automation.
+Install: /plugin install playwright@claude-plugins-official (MCP)
+Or: brew install nicholasgriffintn/tap/playwright-cli (CLI)
+```
+
+See [references/browser-automation-init.md](references/browser-automation-init.md) for the full initialization pattern.
+
 ## Data Files Location
 
 Data files are in `~/.claude/data/chief-of-staff/`:
@@ -185,13 +210,20 @@ In EXECUTE mode, proceed to PHASE 2 with the selections provided in the prompt.
 For each newsletter specified in the EXECUTE prompt (with URLs and email IDs):
 
 **Option A: Web unsubscribe (preferred)**
-```
-1. mcp__plugin_playwright_playwright__browser_navigate -> unsubscribe URL
-2. mcp__plugin_playwright_playwright__browser_snapshot -> get page structure
-3. Find and click "Unsubscribe" / "Confirm" button using browser_click
-4. browser_snapshot again to verify success
+
+**MCP mode:**
+1. `browser_navigate` -> unsubscribe URL
+2. `browser_snapshot` -> get page structure
+3. Find and click "Unsubscribe" / "Confirm" button using `browser_click`
+4. `browser_snapshot` again to verify success
 5. Record result (success/failure)
-```
+
+**CLI mode:**
+1. `playwright-cli open <unsubscribe-url>` (via Bash)
+2. `playwright-cli snapshot` (via Bash)
+3. Find and click unsubscribe button: `playwright-cli click <ref>` (via Bash)
+4. `playwright-cli snapshot` to verify success (via Bash)
+5. Record result (success/failure)
 
 **Option B: Mailto unsubscribe (fallback)**
 Use the send_email tool with:
@@ -206,9 +238,8 @@ Use the send_email tool with:
 
 ### 2.2 Close Browser
 
-```
-Tool: mcp__plugin_playwright_playwright__browser_close
-```
+**MCP mode:** Call `browser_close`
+**CLI mode:** Run `playwright-cli close` via Bash
 
 ### 2.3 Process Allowlist Additions
 
@@ -291,14 +322,24 @@ Read `~/.claude/data/chief-of-staff/settings.yaml` to get the actual tool names 
 
 The settings file maps these logical names to actual MCP tool names (e.g., `mcp__fastmail__list_mailboxes` for Fastmail).
 
-### Playwright Tools
-Use `mcp__plugin_playwright_playwright__*`:
+### Playwright Tools (Provider-Dependent)
+
+Read `providers.playwright.active` from settings.yaml to determine mode.
+
+**MCP mode** (loaded via `ToolSearch "+playwright browser"`):
 - `browser_navigate` - Go to unsubscribe URL
 - `browser_snapshot` - Get page structure (preferred over screenshot)
 - `browser_click` - Click unsubscribe/confirm buttons
 - `browser_type` - Enter email address in forms
 - `browser_fill_form` - Fill multiple form fields at once
 - `browser_close` - Close browser when done (required!)
+
+**CLI mode** (via Bash tool):
+- `playwright-cli open <url>` - Go to unsubscribe URL
+- `playwright-cli snapshot` - Get page accessibility tree
+- `playwright-cli click <ref>` - Click unsubscribe/confirm buttons
+- `playwright-cli type <ref> <text>` - Enter email address in forms
+- `playwright-cli close` - Close browser when done (required!)
 
 ### Other Tools
 - `AskUserQuestion` - Get user selections (max 4 options, present one batch at a time)
