@@ -89,6 +89,24 @@ providers:
         add_delivery: mcp__parcel-api-mcp__add_delivery
         get_supported_carriers: mcp__parcel-api-mcp__get_supported_carriers
 
+  # Browser automation (for newsletter-unsubscriber, inbox-to-parcel web scraping)
+  playwright:
+    active: mcp  # Options: mcp, cli
+    mappings:
+      mcp:
+        # Automatically discovered via ToolSearch "+playwright browser"
+        # Tool names depend on installation (plugin-bundled or standalone)
+        browser_navigate: null   # Auto-resolved by ToolSearch
+        browser_snapshot: null
+        browser_click: null
+        browser_type: null
+        browser_fill_form: null
+        browser_close: null
+      cli:
+        # Uses playwright-cli bash commands (brew install nicholasgriffintn/tap/playwright-cli)
+        # No tool mappings needed - invoked via Bash tool
+        command: playwright-cli
+
 # Optional: folder settings
 folders:
   inbox_id: null  # Will be auto-discovered

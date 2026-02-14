@@ -86,6 +86,37 @@ If ToolSearch finds no email tools, STOP and display:
 Run `/chief-of-staff:setup` to configure your email provider.
 ```
 
+## Parcel API Initialization
+
+Load Parcel API tools (required for adding deliveries):
+```
+ToolSearch query: "+parcel"
+```
+Store `PARCEL_TOOLS` from settings.yaml `providers.parcel.mappings[active]`.
+
+If no tools found, check settings.yaml:
+- If `integrations.parcel` is `false` -> STOP: "Parcel integration disabled in settings.yaml"
+- If `true` -> STOP: "Parcel API MCP not configured. Install: `npx -y @smithery/cli@latest install @NOVA-3951/parcel-api-mcp --client claude`"
+
+See [references/parcel-init.md](references/parcel-init.md) for the full initialization pattern.
+
+## Browser Automation Initialization (for tracking link extraction)
+
+Check settings.yaml `providers.playwright.active` (default: `"mcp"` if not set):
+
+**If "mcp":**
+```
+ToolSearch query: "+playwright browser"
+```
+Use discovered MCP tools for web navigation (`browser_navigate`, `browser_snapshot`, `browser_click`, `browser_close`).
+
+**If "cli":**
+Use `playwright-cli` via Bash for web navigation (`playwright-cli open <url>`, `playwright-cli snapshot`, `playwright-cli click <ref>`, `playwright-cli close`).
+
+**If no Playwright configured or tools not found:** Skip web-based tracking extraction. Only extract tracking numbers from email body text.
+
+See [references/browser-automation-init.md](references/browser-automation-init.md) for the full initialization pattern.
+
 ## Data Files Location
 
 Data files are in `~/.claude/data/chief-of-staff/`:
@@ -222,11 +253,19 @@ Look for patterns like:
 **Via Web Links (use Playwright when needed):**
 Many retailers don't include tracking numbers directly in the email. For these:
 
+**MCP mode** (`providers.playwright.active = "mcp"`):
 1. **Find the tracking link** in the email body
-2. **Use Playwright to navigate:** `mcp__plugin_playwright_playwright__browser_navigate`
-3. **Capture page content:** `mcp__plugin_playwright_playwright__browser_snapshot`
+2. **Navigate:** `browser_navigate` -> tracking URL
+3. **Capture page:** `browser_snapshot` -> get page structure
 4. **Extract tracking info from the page**
-5. **Close browser when done:** `mcp__plugin_playwright_playwright__browser_close`
+5. **Close browser:** `browser_close`
+
+**CLI mode** (`providers.playwright.active = "cli"`):
+1. **Find the tracking link** in the email body
+2. **Navigate:** `playwright-cli open <tracking-url>` (via Bash)
+3. **Capture page:** `playwright-cli snapshot` (via Bash)
+4. **Extract tracking info from the page**
+5. **Close browser:** `playwright-cli close` (via Bash)
 
 ### 4. Carrier Identification
 
