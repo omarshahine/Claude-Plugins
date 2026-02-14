@@ -272,15 +272,18 @@ For each custom decision:
 ```
 For each route decision:
 1. Read routeInfo from the decision object
-2. Build subagent_type from routeInfo:
-   - If routeInfo.agent: subagent_type = "{routeInfo.plugin}:{routeInfo.agent}"
-   - If routeInfo.skill: subagent_type = "{routeInfo.plugin}:{routeInfo.skill}"
-3. Build prompt with email context:
+2. Validate routeInfo exists and has required agent field:
+   - If routeInfo missing or routeInfo.agent missing:
+     → Log error: "Route decision missing routeInfo or agent — skipping"
+     → Continue to next decision
+3. Build subagent_type from routeInfo:
+   - subagent_type = "{routeInfo.plugin}:{routeInfo.agent}"
+4. Build prompt with email context:
    - emailId, subject, sender name/email
    - If routeInfo.pass_attachments is true:
      → First call EMAIL_TOOLS.get_email_attachments(emailId)
      → Include attachment list in the prompt
-4. Invoke via Task tool:
+5. Invoke via Task tool:
    Task:
      subagent_type: "{plugin}:{agent}"
      prompt: |
@@ -292,7 +295,7 @@ For each route decision:
 
        Route: {routeInfo.label}
        Description: {routeInfo.description}
-5. After successful processing, execute post-action:
+6. After successful processing, execute post-action:
    - If routeInfo.post_action == "archive":
      → Look up folder ID for routeInfo.post_action_folder (or use post_action_folder_id)
      → Call EMAIL_TOOLS.move_email(emailId, folderId)
@@ -300,7 +303,7 @@ For each route decision:
      → Call EMAIL_TOOLS.delete_email(emailId)
    - If routeInfo.post_action == "keep" or "none":
      → No action on the email
-6. Track results for summary
+7. Track results for summary
 ```
 
 **Execution order**: Route each email individually (not in parallel with other routes) since different routes may target different agents that shouldn't compete for resources. However, you CAN run routes in parallel with each other if they target different agents.

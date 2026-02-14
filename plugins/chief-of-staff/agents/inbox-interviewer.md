@@ -526,17 +526,20 @@ groups = {
 If groups.route not empty:
   For each route decision:
     1. Read routeInfo from decision (stored during collection)
-    2. Build subagent_type:
-       - If routeInfo.agent: "{routeInfo.plugin}:{routeInfo.agent}"
-       - If routeInfo.skill: "{routeInfo.plugin}:{routeInfo.skill}"
-    3. If routeInfo.pass_attachments:
+    2. Validate routeInfo exists and has required agent field:
+       - If routeInfo missing or routeInfo.agent missing:
+         → Log error: "Route decision missing routeInfo or agent — skipping"
+         → Continue to next decision
+    3. Build subagent_type:
+       - subagent_type = "{routeInfo.plugin}:{routeInfo.agent}"
+    4. If routeInfo.pass_attachments:
        → Fetch attachment list via EMAIL_TOOLS.get_email_attachments
-    4. Invoke via Task tool with email context
-    5. After success: execute routeInfo.post_action
+    5. Invoke via Task tool with email context
+    6. After success: execute routeInfo.post_action
        - "archive" → move to routeInfo.post_action_folder
        - "delete" → delete email
        - "keep"/"none" → leave in inbox
-    6. If agent fails: skip post-action, report error
+    7. If agent fails: skip post-action, report error
 
 Output: "Processing 1 route action... ✓"
 ```

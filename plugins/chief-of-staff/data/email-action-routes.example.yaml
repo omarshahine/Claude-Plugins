@@ -23,7 +23,7 @@ routes:
     #   attachment_required: true        # Optional: only match if email has attachments
     #   route:
     #     plugin: "my-plugin"
-    #     agent: "invoice-processor"        # OR skill: "skill-name"
+    #     agent: "invoice-processor"        # Agent to invoke (must be executable via Task)
     #     label: "Process Vendor Invoice"   # Human-readable name shown in triage
     #     description: "Extract invoice data and generate accounting entries"
     #     pass_attachments: true            # Fetch attachment metadata before invoking
@@ -42,7 +42,7 @@ routes:
     #   subject_pattern: "Result Available"
     #   route:
     #     plugin: "my-plugin"
-    #     skill: "report-downloader"
+    #     agent: "report-downloader"
     #     label: "Download Reports"
     #     description: "Download verification PDF documents"
     #     pass_attachments: false
