@@ -88,15 +88,15 @@ Routes are configured in `email-action-routes.yaml` (mirrors `filing-rules.yaml`
 ```yaml
 routes:
   sender_email:
-    - email: "Accounting@localforeigner.com"
+    - email: "accounting@example.com"
       attachment_required: true
       route:
         plugin: "chief-of-staff-private"
-        agent: "local-foreigner-invoice"
-        label: "Process LF Invoice"
+        agent: "invoice-processor"
+        label: "Process Invoice"
         pass_attachments: true
         post_action: "archive"
-        post_action_folder: "Local Foreigner"
+        post_action_folder: "Invoices"
       confidence: 0.95
       source: "manual"
       enabled: true

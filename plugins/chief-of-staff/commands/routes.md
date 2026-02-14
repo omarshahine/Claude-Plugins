@@ -34,8 +34,8 @@ Email Action Routes
 ## Sender Email Routes (2 routes)
 | # | Email | Route Label | Target | Post-Action | Confidence | Matches | Enabled |
 |---|-------|-------------|--------|-------------|------------|---------|---------|
-| 1 | Accounting@localforeigner.com | Process LF Invoice | chief-of-staff-private:local-foreigner-invoice | archive → Local Foreigner | 95% | 12 | Yes |
-| 2 | billing@netjets.com | Download NetJets Invoices | chief-of-staff-private:netjets-invoice-downloader | none | 95% | 8 | Yes |
+| 1 | accounting@example.com | Process Invoice | chief-of-staff-private:invoice-processor | archive → Invoices | 95% | 12 | Yes |
+| 2 | billing@example.org | Download Invoices | chief-of-staff-private:invoice-downloader | none | 95% | 8 | Yes |
 
 ## Sender Domain Routes (1 route)
 | # | Domain | Subject Filter | Route Label | Target | Post-Action | Confidence | Matches | Enabled |

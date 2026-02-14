@@ -438,17 +438,17 @@ After each question sequence, store in `collected_decisions`:
   suggestion:
     action: "route"
     confidence: 0.95
-    reason: "Route match: Accounting@localforeigner.com -> Process LF Invoice"
+    reason: "Route match: accounting@example.com -> Process Invoice"
   decision:
     action: "route"
     accepted_suggestion: true
     routeInfo:
       plugin: "chief-of-staff-private"
-      agent: "local-foreigner-invoice"
-      label: "Process LF Invoice"
+      agent: "invoice-processor"
+      label: "Process Invoice"
       passAttachments: true
       postAction: "archive"
-      postActionFolder: "Local Foreigner"
+      postActionFolder: "Invoices"
 ```
 
 ### Save State After Each Decision
