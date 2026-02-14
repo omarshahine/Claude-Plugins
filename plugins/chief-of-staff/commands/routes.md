@@ -1,0 +1,80 @@
+---
+description: View and manage email action routes
+argument-hint: "[--add | --disable ID | --enable ID | --remove ID]"
+---
+
+# /chief-of-staff:routes
+
+View, add, remove, and toggle email action routes. Action routes map specific emails to specialized skills/agents for active processing during triage.
+
+## Usage
+
+```
+/chief-of-staff:routes              # Show all routes with match stats
+/chief-of-staff:routes --add        # Interactive route creation
+/chief-of-staff:routes --disable N  # Disable route by index
+/chief-of-staff:routes --enable N   # Re-enable a disabled route
+/chief-of-staff:routes --remove N   # Remove route permanently
+```
+
+## What It Shows
+
+1. **Active Routes** by type (sender_email, sender_domain, subject_pattern, combined)
+2. **Route targets** — which plugin:agent or plugin:skill handles the email
+3. **Confidence scores** and match counts
+4. **Post-action** — what happens to the email after processing
+5. **Disabled Routes** — routes that are toggled off
+
+## Example Output
+
+```
+Email Action Routes
+===================
+
+## Sender Email Routes (2 routes)
+| # | Email | Route Label | Target | Post-Action | Confidence | Matches | Enabled |
+|---|-------|-------------|--------|-------------|------------|---------|---------|
+| 1 | Accounting@localforeigner.com | Process LF Invoice | chief-of-staff-private:local-foreigner-invoice | archive → Local Foreigner | 95% | 12 | Yes |
+| 2 | billing@netjets.com | Download NetJets Invoices | chief-of-staff-private:netjets-invoice-downloader | none | 95% | 8 | Yes |
+
+## Sender Domain Routes (1 route)
+| # | Domain | Subject Filter | Route Label | Target | Post-Action | Confidence | Matches | Enabled |
+|---|--------|---------------|-------------|--------|-------------|------------|---------|---------|
+| 3 | phamatech.com | Result Available | Download Phamatech Results | chief-of-staff-private:phamatech-download | archive | 95% | 3 | Yes |
+
+## Subject Pattern Routes (0 routes)
+(none)
+
+## Combined Routes (0 routes)
+(none)
+
+Thresholds:
+- Suggest minimum: 80% confidence
+- Auto-route minimum: 95% confidence
+
+Actions:
+1. Add new route
+2. Disable/enable a route
+3. Remove a route
+```
+
+## Implementation
+
+This command reads and displays data files directly:
+
+1. Read `~/.claude/data/chief-of-staff/email-action-routes.yaml`
+   - If file doesn't exist, report: "No routes configured. Run `/chief-of-staff:routes --add` to create one, or routes will be auto-populated when you install plugins with route definitions."
+2. Format and display tables (grouped by route type)
+3. For `--add`: Use AskUserQuestion for interactive creation:
+   - Match type (sender_email, sender_domain, subject_pattern, combined)
+   - Match value (email address, domain, regex pattern)
+   - Optional refinements (subject_pattern, attachment_required)
+   - Target plugin and agent/skill name
+   - Route label and description
+   - Whether to pass attachments
+   - Post-action (archive/delete/keep/none)
+   - Post-action folder (if archive)
+   - Initial confidence (default 0.90 for manual routes)
+4. For `--disable N` / `--enable N`: Toggle the `enabled` field on route at index N
+5. For `--remove N`: Remove the route at index N entirely (with confirmation)
+6. Write updated file back after changes

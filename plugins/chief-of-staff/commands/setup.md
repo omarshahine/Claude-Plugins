@@ -196,7 +196,7 @@ AskUserQuestion:
 
 ### Phase 5: Generate Summon Command
 
-10. Read the template from `templates/summon-command.md`
+10. Read the template from `assets/summon-command.md`
 11. Replace placeholders:
     - `{{NAME}}` -> Persona name (e.g., "Friday")
     - `{{NAME_LOWER}}` -> Lowercase persona name (e.g., "friday")
