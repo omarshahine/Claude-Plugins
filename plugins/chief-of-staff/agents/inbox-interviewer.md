@@ -533,8 +533,9 @@ If groups.route not empty:
        - subagent_type = "{routeInfo.plugin}:{routeInfo.agent}"
        - (Routes must target agents, not skills.)
     3. If routeInfo.pass_attachments:
-       → Fetch attachment list via EMAIL_TOOLS.get_email_attachments
-    4. Invoke via Task tool with email context
+       → Fetch the full email with EMAIL_TOOLS.get_email(emailId)
+       → Extract attachment information from email.attachments (if available)
+    4. Invoke via Task tool with email context including attachment info
     5. After success: execute routeInfo.post_action
        - "archive" → move to routeInfo.post_action_folder
        - "delete" → delete email

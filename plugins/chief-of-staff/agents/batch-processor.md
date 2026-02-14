@@ -279,7 +279,8 @@ For each route decision:
 3. Build prompt with email context:
    - emailId, subject, sender name/email
    - If routeInfo.pass_attachments is true:
-     → First call EMAIL_TOOLS.get_email_attachments(emailId)
+     → Fetch the full email with EMAIL_TOOLS.get_email(emailId)
+     → Extract attachment information from email.attachments (if available)
      → Include attachment list in the prompt
 4. Invoke via Task tool:
    Task:
