@@ -18,7 +18,8 @@ Agent-Plugins/
 │   │   │   └── chief-of-staff/
 │   │   │       └── SKILL.md   # Core orchestrator knowledge
 │   │   ├── data/              # User data (gitignored) with .example templates
-│   │   └── templates/         # Pattern files (shipping, newsletter, batch HTML)
+│   │   ├── assets/            # Templates, patterns used in output (shipping, newsletter, batch HTML)
+│   │   └── references/        # Documentation loaded as needed (email provider init, incremental fetch)
 │   ├── travel-agent/          # Flight research and trip tracking
 │   │   ├── .claude-plugin/
 │   │   │   └── plugin.json
@@ -254,10 +255,14 @@ chief-of-staff/
 │   ├── interview-state.example.yaml
 │   ├── batch-state.example.yaml
 │   └── newsletter-lists.example.yaml
-└── templates/
-    ├── shipping-patterns.json     # Carrier detection, tracking regex
-    ├── newsletter-patterns.json   # RFC headers, bulk sender patterns
-    └── batch-triage.html          # HTML batch interface template
+├── assets/
+│   ├── shipping-patterns.json     # Carrier detection, tracking regex
+│   ├── newsletter-patterns.json   # RFC headers, bulk sender patterns
+│   ├── batch-triage.html          # HTML batch interface template
+│   └── summon-command.md          # Dynamic command template
+└── references/
+    ├── email-provider-init.md     # Standard email provider initialization pattern
+    └── email-incremental-fetch.md # JMAP incremental sync documentation
 ```
 
 **Key Concepts:**
@@ -290,7 +295,7 @@ chief-of-staff/
    - Always read `settings.yaml` first to get `EMAIL_PROVIDER` and `EMAIL_TOOLS` mappings
    - Load tools dynamically: `ToolSearch("+{EMAIL_PROVIDER}")`
    - Reference tools as `EMAIL_TOOLS.list_emails`, `EMAIL_TOOLS.bulk_move`, etc.
-   - See `templates/email-provider-init.md` for the standard initialization pattern
+   - See `references/email-provider-init.md` for the standard initialization pattern
    - Exception: agent `allowedTools` frontmatter can't be dynamic — use `tools: "*"` or a broad tool list
 
 **Adding Sub-Agents:**

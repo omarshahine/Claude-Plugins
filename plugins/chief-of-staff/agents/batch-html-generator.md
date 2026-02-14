@@ -47,7 +47,7 @@ Call ALL THREE in a SINGLE message (parallel):
 
 1. `EMAIL_TOOLS.list_mailboxes` - Get folder structure
 2. **Incremental fetch** (see below) - Get inbox emails
-3. `Glob: ~/.claude/plugins/cache/**/chief-of-staff/**/templates/batch-triage.html`
+3. `Glob: ~/.claude/plugins/cache/**/chief-of-staff/**/assets/batch-triage.html`
 
 ### Incremental Fetch Logic (Step 1.2)
 

@@ -91,8 +91,8 @@ Run `/chief-of-staff:setup` to configure your email provider.
 Data files are in `~/.claude/data/chief-of-staff/`:
 - `settings.yaml` - Provider configuration
 
-Templates are in the plugin directory (use Glob to find `~/.claude/plugins/cache/**/chief-of-staff/**/templates/`):
-- `templates/shipping-patterns.json` - Shipping email patterns
+Assets are in the plugin directory (use Glob to find `~/.claude/plugins/cache/**/chief-of-staff/**/assets/`):
+- `assets/shipping-patterns.json` - Shipping email patterns
 
 ## CRITICAL: INBOX-ONLY SEARCH - READ THIS SECOND
 
@@ -166,7 +166,7 @@ else:
 **IMPORTANT: Use Patterns File for Token Efficiency**
 
 Before scanning emails, read the patterns configuration file:
-`templates/shipping-patterns.json`
+`assets/shipping-patterns.json`
 
 This file contains:
 - **subjectPatterns**: Regex patterns for identifying shipping emails by subject

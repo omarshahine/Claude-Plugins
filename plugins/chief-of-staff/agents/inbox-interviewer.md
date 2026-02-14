@@ -108,9 +108,9 @@ All data files are in `~/.claude/data/chief-of-staff/`:
 
 ## Integration Files
 
-Also load from templates directory:
-- `templates/shipping-patterns.json` - Package detection
-- `templates/newsletter-patterns.json` - Newsletter detection
+Also load from assets directory:
+- `assets/shipping-patterns.json` - Package detection
+- `assets/newsletter-patterns.json` - Newsletter detection
 
 ## Three-Phase Workflow
 
@@ -158,7 +158,7 @@ For each decision:
 ### Fetch and Group Emails
 
 1. **Get mailboxes**: Find Inbox ID with list_mailboxes
-2. **Fetch emails using incremental sync** (see `templates/email-incremental-fetch.md`):
+2. **Fetch emails using incremental sync** (see `references/email-incremental-fetch.md`):
    - Check if `EMAIL_TOOLS.get_inbox_updates` exists (not null)
    - Read `sync-state.yaml` for previous `query_state` and `seen_email_ids`
    - If `--reset`: Clear sync state completely (set `query_state`, `last_sync`, `mailbox_id` to null, `seen_email_ids` to `[]`)

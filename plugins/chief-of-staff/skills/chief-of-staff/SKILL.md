@@ -121,7 +121,7 @@ All data is stored in the plugin's `data/` directory:
 
 ## Pattern Files
 
-Pattern files for email classification in `templates/`:
+Pattern files for email classification in `assets/`:
 
 | File | Purpose |
 |------|---------|
