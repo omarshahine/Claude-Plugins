@@ -110,6 +110,7 @@ Organize decisions into groups for efficient processing:
   inline: {
     archive: [...],      // Execute with move_email
     delete: [...],       // Execute with delete_email
+    flag: [...],         // Flag email, keep in inbox
     keep: [...],         // No action (or flag if specified)
     reply: [...]         // Execute with reply_to_email
   },
@@ -148,6 +149,14 @@ For each archive decision:
 For each delete decision:
 1. Call delete_email with emailId
 2. Track success/failure
+```
+
+#### Flag
+```
+For each flag decision:
+1. Call flag_email with emailId, flagged: true
+2. Email stays in inbox (flagged for follow-up)
+3. Track as processed
 ```
 
 #### Keep
@@ -402,10 +411,11 @@ After processing all decisions, update the incremental sync state so "keep" emai
 1. Read ~/.claude/data/chief-of-staff/sync-state.yaml (if exists)
    - If missing, skip this step (sync state is managed by the generator)
 
-2. For each decision where action == "keep":
+2. For each decision where action == "keep" OR action == "flag":
    - Add emailId to sync_state.inbox.seen_email_ids
+   - These emails remain in the inbox, so we track them to avoid re-showing
 
-3. For each decision where action != "keep" (archived, deleted, etc.):
+3. For each decision where action is NOT "keep" and NOT "flag" (archived, deleted, etc.):
    - Remove emailId from sync_state.inbox.seen_email_ids (if present)
    - These emails are no longer in the inbox, so they don't need tracking
 
@@ -450,6 +460,7 @@ results:
     route: { attempted: 1, successful: 1 }
     archive: { attempted: 10, successful: 10 }
     delete: { attempted: 4, successful: 4 }
+    flag: { attempted: 2, successful: 2 }
     parcel: { attempted: 5, successful: 5 }
     unsubscribe: { attempted: 8, successful: 6, failed: 2 }
     reminder: { attempted: 3, successful: 3 }

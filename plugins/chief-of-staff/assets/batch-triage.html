@@ -126,6 +126,7 @@
     .dot-parcel { background: var(--accent-purple); }
     .dot-reply { background: var(--accent-green); }
     .dot-keep { background: var(--text-muted); }
+    .dot-flag { background: var(--accent-orange); }
     .dot-rule { background: var(--accent-teal); }
     .dot-custom { background: var(--accent-pink); }
     .dot-route { background: var(--accent-amber); }
@@ -151,6 +152,7 @@
     .segment-reply { background: var(--accent-green); }
     .segment-custom { background: var(--accent-pink); }
     .segment-route { background: var(--accent-amber); }
+    .segment-flag { background: var(--accent-orange); }
     .segment-keep { background: var(--text-muted); }
 
     /* Buttons */
@@ -283,6 +285,7 @@
     .email-card.action-reply { border-left: 3px solid var(--accent-green); }
     .email-card.action-custom { border-left: 3px solid var(--accent-pink); }
     .email-card.action-route { border-left: 3px solid var(--accent-amber); }
+    .email-card.action-flag { border-left: 3px solid var(--accent-orange); }
     .email-card.action-keep { border-left: 3px solid var(--text-muted); }
 
     .email-top {
@@ -1047,6 +1050,7 @@
       actionable: [
         { value: 'route', label: 'Process', icon: '\u26a1', recommended: true },
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
+        { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
         { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
@@ -1055,6 +1059,7 @@
         { value: 'reminder', label: 'Reminder', icon: '\u23f0', recommended: true },
         { value: 'calendar', label: 'Calendar', icon: '\ud83d\udcc5' },
         { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
+        { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
@@ -1064,6 +1069,7 @@
         { value: 'addToParcel', label: 'Add to Parcel', icon: '\ud83d\udce6', recommended: true },
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
         { value: 'reminder', label: 'Reminder', icon: '\u23f0' },
+        { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
         { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
@@ -1072,6 +1078,7 @@
         { value: 'unsubscribe', label: 'Unsubscribe + Delete', icon: '\ud83d\udeab', recommended: true },
         { value: 'delete', label: 'Delete Only', icon: '\ud83d\uddd1\ufe0f' },
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
+        { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
         { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
       ],
@@ -1080,6 +1087,7 @@
         { value: 'reminder', label: 'Reminder', icon: '\u23f0' },
         { value: 'calendar', label: 'Calendar', icon: '\ud83d\udcc5' },
         { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
+        { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
         { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
@@ -1088,6 +1096,7 @@
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5', recommended: true },
         { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
+        { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
         { value: 'reminder', label: 'Reminder', icon: '\u23f0' },
         { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
@@ -1095,12 +1104,14 @@
       deleteReady: [
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f', recommended: true },
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
+        { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
         { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
       ],
       fyi: [
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5', recommended: true },
         { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
+        { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
         { value: 'reminder', label: 'Reminder', icon: '\u23f0' },
@@ -1477,7 +1488,7 @@
     }
 
     function updateStats() {
-      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, parcel: 0, unsubscribe: 0, calendar: 0, reply: 0, custom: 0, route: 0, rules: 0 };
+      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, flag: 0, parcel: 0, unsubscribe: 0, calendar: 0, reply: 0, custom: 0, route: 0, rules: 0 };
 
       Object.values(decisions).forEach(d => {
         stats.total++;
@@ -1485,6 +1496,7 @@
         else if (d.action === 'delete') stats.delete++;
         else if (d.action === 'reminder') stats.reminder++;
         else if (d.action === 'keep') stats.keep++;
+        else if (d.action === 'flag') stats.flag++;
         else if (d.action === 'addToParcel') stats.parcel++;
         else if (d.action === 'unsubscribe') stats.unsubscribe++;
         else if (d.action === 'calendar') stats.calendar++;
@@ -1498,6 +1510,7 @@
       if (stats.route > 0) parts.push(`${stats.route} process`);
       if (stats.archive > 0) parts.push(`${stats.archive} archive`);
       if (stats.delete > 0) parts.push(`${stats.delete} delete`);
+      if (stats.flag > 0) parts.push(`${stats.flag} flag`);
       if (stats.unsubscribe > 0) parts.push(`${stats.unsubscribe} unsub`);
       if (stats.parcel > 0) parts.push(`${stats.parcel} parcel`);
       if (stats.reminder > 0) parts.push(`${stats.reminder} reminder`);
@@ -1508,7 +1521,7 @@
     }
 
     function updateProgressBar() {
-      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, parcel: 0, unsubscribe: 0, reply: 0, custom: 0, route: 0 };
+      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, flag: 0, parcel: 0, unsubscribe: 0, reply: 0, custom: 0, route: 0 };
 
       Object.values(decisions).forEach(d => {
         stats.total++;
@@ -1516,6 +1529,7 @@
         else if (d.action === 'delete') stats.delete++;
         else if (d.action === 'reminder' || d.action === 'calendar') stats.reminder++;
         else if (d.action === 'keep') stats.keep++;
+        else if (d.action === 'flag') stats.flag++;
         else if (d.action === 'addToParcel') stats.parcel++;
         else if (d.action === 'unsubscribe') stats.unsubscribe++;
         else if (d.action === 'reply') stats.reply++;
@@ -1537,6 +1551,7 @@
         { class: 'segment-route', width: (stats.route / stats.total) * 100 },
         { class: 'segment-archive', width: (stats.archive / stats.total) * 100 },
         { class: 'segment-delete', width: (stats.delete / stats.total) * 100 },
+        { class: 'segment-flag', width: (stats.flag / stats.total) * 100 },
         { class: 'segment-unsubscribe', width: (stats.unsubscribe / stats.total) * 100 },
         { class: 'segment-parcel', width: (stats.parcel / stats.total) * 100 },
         { class: 'segment-reminder', width: (stats.reminder / stats.total) * 100 },

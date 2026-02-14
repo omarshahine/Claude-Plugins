@@ -1,6 +1,6 @@
 {
   "name": "chief-of-staff",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "description": "The orchestrator plugin for personal productivity - inbox triage, package tracking, reminder creation, newsletter management, and more",
   "author": {
     "name": "Omar Shahine"

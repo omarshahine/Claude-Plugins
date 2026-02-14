@@ -137,32 +137,87 @@ Classify each email into ONE category (first match wins):
 | deleteReady | Promotional, spam-like, expired offers, marketing | delete |
 | fyi | Everything else | archive |
 
-### Action Route Matching (Priority 0)
+### Action Route Matching (Priority 0) — MANDATORY FIRST PASS
 
-**Before all other classification**, check each email against `email-action-routes.yaml`:
+**YOU MUST run route matching BEFORE any other classification.** This is the highest priority classifier.
 
-1. Check `routes.sender_email` — match `from.email` exactly (case-insensitive)
-2. Check `routes.sender_domain` — match domain from `from.email`
-3. Check `routes.subject_pattern` — regex match on subject line
-4. Check `routes.combined` — domain + subject pattern together
+**Algorithm — execute literally for EVERY email:**
 
-For each match:
-- Route must have `enabled: true`
-- Route must have `confidence >= thresholds.suggest_minimum` (default 0.80)
-- If `attachment_required: true`, check that email has attachments
-- If `subject_pattern` is set on a sender_email route, also verify subject matches
+```
+ROUTES = email-action-routes.yaml (loaded in Step 0)
+THRESHOLD = ROUTES.thresholds.suggest_minimum (default 0.80)
 
-**First matching route wins.** If a route matches, classify the email as `actionable` and attach `routeInfo`:
+FOR EACH email in emails:
+  sender_email = email.from.email (lowercase)
+  sender_domain = sender_email.split("@")[1]
+
+  matched_route = null
+
+  # Pass 1: Exact sender email match (highest priority)
+  FOR EACH rule in ROUTES.routes.sender_email:
+    IF rule.enabled == false: SKIP
+    IF rule.confidence < THRESHOLD: SKIP
+    IF lowercase(rule.email) == sender_email:
+      # Subject pattern is an ADDITIONAL filter (if present)
+      IF rule.subject_pattern exists:
+        IF email.subject does NOT match rule.subject_pattern: SKIP
+      matched_route = rule
+      BREAK
+
+  # Pass 2: Sender domain match
+  IF matched_route is null:
+    FOR EACH rule in ROUTES.routes.sender_domain:
+      IF rule.enabled == false: SKIP
+      IF rule.confidence < THRESHOLD: SKIP
+      IF rule.domain == sender_domain:
+        matched_route = rule
+        BREAK
+
+  # Pass 3: Subject pattern match
+  IF matched_route is null:
+    FOR EACH rule in ROUTES.routes.subject_pattern:
+      IF rule.enabled == false: SKIP
+      IF rule.confidence < THRESHOLD: SKIP
+      IF email.subject matches rule.pattern:
+        matched_route = rule
+        BREAK
+
+  # Pass 4: Combined (domain + subject) match
+  IF matched_route is null:
+    FOR EACH rule in ROUTES.routes.combined:
+      IF rule.enabled == false: SKIP
+      IF rule.confidence < THRESHOLD: SKIP
+      IF rule.domain == sender_domain AND email.subject matches rule.pattern:
+        matched_route = rule
+        BREAK
+
+  IF matched_route is not null:
+    → Classify email as "actionable"
+    → Attach routeInfo from matched_route.route
+    → DONE with this email (skip normal classification)
+  ELSE:
+    → Continue to normal classification below
+```
+
+**IMPORTANT notes on route matching:**
+
+- **Case-insensitive**: Always lowercase both the email's `from.email` and the route's `email` field before comparing
+- **`attachment_required` is informational only** — do NOT skip a route match because you can't verify attachments at listing time. The processor will verify attachments before executing. Include `attachment_required: true` in routeInfo so the processor knows to check.
+- **`subject_pattern` on sender_email routes** is an additional filter: the sender must match AND the subject must match
+- **`skill` vs `agent`**: Some routes may have `skill` instead of `agent` — include whichever field the route defines in routeInfo
+
+**routeInfo structure** (copy from matched_route.route, plus attachment_required):
 
 ```javascript
 routeInfo: {
-  plugin: "my-plugin",
-  agent: "invoice-processor",         // must be an agent (invoked via Task tool)
-  label: "Process Vendor Invoice",
-  description: "Extract invoice data and generate accounting entries",
+  plugin: "chief-of-staff-private",
+  agent: "local-foreigner-invoice",   // or skill: "phamatech-download"
+  label: "Process LF Invoice",
+  description: "Extract invoice, summarize by trip, generate YNAB split",
   pass_attachments: true,
+  attachment_required: true,          // from the route rule, not route.route
   post_action: "archive",
-  post_action_folder: "Invoices",
+  post_action_folder: "Local Foreigner",
   post_action_folder_id: "..."        // looked up from mailbox list if available
 }
 ```
