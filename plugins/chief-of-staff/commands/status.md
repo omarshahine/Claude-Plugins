@@ -73,7 +73,7 @@ This command performs a quick scan without using a sub-agent:
 2. Load email tools with ToolSearch
 3. Call `list_mailboxes` to get Inbox ID
 4. Call `advanced_search` for recent unread emails
-5. Classify emails using patterns from templates/ (use Glob to find in plugin cache)
+5. Classify emails using patterns from assets/ (use Glob to find in plugin cache)
 6. Load `~/.claude/data/chief-of-staff/interview-state.yaml` for last session
 7. Optionally call Parcel API for active deliveries
 8. Optionally call Apple PIM for upcoming reminders

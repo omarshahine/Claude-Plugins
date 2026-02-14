@@ -11,6 +11,7 @@ batch-state.yaml
 sync-state.yaml
 newsletter-lists.yaml
 newsletter-lists.local.yaml
+email-action-routes.yaml
 shipping-patterns.json
 
 # Keep example templates
