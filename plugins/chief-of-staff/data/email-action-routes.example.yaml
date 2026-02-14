@@ -26,10 +26,10 @@ routes:
     #     agent: "invoice-processor"        # OR skill: "skill-name"
     #     label: "Process Vendor Invoice"   # Human-readable name shown in triage
     #     description: "Extract invoice data and generate accounting entries"
-    #     pass_attachments: true            # Fetch attachment metadata before invoking
-    #     post_action: "archive"            # What to do after: archive, delete, keep, none
-    #     post_action_folder: "Invoices"    # Folder name (for archive post_action)
-    #     post_action_folder_id: null       # Folder ID (optional, looked up if missing)
+    #     passAttachments: true             # Fetch attachment metadata before invoking
+    #     postAction: "archive"             # What to do after: archive, delete, keep, none
+    #     postActionFolder: "Invoices"      # Folder name (for archive postAction)
+    #     postActionFolderId: null          # Folder ID (optional, looked up if missing)
     #   confidence: 0.95
     #   match_count: 0
     #   source: "manual"                    # manual, learned, migrated
@@ -45,8 +45,8 @@ routes:
     #     skill: "report-downloader"
     #     label: "Download Reports"
     #     description: "Download verification PDF documents"
-    #     pass_attachments: false
-    #     post_action: "archive"
+    #     passAttachments: false
+    #     postAction: "archive"
     #   confidence: 0.95
     #   match_count: 0
     #   source: "manual"
@@ -61,8 +61,8 @@ routes:
     #     plugin: "my-plugin"
     #     agent: "invoice-downloader"
     #     label: "Download Service Invoices"
-    #     pass_attachments: false
-    #     post_action: "none"
+    #     passAttachments: false
+    #     postAction: "none"
     #   confidence: 0.90
     #   match_count: 0
     #   source: "manual"
@@ -77,9 +77,9 @@ routes:
     #     plugin: "my-plugin"
     #     agent: "report-processor"
     #     label: "Process Monthly Report"
-    #     pass_attachments: true
-    #     post_action: "archive"
-    #     post_action_folder: "Reports"
+    #     passAttachments: true
+    #     postAction: "archive"
+    #     postActionFolder: "Reports"
     #   confidence: 0.85
     #   match_count: 0
     #   source: "learned"

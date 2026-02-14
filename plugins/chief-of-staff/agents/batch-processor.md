@@ -124,7 +124,49 @@ Organize decisions into groups for efficient processing:
 }
 ```
 
-### 5. Execute Inline Actions
+### 5. Execute Route Actions (BEFORE inline actions)
+
+**CRITICAL**: Route actions must execute BEFORE archive/delete operations since the email must still be accessible for the target agent to read attachments or content.
+
+```
+For each route decision:
+1. Read routeInfo from the decision object
+2. Build subagent_type from routeInfo:
+   - If routeInfo.agent: subagent_type = "{routeInfo.plugin}:{routeInfo.agent}"
+   - If routeInfo.skill: subagent_type = "{routeInfo.plugin}:{routeInfo.skill}"
+3. Build prompt with email context:
+   - emailId, subject, sender name/email
+   - If routeInfo.passAttachments is true:
+     → First call EMAIL_TOOLS.get_email_attachments(emailId)
+     → Include attachment list in the prompt
+4. Invoke via Task tool:
+   Task:
+     subagent_type: "{plugin}:{agent}"
+     prompt: |
+       Process email from route action.
+       Email ID: {emailId}
+       Subject: {subject}
+       From: {senderName} <{senderEmail}>
+       [Attachments: {attachmentList} — if passAttachments]
+
+       Route: {routeInfo.label}
+       Description: {routeInfo.description}
+5. After successful processing, execute post-action:
+   - If routeInfo.postAction == "archive":
+     → Look up folder ID for routeInfo.postActionFolder (or use postActionFolderId)
+     → Call EMAIL_TOOLS.move_email(emailId, folderId)
+   - If routeInfo.postAction == "delete":
+     → Call EMAIL_TOOLS.delete_email(emailId)
+   - If routeInfo.postAction == "keep" or "none":
+     → No action on the email
+6. Track results for summary
+```
+
+**Execution order**: Route each email individually (not in parallel with other routes) since different routes may target different agents that shouldn't compete for resources. However, you CAN run routes in parallel with each other if they target different agents.
+
+**Error handling**: If a route agent fails, log the error but continue with other routes. Do NOT execute the post-action if the agent failed — the email should remain in the inbox for manual handling.
+
+### 5b. Execute Inline Actions
 
 #### Archive
 ```
@@ -256,48 +298,6 @@ For each custom decision:
 - "Create a reminder for Friday to follow up" → Create reminder via Apple PIM
 - "Draft a reply declining the invitation" → Create draft reply
 - "Summarize and move to Travel folder" → Generate summary in report, move to Travel
-
-### 5b. Execute Route Actions (BEFORE other delegations)
-
-**CRITICAL**: Route actions must execute BEFORE archive/delete operations since the email must still be accessible for the target agent to read attachments or content.
-
-```
-For each route decision:
-1. Read routeInfo from the decision object
-2. Build subagent_type from routeInfo:
-   - If routeInfo.agent: subagent_type = "{routeInfo.plugin}:{routeInfo.agent}"
-   - If routeInfo.skill: subagent_type = "{routeInfo.plugin}:{routeInfo.skill}"
-3. Build prompt with email context:
-   - emailId, subject, sender name/email
-   - If routeInfo.passAttachments is true:
-     → First call EMAIL_TOOLS.get_email_attachments(emailId)
-     → Include attachment list in the prompt
-4. Invoke via Task tool:
-   Task:
-     subagent_type: "{plugin}:{agent}"
-     prompt: |
-       Process email from route action.
-       Email ID: {emailId}
-       Subject: {subject}
-       From: {senderName} <{senderEmail}>
-       [Attachments: {attachmentList} — if passAttachments]
-
-       Route: {routeInfo.label}
-       Description: {routeInfo.description}
-5. After successful processing, execute post-action:
-   - If routeInfo.postAction == "archive":
-     → Look up folder ID for routeInfo.postActionFolder (or use postActionFolderId)
-     → Call EMAIL_TOOLS.move_email(emailId, folderId)
-   - If routeInfo.postAction == "delete":
-     → Call EMAIL_TOOLS.delete_email(emailId)
-   - If routeInfo.postAction == "keep" or "none":
-     → No action on the email
-6. Track results for summary
-```
-
-**Execution order**: Route each email individually (not in parallel with other routes) since different routes may target different agents that shouldn't compete for resources. However, you CAN run routes in parallel with each other if they target different agents.
-
-**Error handling**: If a route agent fails, log the error but continue with other routes. Do NOT execute the post-action if the agent failed — the email should remain in the inbox for manual handling.
 
 ### 6. Delegate Batch Actions (PARALLEL)
 
