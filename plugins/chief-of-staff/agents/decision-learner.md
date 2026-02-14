@@ -33,6 +33,7 @@ All data files are in `~/.claude/data/chief-of-staff/`:
 - `decision-history.yaml` - Decision history and statistics (read/write)
 - `filing-rules.yaml` - Filing rules with confidence scores (read/write)
 - `delete-patterns.yaml` - Delete patterns (read/write)
+- `email-action-routes.yaml` - Action routes with confidence scores (read/write)
 - `interview-state.yaml` - Current/last session state (read)
 
 ## Workflow
@@ -43,7 +44,8 @@ All data files are in `~/.claude/data/chief-of-staff/`:
 1. Read ~/.claude/data/chief-of-staff/decision-history.yaml
 2. Read ~/.claude/data/chief-of-staff/filing-rules.yaml
 3. Read ~/.claude/data/chief-of-staff/delete-patterns.yaml
-4. Read ~/.claude/data/chief-of-staff/interview-state.yaml (for recent session)
+4. Read ~/.claude/data/chief-of-staff/email-action-routes.yaml (if exists)
+5. Read ~/.claude/data/chief-of-staff/interview-state.yaml (for recent session)
 ```
 
 ### 2. Analyze Decisions
@@ -93,7 +95,44 @@ If rejected:
   pattern.confidence = max(0.10, pattern.confidence - 0.15)
 ```
 
-#### D. Detect New Patterns
+#### D. Update Action Route Confidence
+
+```
+For route decisions where we had a matching route in email-action-routes.yaml:
+
+If accepted (user chose "route"/"process" as suggested):
+  route.confidence = min(0.99, route.confidence + 0.05)
+  route.match_count += 1
+
+If rejected (user chose a different action instead of the suggested route):
+  route.confidence = max(0.10, route.confidence - 0.15)
+  Log: "Lowered confidence for route {route.label}"
+
+If confidence < 0.50 and rejections >= 3:
+  Flag route for deprecation review
+```
+
+#### E. Detect Route-Worthy Patterns
+
+```
+For decisions with action == "custom" where steering text suggests processing:
+
+Group by sender domain + similar steering text:
+
+If same domain triggers "custom" action 3+ times with similar steering:
+  Create potential_route:
+    domain: [domain]
+    steering_summary: [common theme in steering text]
+    observation_count: [count]
+    status: "flagged_for_user"
+
+  Report to user: "Emails from [domain] triggered custom processing 3 times.
+    Consider creating an action route for this."
+
+  Do NOT auto-create routes — only flag for user.
+```
+
+#### F. Detect New Filing Patterns
 
 ```
 Group decisions by sender domain:
@@ -208,7 +247,8 @@ Use AskUserQuestion:
 After all confirmations:
 1. Write updated `filing-rules.yaml`
 2. Write updated `delete-patterns.yaml`
-3. Write updated `decision-history.yaml` with cleared pending patterns
+3. Write updated `email-action-routes.yaml` (if route confidence changed)
+4. Write updated `decision-history.yaml` with cleared pending patterns
 
 ## Confidence Adjustment Rules
 
@@ -218,7 +258,10 @@ After all confirmations:
 | User rejects archive suggestion | -15% (min 10%) |
 | User accepts delete suggestion | +5% (max 99%) |
 | User rejects delete suggestion | -15% (min 10%) |
-| New pattern (3+ observations) | Initial 70% |
+| User accepts route suggestion | +5% (max 99%) |
+| User rejects route suggestion | -15% (min 10%) |
+| New filing pattern (3+ observations) | Initial 70% |
+| Route-worthy pattern (3+ custom) | Flag for user (don't auto-create) |
 | Low acceptance (<50%, 10+ samples) | Flag for review |
 | 3+ rejections | Consider deprecation |
 
@@ -265,4 +308,5 @@ prompt: "Show learned patterns and their status."
 Updates these files (with confirmation):
 - `filing-rules.yaml` - Confidence adjustments, new rules
 - `delete-patterns.yaml` - Confidence adjustments, new patterns
+- `email-action-routes.yaml` - Route confidence adjustments
 - `decision-history.yaml` - Statistics, pattern status
