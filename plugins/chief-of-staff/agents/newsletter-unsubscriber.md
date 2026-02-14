@@ -42,8 +42,8 @@ Data files are in `~/.claude/data/chief-of-staff/`:
 - `settings.yaml` - Provider configuration
 - `newsletter-lists.yaml` - Allowlist and previously unsubscribed senders
 
-Templates are in the plugin directory (use Glob to find `~/.claude/plugins/cache/**/chief-of-staff/**/templates/`):
-- `templates/newsletter-patterns.json` - Newsletter detection patterns
+Assets are in the plugin directory (use Glob to find `~/.claude/plugins/cache/**/chief-of-staff/**/assets/`):
+- `assets/newsletter-patterns.json` - Newsletter detection patterns
 
 ## TWO-MODE OPERATION
 
@@ -115,7 +115,7 @@ ALLOWLIST: domain2.com
 Read these files:
 1. `~/.claude/data/chief-of-staff/settings.yaml` - Get active provider and tool mappings
 2. `~/.claude/data/chief-of-staff/newsletter-lists.yaml` - Allowlist + previously unsubscribed
-3. Use Glob to find `~/.claude/plugins/cache/**/chief-of-staff/**/templates/newsletter-patterns.json` - Newsletter detection patterns
+3. Use Glob to find `~/.claude/plugins/cache/**/chief-of-staff/**/assets/newsletter-patterns.json` - Newsletter detection patterns
 
 Use the tool names from `providers.email.mappings.[active_provider]` for all email operations.
 

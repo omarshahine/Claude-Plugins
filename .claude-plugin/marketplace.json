@@ -5,16 +5,16 @@
   },
   "metadata": {
     "description": "Personal plugin marketplace for Claude Code",
-    "version": "1.9.1",
+    "version": "1.10.2",
     "pluginRoot": "./plugins"
   },
   "plugins": [
     {
       "name": "chief-of-staff",
       "source": "./plugins/chief-of-staff",
-      "description": "The orchestrator plugin for personal productivity - inbox triage, package tracking, reminder creation, newsletter management, and more",
-      "version": "1.7.1",
-      "keywords": ["email", "inbox", "triage", "packages", "parcel", "reminders", "newsletters", "unsubscribe", "productivity", "orchestrator", "filing", "patterns", "learning", "imessage", "flight-tracking"],
+      "description": "The orchestrator plugin for personal productivity - inbox triage, package tracking, reminder creation, newsletter management, email action routing, and more",
+      "version": "1.8.2",
+      "keywords": ["email", "inbox", "triage", "packages", "parcel", "reminders", "newsletters", "unsubscribe", "productivity", "orchestrator", "filing", "patterns", "learning", "imessage", "flight-tracking", "routing", "action-routes"],
       "category": "productivity"
     },
     {
