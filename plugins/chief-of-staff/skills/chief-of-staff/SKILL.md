@@ -1,4 +1,5 @@
 ---
+name: chief-of-staff
 description: |
   Chief-of-Staff is the orchestrator plugin for personal productivity. Use this knowledge when:
   - User asks about inbox management, email triage, or filing
@@ -17,53 +18,7 @@ Chief-of-Staff is an uber-orchestrator plugin that consolidates multiple email a
 
 ## Persona System
 
-Chief-of-Staff supports a configurable **persona** that gives the assistant a custom identity and dynamic summon command.
-
-### Configuration
-
-Persona settings are stored in `data/settings.yaml`:
-
-```yaml
-persona:
-  name: Friday            # Assistant's name
-  user_name: Jane         # User's name (optional)
-  greeting_style: friendly # professional, friendly, casual
-```
-
-### Dynamic Summon Command
-
-When configured, a personalized command is created at `~/.claude/commands/<name>.md`:
-- Persona "Friday" → `/friday`
-- Persona "Max" → `/max`
-- Persona "Jarvis" → `/jarvis`
-
-### Summon Command Features
-
-The summon command (`/friday`, etc.) provides:
-
-1. **Quick Assessment**: Inbox status, active deliveries, due reminders
-2. **Contextual Suggestions**: Recommends actions based on current state
-3. **Sub-command Routing**: `/friday triage`, `/friday parcel`, etc.
-
-### Greeting Styles
-
-| Style | Example |
-|-------|---------|
-| professional | "Good morning. Here's your current status." |
-| friendly | "Good morning! Let's see what we've got today." |
-| casual | "Hey! Here's what's happening." |
-
-### Sub-commands
-
-| Command | Routes To |
-|---------|-----------|
-| `/friday` | Quick assessment + suggestions |
-| `/friday triage` | `/chief-of-staff:triage` |
-| `/friday parcel` | `/chief-of-staff:parcel` |
-| `/friday status` | `/chief-of-staff:status` |
-| `/friday daily` | `/chief-of-staff:daily` |
-| `/friday reminders` | `/chief-of-staff:reminders` |
-| `/friday imessage` | `/chief-of-staff:imessage` |
+Configurable persona with custom identity and dynamic summon command (e.g., `/friday`, `/jarvis`). Set up via `/chief-of-staff:setup`. See [references/persona-system.md](references/persona-system.md) for configuration details, greeting styles, and sub-commands.
 
 ## Architecture
 
@@ -85,6 +40,72 @@ Chief-of-Staff contains these sub-agents:
 | `batch-processor` | Execute batch triage decisions |
 | `imessage-assistant` | Read and send iMessages via CLI |
 
+## Email Action Routes
+
+Action routes extend the triage system to route emails to specialized agents for active processing. While filing rules route emails to folders, action routes route emails to agents.
+
+### How It Works
+
+```
+Email arrives in inbox
+    ↓
+Triage (batch or interactive)
+    ↓
+Route matcher checks email-action-routes.yaml
+    ↓
+Match found? → Suggest "Process: [label]" as action
+    ↓ (user confirms)
+Invoke agent via Task tool
+    ↓
+Post-action (archive/delete/keep)
+```
+
+### Route Matching
+
+Routes are checked in priority order (same as filing rules):
+1. `sender_email` — Exact sender email match (highest priority)
+2. `sender_domain` — Domain-level match
+3. `subject_pattern` — Subject line regex match
+4. `combined` — Domain + subject combination
+
+Each route specifies:
+- **Match criteria**: email/domain/pattern + optional refinements (subject_pattern, attachment_required)
+- **Target**: `route.plugin` + `route.agent` (resolves to Task subagent_type)
+- **Label**: Human-readable name shown in triage ("Process LF Invoice")
+- **Post-action**: What to do with email after processing (archive/delete/keep/none)
+
+### Integration Points
+
+- **Batch HTML Generator**: Emails matching routes appear in the "Actionable" category (priority 0, before all other categories)
+- **Batch Processor**: Route decisions invoke the target agent via Task tool, then execute the post-action
+- **Inbox Interviewer**: Route matches surface as "Process: [label]" in the interactive interview options
+- **Decision Learner**: Route decisions update confidence scores and detect new route-worthy patterns
+
+### Route Configuration
+
+Routes are configured in `email-action-routes.yaml` (mirrors `filing-rules.yaml` structure):
+
+```yaml
+routes:
+  sender_email:
+    - email: "accounting@vendor.example.com"
+      attachment_required: true
+      route:
+        plugin: "my-plugin"
+        agent: "invoice-processor"
+        label: "Process Vendor Invoice"
+        pass_attachments: true
+        post_action: "archive"
+        post_action_folder: "Invoices"
+      confidence: 0.95
+      source: "manual"
+      enabled: true
+```
+
+### Managing Routes
+
+Use `/chief-of-staff:routes` to list, add, remove, and toggle routes.
+
 ## Commands
 
 | Command | Description |
@@ -102,6 +123,7 @@ Chief-of-Staff contains these sub-agents:
 | `/chief-of-staff:optimize` | Suggest folder reorganization |
 | `/chief-of-staff:batch` | Visual HTML batch interface |
 | `/chief-of-staff:rules` | View/manage filing rules |
+| `/chief-of-staff:routes` | View/manage email action routes |
 | `/chief-of-staff:imessage` | Read, search, and send iMessages |
 
 ## Data Files
@@ -118,10 +140,11 @@ All data is stored in the plugin's `data/` directory:
 | `interview-state.yaml` | Resume state for triage sessions |
 | `batch-state.yaml` | HTML batch triage session state |
 | `newsletter-lists.yaml` | Allowlist and unsubscribed senders |
+| `email-action-routes.yaml` | Action routes mapping emails to skills/agents |
 
 ## Pattern Files
 
-Pattern files for email classification in `templates/`:
+Pattern files for email classification in `assets/`:
 
 | File | Purpose |
 |------|---------|
@@ -153,63 +176,7 @@ Chief-of-Staff integrates with:
 
 ## Email Provider Setup (Required)
 
-**Chief-of-Staff does NOT bundle an email MCP server.** Users must configure their email provider separately.
-
-### Why Separate Configuration?
-
-1. **Privacy**: Your email MCP URL is personal - it shouldn't be in a public plugin
-2. **Flexibility**: Works with any email provider (Fastmail, Gmail, Outlook)
-3. **Cowork compatibility**: Environment variables don't work in Cowork
-
-### Supported Providers
-
-| Provider | Recommended | Notes |
-|----------|-------------|-------|
-| Fastmail | ✓ Yes | Full MCP API support, advanced search |
-| Gmail | Supported | Requires Gmail MCP server |
-| Outlook | Supported | Requires Microsoft Graph MCP |
-
-### Setup Instructions
-
-#### Option A: Cowork (Web Interface)
-
-1. Open Cowork settings
-2. Add a **Custom Connector**:
-   - **Name**: `fastmail` (or `gmail`, `outlook`)
-   - **URL**: Your email MCP server URL
-3. Restart your session
-
-#### Option B: Claude Code CLI
-
-```bash
-# Fastmail
-claude mcp add --transport http fastmail <your-fastmail-mcp-url>
-
-# Gmail
-claude mcp add --transport http gmail <your-gmail-mcp-url>
-
-# Outlook
-claude mcp add --transport http outlook <your-outlook-mcp-url>
-```
-
-### Verification
-
-After setup, run `/chief-of-staff:setup` to verify the connection:
-- It will discover your email provider automatically
-- Test the connection
-- Configure folder mappings
-
-### Troubleshooting
-
-**"No email provider configured" error:**
-1. Check that your email MCP is added (Cowork settings or `claude mcp list`)
-2. Verify the URL is correct
-3. Restart Claude Code/Cowork session
-
-**Connection failures:**
-1. Check `/mcp` to see server status
-2. Re-authenticate if needed (OAuth providers)
-3. Verify your MCP server is running
+Chief-of-Staff does NOT bundle an email MCP server. Run `/chief-of-staff:setup` to configure. Supports Fastmail, Gmail, and Outlook. See [references/email-provider-setup.md](references/email-provider-setup.md) for setup instructions, Cowork configuration, and troubleshooting.
 
 ## Private Extensions
 

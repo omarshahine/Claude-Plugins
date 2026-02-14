@@ -103,14 +103,15 @@ All data files are in `~/.claude/data/chief-of-staff/`:
 - `settings.yaml` - Provider configuration
 - `filing-rules.yaml` - Filing patterns with confidence
 - `delete-patterns.yaml` - Delete suggestions
+- `email-action-routes.yaml` - Action routes mapping emails to skills/agents
 - `interview-state.yaml` - Session state (decisions, batches)
 - `decision-history.yaml` - Learning history
 
 ## Integration Files
 
-Also load from templates directory:
-- `templates/shipping-patterns.json` - Package detection
-- `templates/newsletter-patterns.json` - Newsletter detection
+Also load from plugin directory:
+- `assets/shipping-patterns.json` - Package detection
+- `assets/newsletter-patterns.json` - Newsletter detection
 
 ## Three-Phase Workflow
 
@@ -152,13 +153,14 @@ For each decision:
 3. **Load tools**: ToolSearch with +[provider] (e.g., +fastmail)
 4. **Load data files**: filing-rules, delete-patterns, user-preferences
 5. **Load patterns**: shipping-patterns.json, newsletter-patterns.json
-6. **Load sync state**: Read `sync-state.yaml` (if exists) for incremental fetch
-7. **Check resume**: If interview-state.yaml has active session, offer to continue
+6. **Load action routes**: Read `email-action-routes.yaml` (if exists) for route matching
+7. **Load sync state**: Read `sync-state.yaml` (if exists) for incremental fetch
+8. **Check resume**: If interview-state.yaml has active session, offer to continue
 
 ### Fetch and Group Emails
 
 1. **Get mailboxes**: Find Inbox ID with list_mailboxes
-2. **Fetch emails using incremental sync** (see `templates/email-incremental-fetch.md`):
+2. **Fetch emails using incremental sync** (see `references/email-incremental-fetch.md`):
    - Check if `EMAIL_TOOLS.get_inbox_updates` exists (not null)
    - Read `sync-state.yaml` for previous `query_state` and `seen_email_ids`
    - If `--reset`: Clear sync state completely (set `query_state`, `last_sync`, `mailbox_id` to null, `seen_email_ids` to `[]`)
@@ -231,6 +233,14 @@ From the response, extract:
 
 Before presenting options, classify each email:
 
+0. **Action Route Match** (HIGHEST PRIORITY — check first)
+   - Check email-action-routes.yaml (sender_email > sender_domain > subject_pattern > combined)
+   - Route must be `enabled: true` and `confidence >= thresholds.suggest_minimum` (default 0.80)
+   - If `attachment_required: true`, verify email has attachments
+   - If `subject_pattern` refinement exists, verify subject matches
+   - Suggest: "Process: [route.label] (Recommended)"
+   - If route matches, this takes priority over ALL other suggestions below
+
 1. **Package Detection** (if parcel integration enabled)
    - Match shipping-patterns.json
    - Suggest: "Add to Parcel (Recommended)"
@@ -266,6 +276,7 @@ AskUserQuestion supports max 4 options. Choose based on context:
 **Contextual swaps** (replace one default option):
 | Context | Swap | Replaces |
 |---------|------|----------|
+| Route match | "Process: [Label]" (recommended) | Keep |
 | Package detected | "Add to Parcel" | Keep |
 | Newsletter detected | "Unsubscribe" | Keep |
 | Action item detected | "Reminder" (recommended) | Move to first position |
@@ -420,6 +431,26 @@ After each question sequence, store in `collected_decisions`:
     accepted_suggestion: true
     folder: "Financial"
     folderId: "folder-789"
+
+# For route decisions, also include routeInfo.
+# GUARD: Only store action: "route" if a route actually matched this email.
+# If user says "process" but no route matched, treat as "keep" instead.
+- emailId: "email-456"
+  # ...from, subject fields...
+  suggestion:
+    action: "route"
+    confidence: 0.95
+    reason: "Route match: accounting@vendor.example.com -> Process Vendor Invoice"
+  decision:
+    action: "route"
+    accepted_suggestion: true
+    routeInfo:
+      plugin: "my-plugin"
+      agent: "invoice-processor"
+      label: "Process Vendor Invoice"
+      pass_attachments: true
+      post_action: "archive"
+      post_action_folder: "Invoices"
 ```
 
 ### Save State After Each Decision
@@ -448,6 +479,7 @@ All 12 decisions collected!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Summary:
+- Process: 1 email (route actions)
 - Archive: 6 emails
 - Delete: 3 emails
 - Reminder: 2 emails
@@ -478,6 +510,7 @@ groups = {
   delete: ["email-4", "email-5"],
   keep: ["email-6"],
   flag: ["email-7"],
+  route: [...],       // Route to specialized skill/agent
   parcel: [...],      // Sub-agent batch
   unsubscribe: [...], // Sub-agent batch
   reminder: [...],    // Sub-agent batch
@@ -490,7 +523,30 @@ groups = {
 
 **CRITICAL: Execute in this order to ensure emails are accessible when needed.**
 
-#### Step 1: Unsubscribes FIRST (before any deletes)
+#### Step 0: Routes FIRST (before any moves/deletes)
+```
+If groups.route not empty:
+  For each route decision:
+    1. Read routeInfo from decision (stored during collection)
+       - If routeInfo is missing or empty, skip and log warning
+    2. Build subagent_type:
+       - subagent_type = "{routeInfo.plugin}:{routeInfo.agent}"
+       - (Routes must target agents, not skills.)
+    3. If routeInfo.pass_attachments:
+       → Fetch attachment list via EMAIL_TOOLS.get_email_attachments (if mapped)
+       → Fallback: call EMAIL_TOOLS.get_email and extract attachment metadata from response
+    4. Invoke via Task tool with email context
+    5. After success: execute routeInfo.post_action
+       - "archive" → move to routeInfo.post_action_folder
+       - "delete" → delete email
+       - "keep"/"none" → leave in inbox
+    6. If agent fails: skip post-action, report error
+
+Output: "Processing 1 route action... ✓"
+```
+**WHY FIRST:** Route agents often need to read email content and download attachments. If emails are archived/deleted first, the agent can't access them.
+
+#### Step 1: Unsubscribes (before any deletes)
 ```
 If groups.unsubscribe not empty:
   Use Task tool:
@@ -771,6 +827,7 @@ Accept flexible voice inputs:
 | "reply", "respond" | Reply |
 | "parcel", "package" | Add to Parcel |
 | "unsubscribe" | Unsubscribe |
+| "process", "route" | Process with matched route (only valid if email has routeInfo) |
 | "stop", "done", "finish" | End collection |
 
 Number inputs map to displayed options.

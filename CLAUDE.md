@@ -18,7 +18,8 @@ Agent-Plugins/
 │   │   │   └── chief-of-staff/
 │   │   │       └── SKILL.md   # Core orchestrator knowledge
 │   │   ├── data/              # User data (gitignored) with .example templates
-│   │   └── templates/         # Pattern files (shipping, newsletter, batch HTML)
+│   │   ├── assets/            # Templates, patterns, icons used in output
+│   │   └── references/        # Documentation loaded as needed by agents
 │   ├── travel-agent/          # Flight research and trip tracking
 │   │   ├── .claude-plugin/
 │   │   │   └── plugin.json
@@ -154,6 +155,39 @@ description: |
 Reference documentation, APIs, patterns, etc.
 ```
 
+### Skill Development Best Practices
+
+Follow these conventions when creating or modifying skills:
+
+**Folder structure:**
+```
+skills/<skill-name>/
+├── SKILL.md              # Main skill file (under 5,000 words)
+├── scripts/              # Executable scripts the skill uses
+├── references/           # Verbose docs loaded on demand via Read tool
+└── assets/               # Static files referenced by path only
+```
+
+**SKILL.md frontmatter:**
+```yaml
+---
+name: my-skill            # kebab-case, max 64 chars (recommended)
+description: |
+  WHAT this skill does.
+  Use when:
+  - Trigger condition 1
+  - Trigger condition 2
+  - Explicit phrase: "exact words user might say"
+---
+```
+
+**Key rules:**
+- `name:` — Recommended in skills (unlike commands, where it breaks autocomplete)
+- `description:` — Must include WHAT it does + WHEN to trigger with bulleted list of trigger phrases
+- **Progressive disclosure** — Keep SKILL.md under 5,000 words. Move verbose reference material to `references/` files and link from SKILL.md
+- **References vs assets** — `references/` files are loaded into context via Read tool; `assets/` are referenced by path only (images, templates, JSON patterns)
+- **No README.md** inside skill folders — SKILL.md is the single entry point
+
 ### Command Definition
 
 Commands go in `plugins/<plugin>/commands/<command-name>.md`:
@@ -254,10 +288,14 @@ chief-of-staff/
 │   ├── interview-state.example.yaml
 │   ├── batch-state.example.yaml
 │   └── newsletter-lists.example.yaml
-└── templates/
-    ├── shipping-patterns.json     # Carrier detection, tracking regex
-    ├── newsletter-patterns.json   # RFC headers, bulk sender patterns
-    └── batch-triage.html          # HTML batch interface template
+├── assets/
+│   ├── batch-triage.html          # HTML batch interface template
+│   ├── shipping-patterns.json     # Carrier detection, tracking regex
+│   ├── newsletter-patterns.json   # RFC headers, bulk sender patterns
+│   └── summon-command.md          # Dynamic command generation template
+└── references/
+    ├── email-provider-init.md     # Standard email provider initialization pattern
+    └── email-incremental-fetch.md # JMAP incremental sync documentation
 ```
 
 **Key Concepts:**
@@ -290,7 +328,7 @@ chief-of-staff/
    - Always read `settings.yaml` first to get `EMAIL_PROVIDER` and `EMAIL_TOOLS` mappings
    - Load tools dynamically: `ToolSearch("+{EMAIL_PROVIDER}")`
    - Reference tools as `EMAIL_TOOLS.list_emails`, `EMAIL_TOOLS.bulk_move`, etc.
-   - See `templates/email-provider-init.md` for the standard initialization pattern
+   - See `references/email-provider-init.md` for the standard initialization pattern
    - Exception: agent `allowedTools` frontmatter can't be dynamic — use `tools: "*"` or a broad tool list
 
 **Adding Sub-Agents:**

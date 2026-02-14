@@ -109,3 +109,5 @@ Supported providers: Fastmail, Gmail, Outlook
 | `send_email` | Send new email | `to`, `subject`, `body` |
 | `reply_to_email` | Reply to thread | `emailId`, `body` |
 | `get_thread` | Get conversation thread | `threadId` |
+| `get_email_attachments` | List email attachments (optional) | `emailId` |
+| `download_attachment` | Download attachment content (optional) | `emailId`, `attachmentId` |
