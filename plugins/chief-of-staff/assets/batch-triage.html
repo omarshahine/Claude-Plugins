@@ -22,6 +22,7 @@
       --accent-purple: #a371f7;
       --accent-teal: #39d2c0;
       --accent-pink: #f778ba;
+      --accent-amber: #e3b341;
       --border-color: #30363d;
       --border-subtle: #21262d;
       --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
@@ -127,6 +128,7 @@
     .dot-keep { background: var(--text-muted); }
     .dot-rule { background: var(--accent-teal); }
     .dot-custom { background: var(--accent-pink); }
+    .dot-route { background: var(--accent-amber); }
 
     .progress-bar {
       height: 6px;
@@ -148,6 +150,7 @@
     .segment-unsubscribe { background: var(--accent-orange); }
     .segment-reply { background: var(--accent-green); }
     .segment-custom { background: var(--accent-pink); }
+    .segment-route { background: var(--accent-amber); }
     .segment-keep { background: var(--text-muted); }
 
     /* Buttons */
@@ -279,6 +282,7 @@
     .email-card.action-unsubscribe { border-left: 3px solid var(--accent-orange); }
     .email-card.action-reply { border-left: 3px solid var(--accent-green); }
     .email-card.action-custom { border-left: 3px solid var(--accent-pink); }
+    .email-card.action-route { border-left: 3px solid var(--accent-amber); }
     .email-card.action-keep { border-left: 3px solid var(--text-muted); }
 
     .email-top {
@@ -371,6 +375,28 @@
     .rule-suggestion .rule-domain {
       font-weight: 600;
       color: var(--accent-teal);
+    }
+
+    .route-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.75rem;
+      color: var(--accent-amber);
+      margin-bottom: 0.75rem;
+      padding: 0.375rem 0.75rem;
+      background: rgba(227, 179, 65, 0.1);
+      border: 1px solid rgba(227, 179, 65, 0.25);
+      border-radius: var(--radius-sm);
+    }
+
+    .route-badge .route-label {
+      font-weight: 600;
+    }
+
+    .route-badge .route-desc {
+      color: var(--text-secondary);
+      font-weight: 400;
     }
 
     .email-actions {
@@ -1018,6 +1044,13 @@
     const decisions = {};
 
     const actionOptions = {
+      actionable: [
+        { value: 'route', label: 'Process', icon: '\u26a1', recommended: true },
+        { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
+        { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
+        { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
+        { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
+      ],
       topOfMind: [
         { value: 'reminder', label: 'Reminder', icon: '\u23f0', recommended: true },
         { value: 'calendar', label: 'Calendar', icon: '\ud83d\udcc5' },
@@ -1085,7 +1118,7 @@
       const container = document.getElementById('categories');
       container.innerHTML = '';
 
-      const categoryOrder = ['topOfMind', 'deliveries', 'newsletters', 'financial', 'archiveReady', 'deleteReady', 'fyi'];
+      const categoryOrder = ['actionable', 'topOfMind', 'deliveries', 'newsletters', 'financial', 'archiveReady', 'deleteReady', 'fyi'];
       let totalEmails = 0;
 
       categoryOrder.forEach(categoryKey => {
@@ -1159,6 +1192,10 @@
           decisions[email.id].createRule = true;
           decisions[email.id].ruleSuggestion = email.ruleSuggestion;
         }
+
+        if (email.routeInfo) {
+          decisions[email.id].routeInfo = email.routeInfo;
+        }
       }
 
       const suggestionHtml = email.classification?.reasons?.length > 0
@@ -1177,6 +1214,13 @@
           </label>`
         : '';
 
+      const routeBadgeHtml = email.routeInfo
+        ? `<div class="route-badge">
+            \u26a1 <span class="route-label">${escapeHtml(email.routeInfo.label)}</span>
+            ${email.routeInfo.description ? `<span class="route-desc">&mdash; ${escapeHtml(email.routeInfo.description)}</span>` : ''}
+          </div>`
+        : '';
+
       const confidenceClass = getConfidenceClass(email.classification?.confidence);
       const confidenceHtml = email.classification?.confidence
         ? `<span class="confidence-badge ${confidenceClass}">${Math.round(email.classification.confidence * 100)}%</span>`
@@ -1193,6 +1237,7 @@
           </div>
           <div class="email-subject">${escapeHtml(email.subject || '(No subject)')}</div>
           <div class="email-preview">${escapeHtml(email.preview || '')}</div>
+          ${routeBadgeHtml}
           ${suggestionHtml}
           ${ruleSuggestionHtml}
           <div class="email-actions">
@@ -1383,6 +1428,9 @@
               decision.createRule = true;
               decision.ruleSuggestion = email.ruleSuggestion;
             }
+            if (email.routeInfo) {
+              decision.routeInfo = email.routeInfo;
+            }
             decisions[email.id] = decision;
           });
         }
@@ -1396,7 +1444,7 @@
       const output = {
         sessionId: TRIAGE_DATA.sessionId,
         submittedAt: new Date().toISOString(),
-        decisions: Object.values(decisions).filter(d => d.action !== 'keep' || d.steering || d.params?.domain)
+        decisions: Object.values(decisions).filter(d => d.action !== 'keep' || d.steering || d.params?.domain || d.routeInfo)
       };
 
       const now = new Date();
@@ -1429,7 +1477,7 @@
     }
 
     function updateStats() {
-      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, parcel: 0, unsubscribe: 0, calendar: 0, reply: 0, custom: 0, rules: 0 };
+      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, parcel: 0, unsubscribe: 0, calendar: 0, reply: 0, custom: 0, route: 0, rules: 0 };
 
       Object.values(decisions).forEach(d => {
         stats.total++;
@@ -1442,10 +1490,12 @@
         else if (d.action === 'calendar') stats.calendar++;
         else if (d.action === 'reply') stats.reply++;
         else if (d.action === 'custom') stats.custom++;
+        else if (d.action === 'route') stats.route++;
         if (d.createRule) stats.rules++;
       });
 
       const parts = [];
+      if (stats.route > 0) parts.push(`${stats.route} process`);
       if (stats.archive > 0) parts.push(`${stats.archive} archive`);
       if (stats.delete > 0) parts.push(`${stats.delete} delete`);
       if (stats.unsubscribe > 0) parts.push(`${stats.unsubscribe} unsub`);
@@ -1458,7 +1508,7 @@
     }
 
     function updateProgressBar() {
-      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, parcel: 0, unsubscribe: 0, reply: 0, custom: 0 };
+      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, parcel: 0, unsubscribe: 0, reply: 0, custom: 0, route: 0 };
 
       Object.values(decisions).forEach(d => {
         stats.total++;
@@ -1470,6 +1520,7 @@
         else if (d.action === 'unsubscribe') stats.unsubscribe++;
         else if (d.action === 'reply') stats.reply++;
         else if (d.action === 'custom') stats.custom++;
+        else if (d.action === 'route') stats.route++;
       });
 
       const decided = stats.total - stats.keep;
@@ -1483,6 +1534,7 @@
       }
 
       const segments = [
+        { class: 'segment-route', width: (stats.route / stats.total) * 100 },
         { class: 'segment-archive', width: (stats.archive / stats.total) * 100 },
         { class: 'segment-delete', width: (stats.delete / stats.total) * 100 },
         { class: 'segment-unsubscribe', width: (stats.unsubscribe / stats.total) * 100 },
@@ -1501,6 +1553,7 @@
       // Update counts
       const counts = document.getElementById('progress-counts');
       const countItems = [];
+      if (stats.route > 0) countItems.push(`<span class="progress-count"><span class="dot dot-route"></span>${stats.route} process</span>`);
       if (stats.archive > 0) countItems.push(`<span class="progress-count"><span class="dot dot-archive"></span>${stats.archive}</span>`);
       if (stats.delete + stats.unsubscribe > 0) countItems.push(`<span class="progress-count"><span class="dot dot-delete"></span>${stats.delete + stats.unsubscribe}</span>`);
       if (stats.reminder > 0) countItems.push(`<span class="progress-count"><span class="dot dot-reminder"></span>${stats.reminder}</span>`);
@@ -1514,6 +1567,7 @@
 
     function getDefaultAction(categoryKey) {
       const defaults = {
+        actionable: 'route',
         topOfMind: 'reminder',
         deliveries: 'addToParcel',
         newsletters: 'unsubscribe',

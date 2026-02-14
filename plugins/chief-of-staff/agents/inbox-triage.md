@@ -67,7 +67,7 @@ All data files are in `~/.claude/data/chief-of-staff/`:
 ### Phase 2: Inbox Scan (with Incremental Sync)
 
 1. **Load sync state**: Read `~/.claude/data/chief-of-staff/sync-state.yaml` (if exists)
-2. **Fetch emails using incremental sync** (see `templates/email-incremental-fetch.md`):
+2. **Fetch emails using incremental sync** (see `references/email-incremental-fetch.md`):
    - If `EMAIL_TOOLS.get_inbox_updates` exists + sync state has `query_state`:
      → Call `EMAIL_TOOLS.get_inbox_updates(sinceQueryState, mailboxId)` for delta
    - Else if `EMAIL_TOOLS.get_inbox_updates` exists:

@@ -1,7 +1,13 @@
 ---
+name: credit-card-benefits
 description: |
   Knowledge about premium credit card benefits, statement credits, and maximization strategies.
-  Use when discussing credit card perks, travel credits, dining credits, or lounge access.
+  Use when:
+  - User asks about credit card benefits, credits, or perks
+  - User mentions Amex Platinum, Venture X, Sapphire Reserve, Delta Reserve, or Alaska Atmos
+  - User wants to know what credits are expiring or unused
+  - User asks about travel credits, dining credits, or lounge access
+  - User mentions statement credits, annual fee value, or benefit tracking
 ---
 
 # Credit Card Benefits Knowledge

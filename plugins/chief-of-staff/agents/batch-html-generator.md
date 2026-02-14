@@ -28,7 +28,7 @@ Generate an HTML batch triage interface by injecting classified email data into 
 - You ONLY produce a JSON data file, then use a script to inject it into the template.
 - The template contains ALL the UI logic (dropdowns, progress bars, buttons, etc.)
 
-## Step 0: Initialize Email Provider and Sync State
+## Step 0: Initialize Email Provider, Sync State, and Action Routes
 
 1. Read `~/.claude/data/chief-of-staff/settings.yaml`
 2. Extract `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail")
@@ -38,6 +38,9 @@ Generate an HTML batch triage interface by injecting classified email data into 
 6. Read `~/.claude/data/chief-of-staff/sync-state.yaml` (if exists)
    - Extract `query_state`, `last_sync`, `mailbox_id`, `seen_email_ids`
    - If file doesn't exist, use defaults: all null, empty array
+7. Read `~/.claude/data/chief-of-staff/email-action-routes.yaml` (if exists)
+   - Load all enabled routes for matching in Step 3
+   - If file doesn't exist, skip route matching (no actionable category)
 
 If no settings.yaml or no tools found → STOP. Report: "Run `/chief-of-staff:setup` to configure email."
 
@@ -47,7 +50,7 @@ Call ALL THREE in a SINGLE message (parallel):
 
 1. `EMAIL_TOOLS.list_mailboxes` - Get folder structure
 2. **Incremental fetch** (see below) - Get inbox emails
-3. `Glob: ~/.claude/plugins/cache/**/chief-of-staff/**/templates/batch-triage.html`
+3. `Glob: ~/.claude/plugins/cache/**/chief-of-staff/**/assets/batch-triage.html`
 
 ### Incremental Fetch Logic (Step 1.2)
 
@@ -102,6 +105,7 @@ Classify each email into ONE category (first match wins):
 
 | Category | Signals | Default Action |
 |----------|---------|----------------|
+| actionable | Matches email-action-routes.yaml (see below) | route (process with skill) |
 | topOfMind | Family, urgent, deadline, action required, personal | reply/reminder |
 | deliveries | shipped, tracking, delivery, "on its way" | addToParcel |
 | newsletters | noreply@, newsletter@, digest, $canunsubscribe | unsubscribe |
@@ -109,6 +113,38 @@ Classify each email into ONE category (first match wins):
 | archiveReady | Automated notifications, receipts, CC'd | archive |
 | deleteReady | Promotional, spam-like, expired offers, marketing | delete |
 | fyi | Everything else | archive |
+
+### Action Route Matching (Priority 0)
+
+**Before all other classification**, check each email against `email-action-routes.yaml`:
+
+1. Check `routes.sender_email` — match `from.email` exactly (case-insensitive)
+2. Check `routes.sender_domain` — match domain from `from.email`
+3. Check `routes.subject_pattern` — regex match on subject line
+4. Check `routes.combined` — domain + subject pattern together
+
+For each match:
+- Route must have `enabled: true`
+- Route must have `confidence >= thresholds.suggest_minimum` (default 0.80)
+- If `attachment_required: true`, check that email has attachments
+- If `subject_pattern` is set on a sender_email route, also verify subject matches
+
+**First matching route wins.** If a route matches, classify the email as `actionable` and attach `routeInfo`:
+
+```javascript
+routeInfo: {
+  plugin: "my-plugin",
+  agent: "invoice-processor",         // must be an agent (invoked via Task tool)
+  label: "Process Vendor Invoice",
+  description: "Extract invoice data and generate accounting entries",
+  pass_attachments: true,
+  post_action: "archive",
+  post_action_folder: "Invoices",
+  post_action_folder_id: "..."        // looked up from mailbox list if available
+}
+```
+
+If no route matches, continue with normal classification (topOfMind, deliveries, etc.).
 
 ## Step 4: Write TRIAGE_DATA JSON File
 
@@ -131,6 +167,7 @@ The file must start with `// BEGIN_TRIAGE_DATA` and end with `// END_TRIAGE_DATA
         reminderLists: ["Reminders", "Budget & Finances", "Travel", "Family"]
       },
       categories: {
+        actionable: { title: "Actionable", icon: "\u26a1", emails: [...] },
         topOfMind: { title: "Top of Mind", icon: "\ud83d\udccc", emails: [...] },
         deliveries: { title: "Deliveries", icon: "\ud83d\udce6", emails: [...] },
         newsletters: { title: "Newsletters", icon: "\ud83d\udcf0", emails: [...] },
@@ -163,7 +200,17 @@ The file must start with `// BEGIN_TRIAGE_DATA` and end with `// END_TRIAGE_DATA
   },
   // Optional fields for specific categories:
   packageInfo: { trackingNumber: "...", carrier: "UPS" },  // for deliveries
-  newsletterInfo: { domain: "example.com", unsubscribeUrl: "..." }  // for newsletters
+  newsletterInfo: { domain: "example.com", unsubscribeUrl: "..." },  // for newsletters
+  routeInfo: {                                              // for actionable
+    plugin: "my-plugin",
+    agent: "invoice-processor",         // must be an agent (invoked via Task tool)
+    label: "Process Vendor Invoice",
+    description: "Extract invoice data and generate accounting entries",
+    pass_attachments: true,
+    post_action: "archive",
+    post_action_folder: "Invoices",
+    post_action_folder_id: "..."
+  }
 }
 ```
 
@@ -244,6 +291,7 @@ If `result.queryState` is null (legacy fallback), leave `query_state` as null.
 Generated batch triage interface.
 Sync: [incremental — 8 new emails | full — 45 emails | legacy — 45 emails]
 
+- Actionable: X (route-matched emails)
 - Top of Mind: X
 - Deliveries: X
 - Newsletters: X

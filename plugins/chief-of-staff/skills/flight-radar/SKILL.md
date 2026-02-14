@@ -1,4 +1,5 @@
 ---
+name: flight-radar
 description: |
   Real-time aircraft tracking using FlightRadar24 API.
   Use when the user asks where a plane is, wants to track a flight by tail number or callsign,

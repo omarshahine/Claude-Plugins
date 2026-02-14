@@ -60,7 +60,7 @@ Read the JSON file and validate structure:
   decisions: [
     {
       emailId: "email-abc123",
-      action: "archive|delete|keep|reminder|calendar|reply|addToParcel|unsubscribe|custom",
+      action: "archive|delete|keep|reminder|calendar|reply|addToParcel|unsubscribe|custom|route",
       params: { ... },
       steering: "optional notes",
       replyDraft: "optional full reply text drafted in batch UI"
@@ -118,12 +118,21 @@ Organize decisions into groups for efficient processing:
     parcel: [...],       // Delegate to inbox-to-parcel
     unsubscribe: [...],  // Delegate to newsletter-unsubscriber
     reminder: [...],     // Delegate to inbox-to-reminder
-    calendar: [...]      // Execute inline with Apple PIM
+    calendar: [...],     // Execute inline with Apple PIM
+    route: [...]         // Route to specialized skill/agent
   }
 }
 ```
 
-### 5. Execute Inline Actions
+### 5. Execute Route Actions First, Then Inline Actions
+
+**CRITICAL ordering**: Route actions run BEFORE archive/delete so the email is still accessible for the target agent.
+
+#### 5a. Route Actions
+
+Execute all route decisions first (see Section 5b below for details), then proceed to inline actions.
+
+#### 5b. Inline Actions
 
 #### Archive
 ```
@@ -256,6 +265,50 @@ For each custom decision:
 - "Draft a reply declining the invitation" → Create draft reply
 - "Summarize and move to Travel folder" → Generate summary in report, move to Travel
 
+### 5a Detail: Execute Route Actions
+
+**CRITICAL**: Route actions must execute BEFORE archive/delete operations since the email must still be accessible for the target agent to read attachments or content.
+
+```
+For each route decision:
+1. Read routeInfo from the decision object
+   - If routeInfo is missing or empty, skip this decision and log a warning
+2. Build subagent_type from routeInfo:
+   - subagent_type = "{routeInfo.plugin}:{routeInfo.agent}"
+   - (Routes must target agents, not skills. Skills cannot be invoked via Task tool.)
+3. Build prompt with email context:
+   - emailId, subject, sender name/email
+   - If routeInfo.pass_attachments is true:
+     → First call EMAIL_TOOLS.get_email_attachments(emailId) (if mapped in settings.yaml)
+     → If unmapped, call EMAIL_TOOLS.get_email(emailId) and extract attachment metadata from the response
+     → Include attachment list in the prompt
+4. Invoke via Task tool:
+   Task:
+     subagent_type: "{plugin}:{agent}"
+     prompt: |
+       Process email from route action.
+       Email ID: {emailId}
+       Subject: {subject}
+       From: {senderName} <{senderEmail}>
+       [Attachments: {attachmentList} — if pass_attachments]
+
+       Route: {routeInfo.label}
+       Description: {routeInfo.description}
+5. After successful processing, execute post-action:
+   - If routeInfo.post_action == "archive":
+     → Look up folder ID for routeInfo.post_action_folder (or use post_action_folder_id)
+     → Call EMAIL_TOOLS.move_email(emailId, folderId)
+   - If routeInfo.post_action == "delete":
+     → Call EMAIL_TOOLS.delete_email(emailId)
+   - If routeInfo.post_action == "keep" or "none":
+     → No action on the email
+6. Track results for summary
+```
+
+**Execution order**: Route each email individually (not in parallel with other routes) since different routes may target different agents that shouldn't compete for resources. However, you CAN run routes in parallel with each other if they target different agents.
+
+**Error handling**: If a route agent fails, log the error but continue with other routes. Do NOT execute the post-action if the agent failed — the email should remain in the inbox for manual handling.
+
 ### 6. Delegate Batch Actions (PARALLEL)
 
 **CRITICAL REQUIREMENTS:**
@@ -381,6 +434,7 @@ results:
   successful: 30
   failed: 2
   byAction:
+    route: { attempted: 1, successful: 1 }
     archive: { attempted: 10, successful: 10 }
     delete: { attempted: 4, successful: 4 }
     parcel: { attempted: 5, successful: 5 }
@@ -409,6 +463,13 @@ Output a clear summary:
 
 ```
 Processing 32 decisions from batch-2025-02-02-abc123...
+
+ROUTE ACTIONS
+-------------
+Process LF Invoice: 1 email
+  -> Invoked chief-of-staff-private:local-foreigner-invoice
+  -> Extracted INV-43901, filed PDF, created YNAB transaction
+  -> Post-action: archived to Local Foreigner
 
 INLINE ACTIONS
 --------------
