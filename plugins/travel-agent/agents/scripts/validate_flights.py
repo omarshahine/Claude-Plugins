@@ -171,10 +171,25 @@ def test_total_count_consistency(conn, main_user_id):
 
     combined = tracked_total + manual_total
 
-    # The stats command computes tracked + manual (it does NOT exclude superseded
-    # from its count — it's a raw table count). Verify that.
-    detail = f"tracked={tracked_total}, manual={manual_total}, combined={combined}"
-    return TestResult("Total count (tracked + manual)", True, detail)
+    # Verify the combined count matches an independent all-time total query
+    # This serves as a regression check that our counting logic is consistent
+    cur.execute("""
+        SELECT
+            (SELECT COUNT(*) FROM Flight f
+             JOIN UserFlight uf ON f.id = uf.flightId
+             WHERE uf.isMyFlight = 1 AND uf.deleted IS NULL AND uf.userId = ?) +
+            (SELECT COUNT(*) FROM ManualFlight mf
+             JOIN UserManualFlight umf ON mf.id = umf.flightId
+             WHERE umf.isMyFlight = 1 AND umf.deleted IS NULL AND umf.userId = ?)
+    """, (main_user_id, main_user_id))
+    expected_total = cur.fetchone()[0]
+
+    passed = combined == expected_total
+    detail = (
+        f"tracked={tracked_total}, manual={manual_total}, "
+        f"combined={combined}, expected={expected_total}"
+    )
+    return TestResult("Total count (tracked + manual)", passed, detail)
 
 
 def test_year_sum_matches_total(conn, main_user_id):
@@ -188,7 +203,7 @@ def test_year_sum_matches_total(conn, main_user_id):
     cur = conn.cursor()
     superseded_ids = get_superseded_flight_ids(conn)
 
-    # Get the range of years with flights
+    # Get the range of years with flights (both tracked and manual)
     cur.execute("""
         SELECT
             MIN(COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal)),
@@ -201,11 +216,34 @@ def test_year_sum_matches_total(conn, main_user_id):
           AND (uf.importSource IS NULL OR uf.importSource != 'CONNECTED_FRIEND')
     """, (main_user_id,))
     row = cur.fetchone()
-    if not row or not row[0]:
+    
+    cur.execute("""
+        SELECT
+            MIN(mf.lastKnownDepartureDate),
+            MAX(mf.lastKnownDepartureDate)
+        FROM ManualFlight mf
+        JOIN UserManualFlight umf ON mf.id = umf.flightId
+        WHERE umf.isMyFlight = 1
+          AND umf.deleted IS NULL
+          AND umf.userId = ?
+    """, (main_user_id,))
+    manual_row = cur.fetchone()
+    
+    # Combine min/max from both tables
+    min_ts = row[0] if row and row[0] else None
+    max_ts = row[1] if row and row[1] else None
+    
+    if manual_row:
+        if manual_row[0] and (min_ts is None or manual_row[0] < min_ts):
+            min_ts = manual_row[0]
+        if manual_row[1] and (max_ts is None or manual_row[1] > max_ts):
+            max_ts = manual_row[1]
+    
+    if not min_ts:
         return TestResult("Year sum vs total", False, "No flights found")
 
-    min_year = datetime.fromtimestamp(row[0], tz=timezone.utc).year
-    max_year = datetime.fromtimestamp(row[1], tz=timezone.utc).year
+    min_year = datetime.fromtimestamp(min_ts, tz=timezone.utc).year
+    max_year = datetime.fromtimestamp(max_ts, tz=timezone.utc).year
 
     # Count flights per year using the same dedup logic as get_flights_by_year
     year_total = 0
@@ -456,16 +494,17 @@ def test_recent_upcoming_coverage(conn, main_user_id):
         else:
             future_keys.add(key)
 
-    # All unique keys = union of past + future (they shouldn't overlap)
-    all_keys = past_keys | future_keys
+    # Past and future should be disjoint (no overlap) since we partition by timestamp
     overlap = past_keys & future_keys
 
     detail = (
         f"past={len(past_keys)}, future={len(future_keys)}, "
-        f"union={len(all_keys)}, overlap={len(overlap)}"
+        f"overlap={len(overlap)}"
     )
-    # This should always pass — it's a sanity check on partitioning
-    passed = len(all_keys) == len(past_keys) + len(future_keys) - len(overlap)
+    # Verify that past and future are properly partitioned (no flight in both)
+    passed = len(overlap) == 0
+    if not passed:
+        detail += f" | ERROR: {len(overlap)} flights in both past and future"
     return TestResult("Recent + upcoming coverage", passed, detail)
 
 
@@ -578,13 +617,19 @@ def test_csv_comparison(conn, main_user_id, csv_path):
                 continue
 
             # Normalize date
+            date_parsed = False
             for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y", "%b %d, %Y"):
                 try:
                     parsed_date = datetime.strptime(date_val.strip(), fmt)
                     date_val = parsed_date.strftime("%Y-%m-%d")
+                    date_parsed = True
                     break
                 except ValueError:
                     continue
+
+            # Skip entries with unparseable dates
+            if not date_parsed:
+                continue
 
             dep_code = dep_val.strip().upper()
             arr_code = arr_val.strip().upper()
