@@ -678,8 +678,8 @@ def test_csv_comparison(conn, main_user_id, csv_path):
         if len(unmatched) > 10:
             detail += f"\n    ... and {len(unmatched) - 10} more"
 
-    # Pass if all CSV flights found a DB match (with tolerance)
-    passed = len(unmatched) == 0
+    # Pass if all CSV flights found a DB match (with tolerance) AND we actually parsed some CSV data
+    passed = len(unmatched) == 0 and len(csv_entries) > 0
     return TestResult("CSV comparison", passed, detail)
 
 
