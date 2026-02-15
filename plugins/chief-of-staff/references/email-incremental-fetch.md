@@ -10,8 +10,9 @@
    - **Incremental**: state exists + tool available + not `--reset`/`--full` → call with `sinceQueryState`
    - **Full query**: no state OR `--full` flag → call without `sinceQueryState`
    - **Fallback**: tool unavailable (non-Fastmail) → use `EMAIL_TOOLS.list_emails`
-4. **Filter out** `seen_email_ids` from results (emails user chose to "keep" in previous sessions)
-5. **After triage**: save new state and update `seen_email_ids`
+4. **Filter out** `seen_email_ids` from results (emails that stayed in inbox from previous sessions)
+5. **Reconcile**: cross-check incremental results against a full inbox listing to catch orphaned emails
+6. **After triage**: save new state and update `seen_email_ids`
 
 ### Step-by-Step Implementation
 
@@ -73,10 +74,38 @@ ELSE:
 #### Filtering Already-Seen Emails
 
 ```
-# Remove emails the user already triaged but chose to "keep" in inbox
+# Remove emails the user already triaged but chose to leave in inbox
 IF sync_state.inbox.seen_email_ids is not empty:
   emails = emails.filter(e => e.id NOT IN sync_state.inbox.seen_email_ids)
+```
 
+#### Reconciliation (Incremental Mode Only)
+
+**Why:** JMAP incremental sync only returns emails that were added or modified since the
+last `queryState`. Emails sitting unchanged in inbox (e.g., flagged in a previous session
+but not added to `seen_email_ids`) won't appear in the diff. This step catches them.
+
+```
+IF sync_mode == "incremental":
+  # Fetch current inbox listing
+  inbox_listing = call EMAIL_TOOLS.list_emails({ mailboxId: inbox_id, limit: 50 })
+  inbox_ids = inbox_listing.map(e => e.id)
+
+  # Find orphans: in inbox but NOT in incremental results AND NOT in seen_email_ids
+  incremental_ids = emails.map(e => e.id)
+  orphan_ids = inbox_ids.filter(id =>
+    id NOT IN incremental_ids AND
+    id NOT IN sync_state.inbox.seen_email_ids
+  )
+
+  IF orphan_ids.length > 0:
+    # Add orphaned emails to the triage list
+    orphan_emails = inbox_listing.filter(e => e.id IN orphan_ids)
+    emails = emails.concat(orphan_emails)
+    Report: "Found {orphan_ids.length} orphaned email(s) from previous sessions"
+```
+
+```
 # Report what happened
 IF sync_mode == "incremental" AND emails.length == 0:
   Report: "No new emails since {sync_state.inbox.last_sync}"
@@ -91,9 +120,10 @@ IF sync_mode == "incremental" AND emails.length == 0:
    sync_state.inbox.last_sync = current ISO timestamp
    sync_state.inbox.mailbox_id = result mailbox ID (or discovered inbox ID)
 
-2. Update seen_email_ids for "keep" decisions:
-   For each email where user chose "keep" (stays in inbox):
+2. Update seen_email_ids for ALL inbox-staying decisions:
+   For each email where user chose "keep", "flag", or "custom" (email stays in inbox):
      Add email.id to sync_state.inbox.seen_email_ids
+   NOTE: Any action that does NOT move or delete the email means it stays in inbox.
 
 3. Prune seen_email_ids if > 500 entries:
    Remove oldest entries (beginning of array) to stay at 500

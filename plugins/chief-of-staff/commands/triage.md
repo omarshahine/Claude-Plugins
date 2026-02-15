@@ -131,7 +131,8 @@ Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The tr
       - Else:
         → Fallback to `EMAIL_TOOLS.list_emails(limit: 50)` using the Inbox mailbox ID
       - Filter out `seen_email_ids` from results
-      - If incremental returned 0 new emails: Report "No new emails since [last_sync]" and STOP
+      - **Reconcile** (incremental only): Call `EMAIL_TOOLS.list_emails(mailboxId, limit: 50)` and add any inbox emails NOT in the incremental results AND NOT in `seen_email_ids` (catches orphaned emails from previous sessions)
+      - If incremental returned 0 new emails (after reconciliation): Report "No new emails since [last_sync]" and STOP
 
 2. **PHASE 1 - COLLECT:** For each email, use `AskUserQuestion` to present options:
    - Include email summary in the question text
@@ -156,7 +157,7 @@ Sub-agents spawned via Task tool do NOT have access to `AskUserQuestion`. The tr
    f. **Deletes** - `EMAIL_TOOLS.bulk_delete` for all deletions (including unsubscribed emails)
 
 4. **PHASE 3 - LEARN (mandatory):** After execution, update data files:
-   a. **sync-state.yaml** - Save new `query_state`, `last_sync`, `mailbox_id`. Add "keep" email IDs to `seen_email_ids`. Cap at 500.
+   a. **sync-state.yaml** - Save new `query_state`, `last_sync`, `mailbox_id`. Add IDs for ALL inbox-staying decisions (keep, flag, custom) to `seen_email_ids`. Cap at 500.
    b. **decision-history.yaml** - Append ALL decisions with: date, emailId, action, senderDomain, senderEmail (if available), folder (if archived), category, accepted (true if user followed the system suggestion, false if user chose a different action), and notes for pattern matches
    c. **delete-patterns.yaml** - Bump `match_count` for any confirmed delete patterns. For new domains deleted 2+ times in this session, add as new patterns with confidence 0.75 and source "triage"
    d. **Update statistics** - Increment total_decisions, by_action counts, total_sessions

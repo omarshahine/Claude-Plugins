@@ -171,7 +171,11 @@ For each decision:
    - Else:
      → Fallback to `EMAIL_TOOLS.advanced_search` with `mailboxId=Inbox`
    - Filter out `seen_email_ids` from results
-   - If incremental returned 0 new emails: Report "No new emails since [last_sync]" and STOP
+   - **Reconcile** (incremental only): Call `EMAIL_TOOLS.list_emails(mailboxId, limit: 50)` and
+     add any inbox emails NOT in the incremental results AND NOT in `seen_email_ids`.
+     These are "orphaned" emails from previous sessions where the action left them in
+     inbox but they weren't added to `seen_email_ids`.
+   - If incremental returned 0 new emails (after reconciliation): Report "No new emails since [last_sync]" and STOP
 3. **Group by threadId**: Present each thread once (most recent message)
 
 ### Question Format
@@ -684,8 +688,9 @@ After executing all decisions, update `~/.claude/data/chief-of-staff/sync-state.
 1. Save query_state from the fetch result (if available)
 2. Set last_sync to current ISO timestamp
 3. Set mailbox_id to the Inbox ID used
-4. For each "keep" decision (email stays in inbox):
+4. For each decision where email stays in inbox (keep, flag, or custom):
    - Add email.id to seen_email_ids
+   NOTE: Any action that does NOT move or delete the email means it stays in inbox.
 5. Remove any IDs from seen_email_ids that were in the "removed" list
    from the incremental fetch result
 6. Cap seen_email_ids at 500 entries (prune oldest)
