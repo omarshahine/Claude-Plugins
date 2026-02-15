@@ -131,7 +131,7 @@ def query_tracked_upcoming(conn, now, main_user_id, include_friends, limit):
             uf.isMyFlight = 1
             AND COALESCE(f.lastKnownDepartureDate, f.departureScheduleGateOriginal) > ?
             AND uf.userId = ?
-            AND uf.importSource != 'CONNECTED_FRIEND'
+            AND (uf.importSource IS NULL OR uf.importSource != 'CONNECTED_FRIEND')
         """
         params = [now, main_user_id]
 
@@ -617,7 +617,7 @@ def get_flights_by_year(conn, year):
     user_filter = ""
     params = [start_ts, end_ts]
     if main_user_id:
-        user_filter = "AND uf.userId = ? AND uf.importSource != 'CONNECTED_FRIEND'"
+        user_filter = "AND uf.userId = ? AND (uf.importSource IS NULL OR uf.importSource != 'CONNECTED_FRIEND')"
         params = [start_ts, end_ts, main_user_id]
 
     cursor.execute(f"""
