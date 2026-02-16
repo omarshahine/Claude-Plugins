@@ -32,10 +32,15 @@ An inbox action consists of multiple files in `~/GitHub/Claude/plugins/chief-of-
 
 ## Prerequisites
 
-Before starting, read the reference documentation:
+Before starting, read the reference documentation. Use Glob to find it in the plugin cache:
 
 ```
-Read: ~/GitHub/Agent-Plugins/plugins/chief-of-staff/references/inbox-action-pattern.md
+Glob: ~/.claude/plugins/cache/*/chief-of-staff/*/references/inbox-action-pattern.md
+```
+
+If not found in cache, try the source repo:
+```
+Glob: ~/GitHub/Agent-Plugins/plugins/chief-of-staff/references/inbox-action-pattern.md
 ```
 
 This contains all templates and patterns you need. Use it as your source of truth for file formats.

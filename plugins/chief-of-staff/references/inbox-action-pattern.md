@@ -129,13 +129,13 @@ Routes are appended to `~/.claude/data/chief-of-staff/email-action-routes.yaml`.
   combined:
     - domain: "{sender_domain}"
       subject_pattern: "{subject_pattern}"
+      attachment_required: {true|false}    # Optional, at rule level (not inside route:)
       route:
         plugin: "chief-of-staff-private"
         agent: "inbox-action-{name}"
         label: "{display_label}"
         description: "{route_description}"
         pass_attachments: {true|false}
-        attachment_required: {true|false}
         post_action: "{archive|none}"
         post_action_folder: "{folder}"
       confidence: 0.95
@@ -213,7 +213,7 @@ For agents that file documents:
 
 After processing, save the file to the Filing Cabinet:
 
-**Destination**: `/Users/omarshahine/Library/CloudStorage/OneDrive-Personal/🗄️ Filing Cabinet/{folder_name}/`
+**Destination**: `~/Library/CloudStorage/OneDrive-Personal/🗄️ Filing Cabinet/{folder_name}/`
 
 **Naming**: `{naming_pattern}`
 
