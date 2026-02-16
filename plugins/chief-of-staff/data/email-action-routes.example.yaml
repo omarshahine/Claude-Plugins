@@ -1,6 +1,6 @@
 # Chief-of-Staff Email Action Routes
-# Routes emails to specialized skills/agents for active processing
-# Think of it as: filing rules route to folders; action routes route to skills.
+# Routes emails to specialized agents for active processing
+# Think of it as: filing rules route to folders; action routes route to agents.
 #
 # Routes are checked in priority order: sender_email > sender_domain > subject_pattern > combined
 # Matched routes surface as "Process: [label]" in triage (batch and interactive)
