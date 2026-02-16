@@ -349,7 +349,7 @@ Users can extend COS with private agents by creating a separate plugin (e.g., `c
 description: |
   Private agents available to Chief-of-Staff:
   - filing-cabinet-organizer: Manage Filing Cabinet documents
-  - netjets-invoice-downloader: Download NetJets invoices
+  - inbox-action-netjets: Download NetJets invoices
 ---
 
 # Private Chief-of-Staff Capabilities
@@ -358,7 +358,7 @@ description: |
 Use `chief-of-staff-private:filing-cabinet-organizer` for document organization.
 
 ## NetJets
-Use `chief-of-staff-private:netjets-invoice-downloader` for invoice management.
+Use `chief-of-staff-private:inbox-action-netjets` for invoice management.
 ```
 
 ### travel-agent

@@ -491,7 +491,7 @@ Processing 32 decisions from batch-2025-02-02-abc123...
 ROUTE ACTIONS
 -------------
 Process LF Invoice: 1 email
-  -> Invoked chief-of-staff-private:local-foreigner-invoice
+  -> Invoked chief-of-staff-private:inbox-action-lf-invoice
   -> Extracted INV-43901, filed PDF, created YNAB transaction
   -> Post-action: archived to Local Foreigner
 
