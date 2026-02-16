@@ -120,7 +120,7 @@ Organize decisions into groups for efficient processing:
     unsubscribe: [...],  // Delegate to newsletter-unsubscriber
     reminder: [...],     // Delegate to inbox-to-reminder
     calendar: [...],     // Execute inline with Apple PIM
-    route: [...]         // Route to specialized skill/agent
+    route: [...]         // Route to specialized agent
   }
 }
 ```

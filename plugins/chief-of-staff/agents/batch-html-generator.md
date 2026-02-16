@@ -128,7 +128,7 @@ Classify each email into ONE category (first match wins):
 
 | Category | Signals | Default Action |
 |----------|---------|----------------|
-| actionable | Matches email-action-routes.yaml (see below) | route (process with skill) |
+| actionable | Matches email-action-routes.yaml (see below) | route (process with agent) |
 | topOfMind | Family, urgent, deadline, action required, personal | reply/reminder |
 | deliveries | shipped, tracking, delivery, "on its way" | addToParcel |
 | newsletters | noreply@, newsletter@, digest, $canunsubscribe | unsubscribe |
@@ -204,7 +204,7 @@ FOR EACH email in emails:
 - **Case-insensitive**: Always lowercase both the email's `from.email` and the route's `email` field before comparing
 - **`attachment_required` is informational only** — do NOT skip a route match because you can't verify attachments at listing time. The processor will verify attachments before executing. Include `attachment_required: true` in routeInfo so the processor knows to check.
 - **`subject_pattern` on sender_email routes** is an additional filter: the sender must match AND the subject must match
-- **`skill` vs `agent`**: Some routes may have `skill` instead of `agent` — include whichever field the route defines in routeInfo
+- **`agent` field**: Routes always use the `agent` field (skills cannot be invoked via Task tool) — include it in routeInfo
 
 **routeInfo structure** (copy from matched_route.route, plus attachment_required):
 

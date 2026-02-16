@@ -103,7 +103,7 @@ All data files are in `~/.claude/data/chief-of-staff/`:
 - `settings.yaml` - Provider configuration
 - `filing-rules.yaml` - Filing patterns with confidence
 - `delete-patterns.yaml` - Delete suggestions
-- `email-action-routes.yaml` - Action routes mapping emails to skills/agents
+- `email-action-routes.yaml` - Action routes mapping emails to agents
 - `interview-state.yaml` - Session state (decisions, batches)
 - `decision-history.yaml` - Learning history
 
@@ -514,7 +514,7 @@ groups = {
   delete: ["email-4", "email-5"],
   keep: ["email-6"],
   flag: ["email-7"],
-  route: [...],       // Route to specialized skill/agent
+  route: [...],       // Route to specialized agent
   parcel: [...],      // Sub-agent batch
   unsubscribe: [...], // Sub-agent batch
   reminder: [...],    // Sub-agent batch
