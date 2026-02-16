@@ -405,6 +405,36 @@ See the [Apple-PIM-Agent-Plugin repo](https://github.com/omarshahine/Apple-PIM-A
 - `data/checklist.yaml` - Benefit usage tracking
 - `data/settings.yaml` - Card configurations, data sources
 
+## Code Review Guidelines
+
+### PII Detection (Blocking)
+
+These must never be committed to tracked files:
+
+- **Hardcoded paths**: `/Users/[username]/` or `C:\Users\[username]\` - use `~/`, `${HOME}`, or wildcards
+- **Personal emails**: Real email addresses in agent/command/skill/template files (allowed: `@example.com`, `@anthropic.com`, `@noreply`)
+- **Real names**: Family member names in examples or templates - use generic placeholders ("Jane", "Alex Smith")
+- **Physical addresses**: Real street addresses - use `123 Main St` placeholders
+- **Phone numbers**: US phone patterns (XXX-XXX-XXXX) - use `555-123-4567`
+- **API keys/secrets**: Hardcoded `api_key=`, `token=`, `secret=`, `Bearer [value]` - use `${VAR}` env vars
+- **Service-specific forwarding addresses**: `username@library.readwise.io` style personal identifiers
+- **User data files**: YAML/JSON in `plugins/*/data/` must be gitignored (only `*.example.*` and `.gitignore` tracked)
+
+### Marketplace & Path Patterns (Non-blocking)
+
+- **Hardcoded marketplace cache paths**: Use `~/.claude/plugins/cache/*/plugin-name/` wildcard patterns
+- **Absolute paths in plugin files**: Use `${CLAUDE_PLUGIN_ROOT}`, `${HOME}`, or relative paths
+- **Database paths**: `~/Library/Containers/` paths may change between users
+- **URLs with personal identifiers**: Use env vars for user-specific URLs
+
+### Exclusions
+
+These files/patterns are excluded from all checks:
+- `node_modules/`, `package-lock.json`, `*.min.js`, `bundle/`, `.git/`
+- `.env.example` files, `CHANGELOG.md`
+- Author fields in `plugin.json`, GitHub usernames in repo URLs
+- Co-Authored-By lines, regex patterns in validation code
+
 ## Common Issues
 
 ### Plugin not loading
