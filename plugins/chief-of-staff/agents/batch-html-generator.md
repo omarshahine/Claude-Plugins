@@ -187,7 +187,7 @@ FOR EACH email in emails:
     FOR EACH rule in ROUTES.routes.combined:
       IF rule.enabled == false: SKIP
       IF rule.confidence < THRESHOLD: SKIP
-      IF rule.domain == sender_domain AND email.subject matches rule.pattern:
+      IF rule.domain == sender_domain AND email.subject matches rule.subject_pattern:
         matched_route = rule
         BREAK
 
