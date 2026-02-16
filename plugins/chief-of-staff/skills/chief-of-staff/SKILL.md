@@ -9,6 +9,7 @@ description: |
   - User asks about their daily routine or productivity workflow
   - User asks about iMessages, text messages, or SMS
   - User wants to read, search, or send a text/iMessage
+  - User says "pause packages", "vacation hold", or "hold my mail"
   - User summons their persona by name (e.g., "Friday", "Max", "Jarvis")
 ---
 
@@ -39,6 +40,7 @@ Chief-of-Staff contains these sub-agents:
 | `batch-html-generator` | Visual batch triage interface |
 | `batch-processor` | Execute batch triage decisions |
 | `imessage-assistant` | Read and send iMessages via CLI |
+| `package-pause` | Vacation hold automation for USPS/UPS/FedEx |
 
 ## Email Action Routes
 
@@ -125,6 +127,7 @@ Use `/chief-of-staff:routes` to list, add, remove, and toggle routes.
 | `/chief-of-staff:rules` | View/manage filing rules |
 | `/chief-of-staff:routes` | View/manage email action routes |
 | `/chief-of-staff:imessage` | Read, search, and send iMessages |
+| `/chief-of-staff:package-pause` | Set vacation delivery holds on USPS/UPS/FedEx |
 
 ## Data Files
 
