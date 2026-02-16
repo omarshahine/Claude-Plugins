@@ -150,7 +150,7 @@ Example skill in a private plugin:
 description: |
   Private agents available to Chief-of-Staff:
   - filing-cabinet-organizer: Manage Filing Cabinet documents
-  - netjets-invoice-downloader: Download NetJets invoices
+  - inbox-action-netjets: Download NetJets invoices
 ---
 
 # Private Chief-of-Staff Capabilities

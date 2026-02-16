@@ -211,7 +211,7 @@ FOR EACH email in emails:
 ```javascript
 routeInfo: {
   plugin: "chief-of-staff-private",
-  agent: "local-foreigner-invoice",   // or skill: "phamatech-download"
+  agent: "inbox-action-lf-invoice",   // or agent: "inbox-action-phamatech"
   label: "Process LF Invoice",
   description: "Extract invoice, summarize by trip, generate YNAB split",
   pass_attachments: true,
