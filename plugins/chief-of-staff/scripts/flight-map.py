@@ -2,39 +2,18 @@
 """Generate a self-contained HTML flight tracker map.
 
 Usage:
-    python3 flight-map.py N464QS              # Generate map and open in browser
-    python3 flight-map.py N464QS --output map.html  # Save to file
-    python3 flight-map.py N464QS --no-open    # Generate but don't open browser
-
-The generated HTML auto-refreshes by re-running this script via a meta refresh,
-or can be used as a static snapshot.
+    # Pipe JSON from FR24 MCP tools
+    echo '{"registration":"N464QS","latitude":37.1,...}' | python3 flight-map.py --stdin
+    echo '{"registration":"N464QS",...}' | python3 flight-map.py --stdin --output map.html
+    echo '{"registration":"N464QS",...}' | python3 flight-map.py --stdin --no-open
 """
 import argparse
 import json
 import os
-import subprocess
 import sys
 import tempfile
 import webbrowser
 from datetime import datetime, timezone
-
-# Get the directory of this script so we can find flight-radar.py
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-FLIGHT_RADAR = os.path.join(SCRIPT_DIR, "flight-radar.py")
-
-
-def get_flight_data(tail):
-    """Run flight-radar.py and parse the JSON output."""
-    result = subprocess.run(
-        [sys.executable, FLIGHT_RADAR, tail, "--json"],
-        capture_output=True, text=True, timeout=30
-    )
-    if result.returncode != 0:
-        return None
-    try:
-        return json.loads(result.stdout)
-    except json.JSONDecodeError:
-        return None
 
 
 def generate_html(data, tail):
@@ -239,18 +218,34 @@ L.marker([lat, lon], {{ icon: planeIcon }}).addTo(map)
 
 def main():
     p = argparse.ArgumentParser(description="Generate a flight tracker map")
-    p.add_argument("tail", help="Tail number (e.g. N464QS)")
+    p.add_argument("--stdin", action="store_true", help="Read JSON from stdin")
     p.add_argument("--output", "-o", help="Output HTML file path")
     p.add_argument("--no-open", action="store_true", help="Don't open in browser")
     args = p.parse_args()
 
-    data = get_flight_data(args.tail)
-    html = generate_html(data, args.tail)
+    if not args.stdin:
+        print("Error: --stdin is required. Pipe JSON data via stdin.", file=sys.stderr)
+        print("Usage: echo '{...}' | python3 flight-map.py --stdin", file=sys.stderr)
+        sys.exit(1)
+
+    raw = sys.stdin.read().strip()
+    if not raw:
+        print("Error: No JSON data received on stdin.", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as e:
+        print(f"Error: Invalid JSON: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    tail = data.get("registration", "Unknown")
+    html = generate_html(data, tail)
 
     if args.output:
         path = args.output
     else:
-        fd, path = tempfile.mkstemp(suffix=".html", prefix=f"flight-{args.tail}-")
+        fd, path = tempfile.mkstemp(suffix=".html", prefix=f"flight-{tail}-")
         os.close(fd)
 
     with open(path, "w") as f:

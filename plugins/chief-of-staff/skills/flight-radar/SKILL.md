@@ -1,100 +1,111 @@
 ---
-name: flight-radar
 description: |
-  Real-time aircraft tracking using FlightRadar24 API.
+  Real-time aircraft tracking using the official FlightRadar24 API.
   Use when the user asks where a plane is, wants to track a flight by tail number or callsign,
   check aircraft status, or get recent flight history for a specific aircraft.
 ---
 
 # Flight Radar
 
-Track aircraft in real-time using the FlightRadar24 Python API. Returns live position, route, status, aircraft details, and recent flight history.
+Track aircraft in real-time using the official FlightRadar24 API via MCP tools.
 
-## Script
+## Setup
 
-`scripts/flight-radar.py` in the plugin directory.
+Use `ToolSearch` to load the FR24 MCP tools:
 
-```bash
-# Single tail number
-python3 scripts/flight-radar.py N12345 --json
-
-# Multiple aircraft
-python3 scripts/flight-radar.py N12345 N67890 --json
-
-# Plain text output (no --json flag)
-python3 scripts/flight-radar.py N12345
-
-# Poll every 30 seconds (for in-flight tracking)
-python3 scripts/flight-radar.py N12345 --poll 30
-
-# All active flights for an airline (EJA = Executive Jet Aviation)
-python3 scripts/flight-radar.py --fleet --json
+```
+ToolSearch query: "+fr24api"
 ```
 
-## JSON Output Fields
+This loads all available FR24 tools. Key tools:
 
-When a flight is found (`status: "tracked"`):
+| Tool | Purpose | Key Parameters |
+|------|---------|----------------|
+| `get_live_flights_positions_full` | Real-time position by registration or callsign | `registrations`, `callsigns`, `flights` (arrays) |
+| `get_flight_summary_full` | Recent flight history with departure/arrival details | `flights` (array of flight numbers/callsigns) |
+| `get_flight_tracks` | Detailed positional track for a specific flight | `flight_id` |
+| `get_airline_info` | Airline details by ICAO/IATA code | `code` |
+| `get_airport_info_full` | Airport details and stats | `code` |
 
-| Field | Description |
-|-------|-------------|
-| `callsign` | ATC callsign (e.g., "EJA464") |
-| `registration` | Tail number (e.g., "N464QS") |
-| `aircraft_type` | ICAO type code (e.g., "E55P") |
-| `aircraft_model` | Full model name (e.g., "Embraer Phenom 300E") |
-| `airline` | Operator name |
-| `airline_icao` | ICAO airline code |
-| `latitude` / `longitude` | Current position |
-| `altitude_ft` | Altitude in feet |
-| `ground_speed_kts` | Ground speed in knots |
-| `heading` | Track heading in degrees |
-| `on_ground` | Whether aircraft is on the ground |
-| `origin` / `destination` | IATA airport codes |
-| `origin_name` / `destination_name` | Full airport names |
-| `origin_city` / `destination_city` | City names |
-| `flight_status` | Status text (e.g., "Landed 12:59", "Estimated 14:30", "En Route") |
-| `scheduled_departure` / `scheduled_arrival` | Scheduled times (UTC) |
-| `actual_departure` / `actual_arrival` | Actual times (UTC) |
-| `eta` | Estimated time of arrival (UTC) |
-| `recent_flights` | Array of last ~4 flights for this tail |
+## Workflow
 
-Each `recent_flights` entry has: `callsign`, `origin`, `origin_city`, `destination`, `destination_city`, `departure`.
+### Track by tail number (registration)
 
-When not found (`status: "not_found"`):
-```json
-{"tail": "N12345", "status": "not_found", "message": "Not currently airborne or not tracked"}
-```
+1. Load tools: `ToolSearch` with `+fr24api`
+2. Call `get_live_flights_positions_full` with `registrations: ["N464QS"]`
+3. If found, present position, altitude, speed, heading, route
+4. For flight history, call `get_flight_summary_full` with the callsign from step 2
 
-## When to Use --poll
+### Track by callsign or flight number
 
-Use `--poll 30` when tracking an in-flight aircraft over time. It re-queries every N seconds and prints updated position, altitude, and speed. Useful for "let me know when it lands" — watch for `on_ground: true` or a "Landed" status.
+1. Load tools: `ToolSearch` with `+fr24api`
+2. Call `get_live_flights_positions_full` with `callsigns: ["EJA464"]` or `flights: ["EJA464"]`
+3. Present the results
 
-Don't poll for parked/ground aircraft — it wastes API calls and the data won't change.
+### Get flight history
 
-## When to Use --json
+1. Load tools: `ToolSearch` with `+fr24api`
+2. Call `get_flight_summary_full` with the flight number or callsign
 
-`--json` returns raw structured data including lat/lon coordinates. Use this when:
-- You need to parse the response programmatically
-- The user wants specific fields (e.g., "what altitude is it at?")
-- You're feeding data into another tool or generating a map
+## Response Format
 
-To give the user a quick visual, generate a map with `flight-map.py`:
-```bash
-python3 scripts/flight-map.py {TAIL}
-```
+Present results clearly with:
+- Registration, callsign, aircraft type
+- Route (origin → destination) with airport names
+- Position (lat/lon), altitude, ground speed, heading
+- Status (in flight, landed, on ground)
+- Departure/arrival times or ETA
 
 ## Visual Map
 
-`scripts/flight-map.py` generates a self-contained HTML flight tracker map using Leaflet + OpenStreetMap.
+To show the user a map, pipe FR24 data through `flight-map.py`:
 
 ```bash
-# Generate map and open in browser
-python3 scripts/flight-map.py N12345
+echo '<JSON>' | python3 scripts/flight-map.py --stdin
+```
 
+The JSON should contain these fields (matching the map template):
+
+```json
+{
+  "registration": "N464QS",
+  "callsign": "EJA464",
+  "aircraft_model": "Embraer Phenom 300E",
+  "aircraft_type": "E55P",
+  "airline": "NetJets",
+  "latitude": 37.1234,
+  "longitude": -122.5678,
+  "altitude_ft": 35000,
+  "ground_speed_kts": 420,
+  "heading": 270,
+  "on_ground": false,
+  "origin": "TEB",
+  "origin_city": "Teterboro",
+  "destination": "SFO",
+  "destination_city": "San Francisco",
+  "flight_status": "En Route",
+  "actual_departure": "2025-01-15 14:30 UTC",
+  "eta": "2025-01-15 20:15 UTC",
+  "recent_flights": [
+    {
+      "origin": "TEB",
+      "origin_city": "Teterboro",
+      "destination": "SFO",
+      "destination_city": "San Francisco",
+      "departure": "2025-01-14 08:00 UTC"
+    }
+  ]
+}
+```
+
+Map to these fields from the FR24 MCP tool responses. If a field isn't available, omit it — the map handles missing values gracefully.
+
+```bash
 # Save to a specific file
-python3 scripts/flight-map.py N12345 --output map.html
+echo '<JSON>' | python3 scripts/flight-map.py --stdin --output map.html
 
 # Generate without opening browser
-python3 scripts/flight-map.py N12345 --no-open
+echo '<JSON>' | python3 scripts/flight-map.py --stdin --no-open
 ```
 
 The map shows:
@@ -103,17 +114,10 @@ The map shows:
 - Recent flights table (if available)
 - Auto-adjusting zoom (z6 for cruise, z10 for low altitude, z13 on ground)
 
-If the aircraft is not found, it renders a styled "not tracked" card instead.
+If the aircraft data has `status: "not_found"` or is empty, it renders a styled "not tracked" card.
 
 ## Limitations
 
-- **Live only**: FlightRadar24 tracks aircraft with active ADS-B transponders. Parked/powered-down aircraft return "not_found".
-- **No future flights**: Scheduled/upcoming flights are not available from this API. Charter and private flights don't publish schedules publicly.
-- **History is shallow**: `recent_flights` covers the last ~4 legs only, with departure times but no arrival times.
-- **Rate limiting**: The API is unofficial; heavy usage may be throttled.
-
-## Prerequisites
-
-```bash
-pip3 install FlightRadarAPI beautifulsoup4
-```
+- **Live only**: FlightRadar24 tracks aircraft with active ADS-B transponders. Parked/powered-down aircraft won't appear in live positions.
+- **No future flights**: Scheduled/upcoming flights are not available. Charter and private flights don't publish schedules publicly.
+- **API quota**: The official API has rate limits based on the subscription tier. Avoid unnecessary repeated calls.
