@@ -1,6 +1,6 @@
 {
   "name": "chief-of-staff",
-  "version": "1.12.1",
+  "version": "1.13.1",
   "description": "The orchestrator plugin for personal productivity - inbox triage, package tracking, reminder creation, newsletter management, and more",
   "author": {
     "name": "Omar Shahine"
@@ -18,7 +18,10 @@
     "productivity",
     "imessage",
     "orchestrator",
-    "vacation-hold"
+    "vacation-hold",
+    "reading-digest",
+    "summarize",
+    "memo"
   ],
   "mcpServers": "./.mcp.json"
 }

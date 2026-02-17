@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reading Digest</title>
+  <style>
+    :root {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-card: #21262d;
+      --bg-hover: #30363d;
+      --bg-input: #0d1117;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+      --accent-blue: #58a6ff;
+      --accent-green: #3fb950;
+      --accent-red: #f85149;
+      --accent-indigo: #818cf8;
+      --accent-purple: #a371f7;
+      --border-color: #30363d;
+      --border-subtle: #21262d;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Header */
+    .header-wrapper {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      backdrop-filter: blur(12px);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      gap: 1rem;
+    }
+
+    .header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--accent-indigo);
+    }
+
+    .header-meta {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: var(--accent-indigo);
+      color: #fff;
+      border-color: var(--accent-indigo);
+    }
+
+    .btn-primary:hover {
+      background: #6366f1;
+      border-color: #6366f1;
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border-color: var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-hover);
+      border-color: var(--text-muted);
+    }
+
+    .btn-sm {
+      padding: 0.25rem 0.625rem;
+      font-size: 0.75rem;
+    }
+
+    /* Summary Cards */
+    main {
+      padding: 1.5rem 0 3rem;
+    }
+
+    .digest-list {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .digest-card {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      transition: all 0.15s ease;
+      border-left: 3px solid var(--accent-indigo);
+    }
+
+    .digest-card:hover {
+      border-color: var(--accent-indigo);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 1rem 1rem 0.5rem;
+      gap: 1rem;
+    }
+
+    .card-sender {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--accent-indigo);
+    }
+
+    .card-date {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .card-subject {
+      padding: 0 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+    }
+
+    .card-body {
+      padding: 0 1rem 1rem;
+    }
+
+    .card-tldr {
+      font-size: 0.9375rem;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+      padding: 0.75rem;
+      background: rgba(129, 140, 248, 0.08);
+      border-radius: var(--radius-sm);
+      border-left: 2px solid var(--accent-indigo);
+    }
+
+    .card-section-title {
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 0.375rem;
+      margin-top: 0.75rem;
+    }
+
+    .card-key-points {
+      list-style: none;
+      padding: 0;
+    }
+
+    .card-key-points li {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      padding: 0.25rem 0;
+      padding-left: 1.25rem;
+      position: relative;
+    }
+
+    .card-key-points li::before {
+      content: "\2022";
+      color: var(--accent-indigo);
+      font-weight: bold;
+      position: absolute;
+      left: 0.25rem;
+    }
+
+    .card-action-items {
+      list-style: none;
+      padding: 0;
+    }
+
+    .card-action-items li {
+      font-size: 0.875rem;
+      color: var(--accent-green);
+      padding: 0.25rem 0;
+      padding-left: 1.25rem;
+      position: relative;
+    }
+
+    .card-action-items li::before {
+      content: "\2713";
+      color: var(--accent-green);
+      font-weight: bold;
+      position: absolute;
+      left: 0.25rem;
+    }
+
+    .card-meta {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .meta-tag {
+      font-size: 0.75rem;
+      padding: 0.125rem 0.5rem;
+      border-radius: 10px;
+      background: var(--bg-card);
+      color: var(--text-secondary);
+    }
+
+    /* Card Actions */
+    .card-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .action-radios {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .action-radio {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      cursor: pointer;
+      font-size: 0.8125rem;
+    }
+
+    .action-radio input[type="radio"] {
+      accent-color: var(--accent-indigo);
+      cursor: pointer;
+    }
+
+    .action-radio.archive-radio {
+      color: var(--accent-blue);
+    }
+
+    .action-radio.delete-radio {
+      color: var(--accent-red);
+    }
+
+    /* Footer */
+    .footer-wrapper {
+      position: sticky;
+      bottom: 0;
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border-color);
+      backdrop-filter: blur(12px);
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+    }
+
+    .bulk-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    /* Success Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 1;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .modal {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      max-width: 440px;
+      width: 90%;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-md);
+      transform: scale(1);
+      transition: transform 0.2s ease;
+    }
+
+    .modal-overlay.hidden .modal {
+      transform: scale(0.95);
+    }
+
+    .modal h2 {
+      margin-bottom: 0.75rem;
+      font-size: 1.125rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .modal p {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .modal code {
+      display: block;
+      background: var(--bg-primary);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+      font-size: 0.8125rem;
+      margin-bottom: 1rem;
+      color: var(--accent-indigo);
+      border: 1px solid var(--border-color);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .digest-card {
+      animation: fadeIn 0.25s ease forwards;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .container {
+        padding: 0 1rem;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+
+      .header-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .footer {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .bulk-actions {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+
+      .bulk-actions .btn {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header-wrapper">
+    <div class="container">
+      <header class="header">
+        <div>
+          <h1>Reading Digest</h1>
+          <div class="header-meta" id="header-meta">Loading...</div>
+        </div>
+        <div class="header-actions">
+          <span id="stats"></span>
+          <button class="btn btn-primary" onclick="submitDecisions()">Submit Decisions</button>
+        </div>
+      </header>
+    </div>
+  </div>
+
+  <div class="container">
+    <main id="digest-list">
+      <div class="empty-state">
+        <div class="empty-state-icon">Loading...</div>
+      </div>
+    </main>
+  </div>
+
+  <div class="footer-wrapper">
+    <div class="container">
+      <footer class="footer">
+        <div class="bulk-actions">
+          <button class="btn btn-secondary btn-sm" onclick="archiveAll()">Archive All</button>
+          <button class="btn btn-secondary btn-sm" onclick="deleteAll()">Delete All</button>
+        </div>
+        <button class="btn btn-primary" onclick="submitDecisions()">Submit Decisions</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="modal-overlay hidden" id="successModal">
+    <div class="modal">
+      <h2>Decisions Saved</h2>
+      <p style="margin-bottom: 0.5rem;">A JSON file was downloaded to your <strong>Downloads</strong> folder:</p>
+      <code style="margin-bottom: 1rem; font-size: 0.75rem; color: var(--text-secondary);" id="downloadedFilename">reading-digest-decisions-YYYYMMDD-HHmmss.json</code>
+      <p>Now run this command in Claude Code to execute your decisions:</p>
+      <code>/chief-of-staff:batch --digest</code>
+      <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.75rem;">The command will archive or delete each email and clear the digest.</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="closeModal()">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // BEGIN_DIGEST_DATA - Do not remove this marker
+    const DIGEST_DATA = {
+      generated: "2026-02-17T10:30:00Z",
+      sessionId: "digest-example",
+      items: [
+        {
+          emailId: "email-example-1",
+          from: { name: "Stratechery", email: "ben@stratechery.com" },
+          subject: "The AI Platform Shift",
+          receivedAt: "2026-02-15T12:00:00Z",
+          summarizedAt: "2026-02-17T10:30:00Z",
+          summary: {
+            tldr: "AI is reshaping technology platforms by shifting value from distribution to intelligence layers.",
+            keyPoints: [
+              "Traditional platform advantages are being disrupted by AI capabilities",
+              "AI-native companies can bypass existing gatekeepers",
+              "The winner-take-all dynamic may not apply to AI platforms"
+            ],
+            actionItems: [],
+            estimatedReadTime: "8 min",
+            contentType: "analysis"
+          }
+        }
+      ]
+    };
+    // END_DIGEST_DATA - Do not remove this marker
+
+    const decisions = {};
+
+    function init() {
+      if (!DIGEST_DATA.items || DIGEST_DATA.items.length === 0) {
+        document.getElementById('digest-list').textContent = 'No items in digest.';
+        return;
+      }
+
+      // Initialize all decisions to archive (default)
+      DIGEST_DATA.items.forEach(function(item) {
+        decisions[item.emailId] = { emailId: item.emailId, action: 'archive' };
+      });
+
+      renderDigest();
+      updateStats();
+
+      var meta = document.getElementById('header-meta');
+      meta.textContent = DIGEST_DATA.items.length + ' items \u2022 Generated ' + formatDate(DIGEST_DATA.generated);
+    }
+
+    function renderDigest() {
+      var container = document.getElementById('digest-list');
+      while (container.firstChild) container.removeChild(container.firstChild);
+
+      var list = document.createElement('div');
+      list.className = 'digest-list';
+
+      DIGEST_DATA.items.forEach(function(item, index) {
+        list.appendChild(renderCard(item, index));
+      });
+
+      container.appendChild(list);
+    }
+
+    function renderCard(item, index) {
+      var card = document.createElement('article');
+      card.className = 'digest-card';
+      card.id = 'card-' + item.emailId;
+      card.style.animationDelay = (index * 0.05) + 's';
+
+      var summary = item.summary || {};
+
+      // Build card header
+      var header = document.createElement('div');
+      header.className = 'card-header';
+
+      var sender = document.createElement('div');
+      sender.className = 'card-sender';
+      sender.textContent = (item.from && item.from.name) || (item.from && item.from.email) || 'Unknown';
+
+      var date = document.createElement('div');
+      date.className = 'card-date';
+      date.textContent = formatDate(item.receivedAt);
+
+      header.appendChild(sender);
+      header.appendChild(date);
+      card.appendChild(header);
+
+      // Subject
+      var subject = document.createElement('div');
+      subject.className = 'card-subject';
+      subject.textContent = item.subject || '(No subject)';
+      card.appendChild(subject);
+
+      // Body
+      var body = document.createElement('div');
+      body.className = 'card-body';
+
+      // TL;DR
+      if (summary.tldr) {
+        var tldr = document.createElement('div');
+        tldr.className = 'card-tldr';
+        tldr.textContent = summary.tldr;
+        body.appendChild(tldr);
+      }
+
+      // Key Points
+      if (summary.keyPoints && summary.keyPoints.length > 0) {
+        var kpTitle = document.createElement('div');
+        kpTitle.className = 'card-section-title';
+        kpTitle.textContent = 'Key Points';
+        body.appendChild(kpTitle);
+
+        var kpList = document.createElement('ul');
+        kpList.className = 'card-key-points';
+        summary.keyPoints.forEach(function(point) {
+          var li = document.createElement('li');
+          li.textContent = point;
+          kpList.appendChild(li);
+        });
+        body.appendChild(kpList);
+      }
+
+      // Action Items
+      if (summary.actionItems && summary.actionItems.length > 0) {
+        var aiTitle = document.createElement('div');
+        aiTitle.className = 'card-section-title';
+        aiTitle.textContent = 'Action Items';
+        body.appendChild(aiTitle);
+
+        var aiList = document.createElement('ul');
+        aiList.className = 'card-action-items';
+        summary.actionItems.forEach(function(ai) {
+          var li = document.createElement('li');
+          li.textContent = ai;
+          aiList.appendChild(li);
+        });
+        body.appendChild(aiList);
+      }
+
+      // Meta tags
+      var meta = document.createElement('div');
+      meta.className = 'card-meta';
+      if (summary.estimatedReadTime) {
+        var tag1 = document.createElement('span');
+        tag1.className = 'meta-tag';
+        tag1.textContent = summary.estimatedReadTime + ' read';
+        meta.appendChild(tag1);
+      }
+      if (summary.contentType) {
+        var tag2 = document.createElement('span');
+        tag2.className = 'meta-tag';
+        tag2.textContent = summary.contentType;
+        meta.appendChild(tag2);
+      }
+      body.appendChild(meta);
+      card.appendChild(body);
+
+      // Actions
+      var actions = document.createElement('div');
+      actions.className = 'card-actions';
+
+      var radios = document.createElement('div');
+      radios.className = 'action-radios';
+
+      // Archive radio
+      var archiveLabel = document.createElement('label');
+      archiveLabel.className = 'action-radio archive-radio';
+      var archiveInput = document.createElement('input');
+      archiveInput.type = 'radio';
+      archiveInput.name = 'action-' + item.emailId;
+      archiveInput.value = 'archive';
+      archiveInput.checked = true;
+      archiveInput.addEventListener('change', function() { updateDecision(item.emailId, 'archive'); });
+      archiveLabel.appendChild(archiveInput);
+      archiveLabel.appendChild(document.createTextNode(' Archive'));
+      radios.appendChild(archiveLabel);
+
+      // Delete radio
+      var deleteLabel = document.createElement('label');
+      deleteLabel.className = 'action-radio delete-radio';
+      var deleteInput = document.createElement('input');
+      deleteInput.type = 'radio';
+      deleteInput.name = 'action-' + item.emailId;
+      deleteInput.value = 'delete';
+      deleteInput.addEventListener('change', function() { updateDecision(item.emailId, 'delete'); });
+      deleteLabel.appendChild(deleteInput);
+      deleteLabel.appendChild(document.createTextNode(' Delete'));
+      radios.appendChild(deleteLabel);
+
+      actions.appendChild(radios);
+      card.appendChild(actions);
+
+      return card;
+    }
+
+    function updateDecision(emailId, action) {
+      decisions[emailId] = { emailId: emailId, action: action };
+      updateStats();
+    }
+
+    function archiveAll() {
+      Object.keys(decisions).forEach(function(emailId) {
+        decisions[emailId].action = 'archive';
+        var radio = document.querySelector('input[name="action-' + emailId + '"][value="archive"]');
+        if (radio) radio.checked = true;
+      });
+      updateStats();
+    }
+
+    function deleteAll() {
+      Object.keys(decisions).forEach(function(emailId) {
+        decisions[emailId].action = 'delete';
+        var radio = document.querySelector('input[name="action-' + emailId + '"][value="delete"]');
+        if (radio) radio.checked = true;
+      });
+      updateStats();
+    }
+
+    function updateStats() {
+      var vals = Object.values(decisions);
+      var archiveCount = vals.filter(function(d) { return d.action === 'archive'; }).length;
+      var deleteCount = vals.filter(function(d) { return d.action === 'delete'; }).length;
+      document.getElementById('stats').textContent =
+        archiveCount + ' archive \u2022 ' + deleteCount + ' delete';
+    }
+
+    function submitDecisions() {
+      var output = {
+        sessionId: DIGEST_DATA.sessionId,
+        submittedAt: new Date().toISOString(),
+        type: "digest",
+        decisions: Object.values(decisions)
+      };
+
+      var now = new Date();
+      var ts = now.toISOString().replace(/[-:]/g, '').replace('T', '-').split('.')[0];
+      var filename = 'reading-digest-decisions-' + ts + '.json';
+      var blob = new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      document.getElementById('downloadedFilename').textContent = filename;
+      document.getElementById('successModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('successModal').classList.add('hidden');
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      var date = new Date(dateStr);
+      var now = new Date();
+      var diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) {
+        return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      } else if (diffDays === 1) {
+        return 'Yesterday';
+      } else if (diffDays < 7) {
+        return date.toLocaleDateString([], { weekday: 'short' });
+      } else {
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

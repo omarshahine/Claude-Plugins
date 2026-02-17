@@ -23,6 +23,8 @@
       --accent-teal: #39d2c0;
       --accent-pink: #f778ba;
       --accent-amber: #e3b341;
+      --accent-indigo: #818cf8;
+      --accent-sky: #38bdf8;
       --border-color: #30363d;
       --border-subtle: #21262d;
       --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
@@ -130,6 +132,8 @@
     .dot-rule { background: var(--accent-teal); }
     .dot-custom { background: var(--accent-pink); }
     .dot-route { background: var(--accent-amber); }
+    .dot-summarize { background: var(--accent-indigo); }
+    .dot-memo { background: var(--accent-sky); }
 
     .progress-bar {
       height: 6px;
@@ -153,6 +157,8 @@
     .segment-custom { background: var(--accent-pink); }
     .segment-route { background: var(--accent-amber); }
     .segment-flag { background: var(--accent-orange); }
+    .segment-summarize { background: var(--accent-indigo); }
+    .segment-memo { background: var(--accent-sky); }
     .segment-keep { background: var(--text-muted); }
 
     /* Buttons */
@@ -286,6 +292,8 @@
     .email-card.action-custom { border-left: 3px solid var(--accent-pink); }
     .email-card.action-route { border-left: 3px solid var(--accent-amber); }
     .email-card.action-flag { border-left: 3px solid var(--accent-orange); }
+    .email-card.action-summarize { border-left: 3px solid var(--accent-indigo); }
+    .email-card.action-memo { border-left: 3px solid var(--accent-sky); }
     .email-card.action-keep { border-left: 3px solid var(--text-muted); }
 
     .email-top {
@@ -1051,6 +1059,8 @@
         { value: 'route', label: 'Process', icon: '\u26a1', recommended: true },
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
         { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
+        { value: 'memo', label: 'Memo', icon: '\ud83d\udcdd' },
+        { value: 'summarize', label: 'Summarize', icon: '\ud83d\udcd6' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
         { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
@@ -1060,6 +1070,8 @@
         { value: 'calendar', label: 'Calendar', icon: '\ud83d\udcc5' },
         { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
         { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
+        { value: 'memo', label: 'Memo', icon: '\ud83d\udcdd' },
+        { value: 'summarize', label: 'Summarize', icon: '\ud83d\udcd6' },
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
@@ -1070,15 +1082,28 @@
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
         { value: 'reminder', label: 'Reminder', icon: '\u23f0' },
         { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
+        { value: 'memo', label: 'Memo', icon: '\ud83d\udcdd' },
+        { value: 'summarize', label: 'Summarize', icon: '\ud83d\udcd6' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
         { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
       ],
       newsletters: [
         { value: 'unsubscribe', label: 'Unsubscribe + Delete', icon: '\ud83d\udeab', recommended: true },
+        { value: 'summarize', label: 'Summarize', icon: '\ud83d\udcd6' },
+        { value: 'memo', label: 'Memo', icon: '\ud83d\udcdd' },
         { value: 'delete', label: 'Delete Only', icon: '\ud83d\uddd1\ufe0f' },
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
         { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
+        { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
+        { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
+      ],
+      reading: [
+        { value: 'summarize', label: 'Summarize', icon: '\ud83d\udcd6', recommended: true },
+        { value: 'memo', label: 'Memo', icon: '\ud83d\udcdd' },
+        { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
+        { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
+        { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
         { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
       ],
@@ -1088,6 +1113,8 @@
         { value: 'calendar', label: 'Calendar', icon: '\ud83d\udcc5' },
         { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
         { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
+        { value: 'memo', label: 'Memo', icon: '\ud83d\udcdd' },
+        { value: 'summarize', label: 'Summarize', icon: '\ud83d\udcd6' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
         { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
@@ -1095,6 +1122,8 @@
       archiveReady: [
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5', recommended: true },
         { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
+        { value: 'memo', label: 'Memo', icon: '\ud83d\udcdd' },
+        { value: 'summarize', label: 'Summarize', icon: '\ud83d\udcd6' },
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
         { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
@@ -1104,6 +1133,8 @@
       deleteReady: [
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f', recommended: true },
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5' },
+        { value: 'memo', label: 'Memo', icon: '\ud83d\udcdd' },
+        { value: 'summarize', label: 'Summarize', icon: '\ud83d\udcd6' },
         { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
         { value: 'custom', label: 'Custom', icon: '\u270f\ufe0f' }
@@ -1111,6 +1142,8 @@
       fyi: [
         { value: 'archive', label: 'Archive', icon: '\ud83d\udce5', recommended: true },
         { value: 'reply', label: 'Reply', icon: '\u21a9\ufe0f' },
+        { value: 'memo', label: 'Memo', icon: '\ud83d\udcdd' },
+        { value: 'summarize', label: 'Summarize', icon: '\ud83d\udcd6' },
         { value: 'flag', label: 'Flag', icon: '\ud83d\udea9' },
         { value: 'delete', label: 'Delete', icon: '\ud83d\uddd1\ufe0f' },
         { value: 'keep', label: 'Keep', icon: '\ud83d\udccc' },
@@ -1129,7 +1162,7 @@
       const container = document.getElementById('categories');
       container.innerHTML = '';
 
-      const categoryOrder = ['actionable', 'topOfMind', 'deliveries', 'newsletters', 'financial', 'archiveReady', 'deleteReady', 'fyi'];
+      const categoryOrder = ['actionable', 'topOfMind', 'deliveries', 'newsletters', 'reading', 'financial', 'archiveReady', 'deleteReady', 'fyi'];
       let totalEmails = 0;
 
       categoryOrder.forEach(categoryKey => {
@@ -1331,12 +1364,16 @@
         replyDraft.classList.toggle('visible', action === 'reply');
       }
 
-      // Handle custom action - focus steering and change placeholder
+      // Handle custom/memo action - focus steering and change placeholder
       const steeringInput = card.querySelector('.steering-input input');
       if (steeringInput) {
         if (action === 'custom') {
           steeringInput.placeholder = 'Describe what to do with this email...';
           steeringInput.style.borderColor = 'var(--accent-pink)';
+          setTimeout(() => steeringInput.focus(), 50);
+        } else if (action === 'memo') {
+          steeringInput.placeholder = 'Write memo text to attach...';
+          steeringInput.style.borderColor = 'var(--accent-sky)';
           setTimeout(() => steeringInput.focus(), 50);
         } else {
           steeringInput.placeholder = 'Add notes...';
@@ -1401,8 +1438,8 @@
 
           const steeringInput = card.querySelector('.steering-input input');
           if (steeringInput) {
-            steeringInput.placeholder = action === 'custom' ? 'Describe what to do with this email...' : 'Add notes...';
-            steeringInput.style.borderColor = action === 'custom' ? 'var(--accent-pink)' : '';
+            steeringInput.placeholder = action === 'custom' ? 'Describe what to do with this email...' : action === 'memo' ? 'Write memo text to attach...' : 'Add notes...';
+            steeringInput.style.borderColor = action === 'custom' ? 'var(--accent-pink)' : action === 'memo' ? 'var(--accent-sky)' : '';
           }
         }
       });
@@ -1488,7 +1525,7 @@
     }
 
     function updateStats() {
-      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, flag: 0, parcel: 0, unsubscribe: 0, calendar: 0, reply: 0, custom: 0, route: 0, rules: 0 };
+      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, flag: 0, parcel: 0, unsubscribe: 0, calendar: 0, reply: 0, custom: 0, route: 0, summarize: 0, memo: 0, rules: 0 };
 
       Object.values(decisions).forEach(d => {
         stats.total++;
@@ -1503,6 +1540,8 @@
         else if (d.action === 'reply') stats.reply++;
         else if (d.action === 'custom') stats.custom++;
         else if (d.action === 'route') stats.route++;
+        else if (d.action === 'summarize') stats.summarize++;
+        else if (d.action === 'memo') stats.memo++;
         if (d.createRule) stats.rules++;
       });
 
@@ -1511,6 +1550,8 @@
       if (stats.archive > 0) parts.push(`${stats.archive} archive`);
       if (stats.delete > 0) parts.push(`${stats.delete} delete`);
       if (stats.flag > 0) parts.push(`${stats.flag} flag`);
+      if (stats.summarize > 0) parts.push(`${stats.summarize} summarize`);
+      if (stats.memo > 0) parts.push(`${stats.memo} memo`);
       if (stats.unsubscribe > 0) parts.push(`${stats.unsubscribe} unsub`);
       if (stats.parcel > 0) parts.push(`${stats.parcel} parcel`);
       if (stats.reminder > 0) parts.push(`${stats.reminder} reminder`);
@@ -1521,7 +1562,7 @@
     }
 
     function updateProgressBar() {
-      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, flag: 0, parcel: 0, unsubscribe: 0, reply: 0, custom: 0, route: 0 };
+      const stats = { total: 0, archive: 0, delete: 0, reminder: 0, keep: 0, flag: 0, parcel: 0, unsubscribe: 0, reply: 0, custom: 0, route: 0, summarize: 0, memo: 0 };
 
       Object.values(decisions).forEach(d => {
         stats.total++;
@@ -1535,6 +1576,8 @@
         else if (d.action === 'reply') stats.reply++;
         else if (d.action === 'custom') stats.custom++;
         else if (d.action === 'route') stats.route++;
+        else if (d.action === 'summarize') stats.summarize++;
+        else if (d.action === 'memo') stats.memo++;
       });
 
       const decided = stats.total - stats.keep;
@@ -1557,6 +1600,8 @@
         { class: 'segment-reminder', width: (stats.reminder / stats.total) * 100 },
         { class: 'segment-reply', width: (stats.reply / stats.total) * 100 },
         { class: 'segment-custom', width: (stats.custom / stats.total) * 100 },
+        { class: 'segment-summarize', width: (stats.summarize / stats.total) * 100 },
+        { class: 'segment-memo', width: (stats.memo / stats.total) * 100 },
         { class: 'segment-keep', width: (stats.keep / stats.total) * 100 }
       ];
 
@@ -1575,6 +1620,8 @@
       if (stats.parcel > 0) countItems.push(`<span class="progress-count"><span class="dot dot-parcel"></span>${stats.parcel}</span>`);
       if (stats.reply > 0) countItems.push(`<span class="progress-count"><span class="dot dot-reply"></span>${stats.reply}</span>`);
       if (stats.custom > 0) countItems.push(`<span class="progress-count"><span class="dot dot-custom"></span>${stats.custom}</span>`);
+      if (stats.summarize > 0) countItems.push(`<span class="progress-count"><span class="dot dot-summarize"></span>${stats.summarize}</span>`);
+      if (stats.memo > 0) countItems.push(`<span class="progress-count"><span class="dot dot-memo"></span>${stats.memo}</span>`);
       const ruleCount = Object.values(decisions).filter(d => d.createRule).length;
       if (ruleCount > 0) countItems.push(`<span class="progress-count"><span class="dot dot-rule"></span>${ruleCount} rules</span>`);
       counts.innerHTML = countItems.join('');
@@ -1586,6 +1633,7 @@
         topOfMind: 'reminder',
         deliveries: 'addToParcel',
         newsletters: 'unsubscribe',
+        reading: 'summarize',
         financial: 'archive',
         archiveReady: 'archive',
         deleteReady: 'delete',

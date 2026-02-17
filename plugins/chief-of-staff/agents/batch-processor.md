@@ -60,7 +60,7 @@ Read the JSON file and validate structure:
   decisions: [
     {
       emailId: "email-abc123",
-      action: "archive|delete|keep|reminder|calendar|reply|addToParcel|unsubscribe|custom|route",
+      action: "archive|delete|keep|reminder|calendar|reply|addToParcel|unsubscribe|custom|route|summarize|memo",
       params: { ... },
       steering: "optional notes",
       replyDraft: "optional full reply text drafted in batch UI"
@@ -100,6 +100,7 @@ Use `EMAIL_TOOLS` mappings for all email operations:
 - `EMAIL_TOOLS.flag_email` - Flag emails
 - `EMAIL_TOOLS.list_mailboxes` - Get folder IDs
 - `EMAIL_TOOLS.reply_to_email` - Draft replies
+- `EMAIL_TOOLS.create_memo` - Attach private memo/annotation to an email
 
 ### 4. Group Decisions by Action Type
 
@@ -111,6 +112,8 @@ Organize decisions into groups for efficient processing:
     archive: [...],      // Execute with move_email
     delete: [...],       // Execute with delete_email
     flag: [...],         // Flag email, keep in inbox
+    summarize: [...],    // Flag email, fetch body, AI-summarize, store in reading-digest-state
+    memo: [...],         // Attach steering text as memo, then archive
     keep: [...],         // No action (or flag if specified)
     reply: [...]         // Execute with reply_to_email
   },
@@ -157,6 +160,68 @@ For each flag decision:
 1. Call flag_email with emailId, flagged: true
 2. Email stays in inbox (flagged for follow-up)
 3. Track as processed
+```
+
+#### Summarize
+```
+For each summarize decision:
+1. Call flag_email with emailId, flagged: true (marks for follow-up)
+2. Fetch full email body: EMAIL_TOOLS.get_email(emailId)
+3. Generate AI summary inline:
+   - TL;DR: 1-2 sentence summary
+   - Key Points: 3-5 bullet points of the most important information
+   - Action Items: any tasks or deadlines mentioned (may be empty)
+   - Estimated Read Time: estimate based on content length
+   - Content Type: one of "analysis", "news", "tutorial", "update", "opinion"
+4. Attach summary as Fastmail memo on the email:
+   Call EMAIL_TOOLS.create_memo(emailId, memoText) where memoText is:
+     "## AI Summary\n\n{tldr}\n\n### Key Points\n{keyPoints as bullet list}\n\n### Action Items\n{actionItems as bullet list or 'None'}\n\n---\nRead time: {estimatedReadTime} | Type: {contentType}\nSummarized: {timestamp}"
+   This persists the summary with the email in Fastmail so it's
+   accessible even after the digest is processed and the email archived.
+5. Collect all summaries for batch writing
+```
+
+After processing ALL summarize decisions:
+
+```
+1. Read ~/.claude/data/chief-of-staff/reading-digest-state.yaml
+   - If file doesn't exist, initialize from reading-digest-state.example.yaml
+2. Append each summary to items array:
+   - emailId: "[email ID]"
+     from:
+       name: "[sender name]"
+       email: "[sender email]"
+     subject: "[email subject]"
+     receivedAt: "[original receive timestamp]"
+     summarizedAt: "[current ISO timestamp]"
+     sourceSessionId: "[current batch session ID]"
+     summary:
+       tldr: "[1-2 sentence summary]"
+       keyPoints: ["point 1", "point 2", ...]
+       actionItems: ["item 1", ...] or []
+       estimatedReadTime: "X min"
+       contentType: "analysis|news|tutorial|update|opinion"
+3. Update metadata.total_items and metadata.last_generated
+4. Write updated reading-digest-state.yaml
+5. Launch reading-digest-generator sub-agent:
+   Task:
+     subagent_type: "chief-of-staff:reading-digest-generator"
+     prompt: |
+       Generate reading digest HTML from reading-digest-state.yaml.
+       Session: [sessionId]
+```
+
+#### Memo
+```
+For each memo decision:
+1. Get memo text from decision.steering (the Notes field)
+   - If steering is empty/missing, use a default: "Memo added via batch triage"
+2. Call EMAIL_TOOLS.create_memo(emailId, steering)
+   - This attaches a private annotation to the email in Fastmail
+3. Archive the email:
+   - Get target folder from params.folderId (if set) or default Archive folder
+   - Call move_email with emailId and folderId
+4. Track success/failure
 ```
 
 #### Keep
@@ -461,6 +526,8 @@ results:
     archive: { attempted: 10, successful: 10 }
     delete: { attempted: 4, successful: 4 }
     flag: { attempted: 2, successful: 2 }
+    summarize: { attempted: 3, successful: 3 }
+    memo: { attempted: 2, successful: 2 }
     parcel: { attempted: 5, successful: 5 }
     unsubscribe: { attempted: 8, successful: 6, failed: 2 }
     reminder: { attempted: 3, successful: 3 }
@@ -502,6 +569,8 @@ Archive: 10 emails archived
   - 3 to Orders
   - 1 to Travel
 Delete: 4 emails deleted
+Summarize: 3 emails summarized (flagged, digest generated)
+Memo: 2 emails annotated (memo attached, archived)
 Keep: 1 email kept (flagged)
 Reply: 0 drafts created
 Custom: 2 custom actions executed
@@ -716,7 +785,7 @@ Include in the final report:
 RULES CREATED
 -------------
 Local filing rules: 2
-  - seattleacademy.org -> SAAS (4 manual filings)
+  - seattleacademy.org -> Seattle Academy (4 manual filings)
   - ellimanpm.com -> DHT (3 manual filings)
 
 Fastmail server-side rules: 1
@@ -726,6 +795,58 @@ Skipped: 1
 
 Local only (no Fastmail rule): 0
 Failed: 0
+```
+
+## Digest Processing Mode
+
+When the decisions JSON has `"type": "digest"` (from the reading-digest.html interface), execute digest-specific processing instead of normal batch triage.
+
+### Digest Decisions File Structure
+
+```javascript
+{
+  sessionId: "digest-2026-02-17-abc",
+  submittedAt: "2026-02-17T14:00:00Z",
+  type: "digest",
+  decisions: [
+    {
+      emailId: "email-abc123",
+      action: "archive"  // or "delete"
+    }
+  ]
+}
+```
+
+### Digest Processing Workflow
+
+```
+1. Detect digest mode: check if decisions JSON has type === "digest"
+
+2. Initialize email provider (same as normal mode - Step 3)
+
+3. For each decision:
+   a. If action === "archive":
+      - Call move_email to Archive folder
+      - Call flag_email with flagged: false (unflag)
+   b. If action === "delete":
+      - Call delete_email
+      (no need to unflag — email is being deleted)
+
+4. Update reading-digest-state.yaml:
+   - Remove processed items from items array (match by emailId)
+   - Append to history array:
+     - emailId, domain (from sender email), action, processedAt, sessionId
+
+5. Record decisions in decision-history.yaml:
+   - Use action type "summarize_archive" or "summarize_delete"
+   - These are tracked separately from regular archive/delete for learning
+
+6. Report summary:
+   DIGEST PROCESSING
+   -----------------
+   Archived: X emails (unflagged)
+   Deleted: X emails
+   Remaining in digest: X items
 ```
 
 ## Error Handling

@@ -1,6 +1,6 @@
 ---
 description: Visual HTML batch triage interface
-argument-hint: "[--generate | --process | --retry | --reset | --full]"
+argument-hint: "[--generate | --process | --digest | --retry | --reset | --full]"
 ---
 
 # /chief-of-staff:batch
@@ -13,6 +13,7 @@ Generate or process a visual HTML batch triage interface.
 /chief-of-staff:batch              # Generate HTML interface (incremental if state exists)
 /chief-of-staff:batch --generate   # Same as above
 /chief-of-staff:batch --process    # Process downloaded decisions
+/chief-of-staff:batch --digest     # Process reading digest decisions (archive/delete summarized emails)
 /chief-of-staff:batch --retry      # Retry failed items from last batch
 /chief-of-staff:batch --reset      # Clear sync state, full fetch
 /chief-of-staff:batch --full       # One-time full fetch, save new state
@@ -22,6 +23,7 @@ Generate or process a visual HTML batch triage interface.
 
 - **--generate** (default): Create the HTML batch triage page
 - **--process**: Process decisions from downloaded JSON file
+- **--digest**: Process reading digest decisions (archive/delete summarized emails)
 - **--retry**: Retry only failed items from previous batch
 - **--reset**: Clear sync state completely, do full fetch (starts fresh)
 - **--full**: One-time full fetch but save new state for future incremental calls
@@ -78,7 +80,7 @@ Browser opened. Review emails, adjust actions, click 'Submit All'.
 After submitting, run: /chief-of-staff:batch --process
 ```
 
-### Process Mode
+### Process Mode (with Summarize)
 
 ```
 Processing 40 decisions from batch-2026-02-02-abc123...
@@ -106,6 +108,20 @@ Successful: 38
 Failed: 2
 
 Failed items saved for retry.
+```
+
+### Digest Mode
+
+```
+Processing 5 digest decisions...
+
+DIGEST PROCESSING
+-----------------
+Archived: 3 emails (unflagged)
+Deleted: 2 emails
+Remaining in digest: 0 items
+
+Decisions recorded as summarize_archive/summarize_delete.
 ```
 
 ## Implementation
@@ -147,6 +163,25 @@ Use the Task tool with:
     - Use reply_to_email with markdownBody for drafts
     - Initialize data files from .example templates if missing
     - Record all decisions to decision-history.yaml for learning
+```
+
+**Digest Mode (--digest):**
+```
+Use the Task tool with:
+  subagent_type: "chief-of-staff:batch-processor"
+  prompt: |
+    Process reading digest decisions from the downloaded JSON file.
+
+    Check these locations for the decisions file:
+    1. ~/Downloads/reading-digest-decisions-*.json
+    2. Scratchpad directory
+
+    The decisions JSON will have type: "digest" with archive/delete actions per email.
+    For each decision:
+    - Archive: move to Archive folder, unflag the email
+    - Delete: delete the email
+    After processing, update reading-digest-state.yaml (remove processed items, add to history).
+    Record decisions as summarize_archive / summarize_delete in decision-history.yaml.
 ```
 
 **Retry Mode (--retry):**

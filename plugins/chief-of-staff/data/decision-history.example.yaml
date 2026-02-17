@@ -39,6 +39,22 @@ statistics:
       total: 0
       accepted: 0
       acceptance_rate: 0.0
+    summarize:
+      total: 0
+      accepted: 0
+      acceptance_rate: 0.0
+    memo:
+      total: 0
+      accepted: 0
+      acceptance_rate: 0.0
+    summarize_archive:
+      total: 0
+      accepted: 0
+      acceptance_rate: 0.0
+    summarize_delete:
+      total: 0
+      accepted: 0
+      acceptance_rate: 0.0
 
   # By domain (top domains)
   by_domain: {}
@@ -68,6 +84,16 @@ history:
     #
     #   accepted: true
     []
+
+# Learned reading senders (auto-applied, no confirmation needed)
+# Domains with 3+ "summarize" decisions are added here automatically
+# Used by batch-html-generator to pre-classify emails into "reading" category
+reading_senders:
+  # - domain: "stratechery.com"
+  #   observation_count: 5
+  #   learned_at: "2026-02-15T10:00:00Z"
+  #   confidence: 0.85
+  []
 
 # Learned patterns (pending confirmation)
 learned_patterns:
