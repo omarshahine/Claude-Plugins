@@ -2,6 +2,22 @@
 
 This repository is a Claude Code plugin marketplace (`omarshahine-agent-plugins`) containing reusable plugins for email management, travel, file organization, and personal information management.
 
+## Quick Commands
+
+```bash
+# Install a plugin from this marketplace
+/plugin install chief-of-staff@omarshahine-agent-plugins
+
+# Check MCP server status
+/mcp
+
+# Test an agent
+# Task(subagent_type="chief-of-staff:inbox-interviewer", prompt="Triage my inbox")
+
+# Clear plugin cache (after changes)
+rm -rf ~/.claude/plugins/cache/omarshahine-agent-plugins/<plugin>
+```
+
 ## Repository Structure
 
 ```
