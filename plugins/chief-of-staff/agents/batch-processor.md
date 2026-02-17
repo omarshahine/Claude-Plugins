@@ -785,13 +785,13 @@ Include in the final report:
 RULES CREATED
 -------------
 Local filing rules: 2
-  - seattleacademy.org -> Seattle Academy (4 manual filings)
-  - ellimanpm.com -> DHT (3 manual filings)
+  - example-school.org -> School (4 manual filings)
+  - vendor.example.com -> Vendor Co (3 manual filings)
 
 Fastmail server-side rules: 1
-  - ellimanpm.com -> DHT (created via Playwright)
+  - vendor.example.com -> Vendor Co (created via Playwright)
 Skipped: 1
-  - seattleacademy.org -> already in Fastmail rule "School"
+  - example-school.org -> already in Fastmail rule "School"
 
 Local only (no Fastmail rule): 0
 Failed: 0

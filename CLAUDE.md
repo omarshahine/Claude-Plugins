@@ -430,6 +430,8 @@ These must never be committed to tracked files:
 - **Hardcoded paths**: `/Users/[username]/` or `C:\Users\[username]\` - use `~/`, `${HOME}`, or wildcards
 - **Personal emails**: Real email addresses in agent/command/skill/template files (allowed: `@example.com`, `@anthropic.com`, `@noreply`)
 - **Real names**: Family member names in examples or templates - use generic placeholders ("Jane", "Alex Smith")
+- **Real organizations/schools**: Real institution names (schools, companies, property managers) in examples - use `Example School`, `Vendor Co`, `Acme Corp`
+- **Real domains in examples**: Personal or institutional domains (`myschool.org`, `myvendor.com`) in code examples - use `example-school.org`, `vendor.example.com`, or `*.example.com`
 - **Physical addresses**: Real street addresses - use `123 Main St` placeholders
 - **Phone numbers**: US phone patterns (XXX-XXX-XXXX) - use `555-123-4567`
 - **API keys/secrets**: Hardcoded `api_key=`, `token=`, `secret=`, `Bearer [value]` - use `${VAR}` env vars

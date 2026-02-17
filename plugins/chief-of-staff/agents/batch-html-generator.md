@@ -334,11 +334,11 @@ Before writing TRIAGE_DATA, detect opportunities for filing rules:
 
 ```javascript
 ruleSuggestion: {
-  domain: "seattleacademy.org",        // sender domain
-  targetFolder: "Seattle Academy",      // most common destination folder name
+  domain: "example-school.org",        // sender domain
+  targetFolder: "School",              // most common destination folder name
   targetFolderId: "P4k",              // mailbox ID for that folder
   matchCount: 4,                       // number of times filed to this folder
-  message: "Filed to Seattle Academy 4 times"  // human-readable description
+  message: "Filed to School 4 times"   // human-readable description
 }
 ```
 
