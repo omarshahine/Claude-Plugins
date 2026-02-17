@@ -132,10 +132,33 @@ Classify each email into ONE category (first match wins):
 | topOfMind | Family, urgent, deadline, action required, personal | reply/reminder |
 | deliveries | shipped, tracking, delivery, "on its way" | addToParcel |
 | newsletters | noreply@, newsletter@, digest, $canunsubscribe | unsubscribe |
+| reading | Domain in `reading_senders` list (decision-history.yaml) with 3+ summarize decisions | summarize |
 | financial | Banks, statement, payment, balance, credit card | archive (Financial) |
 | archiveReady | Automated notifications, receipts, CC'd | archive |
 | deleteReady | Promotional, spam-like, expired offers, marketing | delete |
 | fyi | Everything else | archive |
+
+### Reading Category Classification
+
+After newsletter classification but before financial, check if the sender domain appears in the `reading_senders` list in `decision-history.yaml`:
+
+```
+1. Read ~/.claude/data/chief-of-staff/decision-history.yaml
+2. Check if reading_senders list exists and has entries
+3. For each email not yet classified:
+   a. Extract sender domain from from.email
+   b. If domain is in reading_senders AND confidence >= 0.50:
+      -> Classify as "reading"
+      -> Set suggestion.action = "summarize"
+      -> Set readingInfo:
+         estimatedReadTime: estimate from preview length
+         contentType: infer from sender/subject
+         learnedFrom: "reading_senders ([confidence]%)"
+   c. If domain is in reading_senders but confidence < 0.50:
+      -> Skip (low confidence, let normal classification handle it)
+```
+
+The reading category is populated by the learning system. Initially it will be empty — users must manually select "Summarize" in the triage UI. After 3+ summarize decisions for a domain, the decision-learner automatically adds it to `reading_senders` and future emails from that domain are pre-classified into the reading category.
 
 ### Action Route Matching (Priority 0) — MANDATORY FIRST PASS
 
@@ -249,6 +272,7 @@ The file must start with `// BEGIN_TRIAGE_DATA` and end with `// END_TRIAGE_DATA
         topOfMind: { title: "Top of Mind", icon: "\ud83d\udccc", emails: [...] },
         deliveries: { title: "Deliveries", icon: "\ud83d\udce6", emails: [...] },
         newsletters: { title: "Newsletters", icon: "\ud83d\udcf0", emails: [...] },
+        reading: { title: "Reading", icon: "\ud83d\udcd6", emails: [...] },
         financial: { title: "Financial", icon: "\ud83d\udcb0", emails: [...] },
         archiveReady: { title: "Archive Ready", icon: "\ud83d\udcc1", emails: [...] },
         deleteReady: { title: "Delete Candidates", icon: "\ud83d\uddd1\ufe0f", emails: [...] },
@@ -311,10 +335,10 @@ Before writing TRIAGE_DATA, detect opportunities for filing rules:
 ```javascript
 ruleSuggestion: {
   domain: "seattleacademy.org",        // sender domain
-  targetFolder: "SAAS",                // most common destination folder name
+  targetFolder: "Seattle Academy",      // most common destination folder name
   targetFolderId: "P4k",              // mailbox ID for that folder
   matchCount: 4,                       // number of times filed to this folder
-  message: "Filed to SAAS 4 times"     // human-readable description
+  message: "Filed to Seattle Academy 4 times"  // human-readable description
 }
 ```
 

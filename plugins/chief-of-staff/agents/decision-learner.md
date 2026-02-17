@@ -158,6 +158,38 @@ If same domain -> same action 3+ times:
       status: "pending_confirmation"
 ```
 
+#### G. Detect Summarize Patterns (Reading Senders)
+
+```
+Group decisions by sender domain where action == "summarize":
+
+If same domain has 3+ "summarize" decisions:
+  1. Read decision-history.yaml → reading_senders list (create if missing)
+  2. Check if domain already exists in reading_senders:
+     a. If exists: boost confidence = min(0.99, confidence + 0.05)
+     b. If not exists: add new entry:
+        - domain: "[domain]"
+          observation_count: [count]
+          learned_at: "[current ISO timestamp]"
+          confidence: 0.70
+  3. Write updated reading_senders to decision-history.yaml
+
+For decisions where action was "summarize_archive" or "summarize_delete":
+  - These are post-digest actions and confirm the summarize pattern
+  - Treat "summarize_archive" as acceptance (+5% confidence)
+  - Treat "summarize_delete" as mild rejection (-5% confidence, not -15%)
+
+If confidence drops below 0.50 for a reading_sender:
+  - Remove the entry from reading_senders
+  - Log: "Removed [domain] from reading senders (confidence too low)"
+```
+
+**IMPORTANT**: Unlike other pattern types, reading_senders are auto-applied without user confirmation.
+This is safe because:
+1. The "reading" category only sets the default action to "summarize" — users can always change it
+2. Summarize is non-destructive (email is flagged, not deleted)
+3. The confidence threshold (0.50) prevents false positives
+
 ### 3. Present Findings
 
 Output summary:
@@ -261,6 +293,9 @@ After all confirmations:
 | User accepts route suggestion | +5% (max 99%) |
 | User rejects route suggestion | -15% (min 10%) |
 | New filing pattern (3+ observations) | Initial 70% |
+| New summarize pattern (3+ summarize) | Initial 70% (auto-applied) |
+| Summarize accepted (summarize_archive) | +5% (max 99%) |
+| Summarize mild rejection (summarize_delete) | -5% (min 10%) |
 | Route-worthy pattern (3+ custom) | Flag for user (don't auto-create) |
 | Low acceptance (<50%, 10+ samples) | Flag for review |
 | 3+ rejections | Consider deprecation |

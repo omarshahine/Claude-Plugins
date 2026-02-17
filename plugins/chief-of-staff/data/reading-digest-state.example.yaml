@@ -1,0 +1,38 @@
+# Reading Digest State
+# Stores AI-generated summaries of emails marked for reading
+# Created by batch-processor when emails have action: "summarize"
+# Consumed by reading-digest-generator to create newspaper-style HTML
+
+metadata:
+  last_generated: null
+  total_items: 0
+
+# Active digest items (not yet processed by --digest)
+items:
+  # - emailId: "email-abc123"
+  #   from:
+  #     name: "Stratechery"
+  #     email: "ben@stratechery.com"
+  #   subject: "The AI Platform Shift"
+  #   receivedAt: "2026-02-15T12:00:00Z"
+  #   summarizedAt: "2026-02-17T10:30:00Z"
+  #   sourceSessionId: "batch-2026-02-17-abc"
+  #   summary:
+  #     tldr: "AI is reshaping technology platforms by shifting value from distribution to intelligence layers."
+  #     keyPoints:
+  #       - "Traditional platform advantages (distribution, network effects) are being disrupted"
+  #       - "AI-native companies can bypass existing gatekeepers"
+  #       - "The winner-take-all dynamic may not apply to AI platforms"
+  #     actionItems: []
+  #     estimatedReadTime: "8 min"
+  #     contentType: "analysis"  # analysis, news, tutorial, update, opinion
+  []
+
+# History of processed digest items (for learning)
+history:
+  # - emailId: "email-xyz789"
+  #   domain: "morningbrew.com"
+  #   action: "archive"  # archive or delete
+  #   processedAt: "2026-02-16T14:00:00Z"
+  #   sessionId: "batch-2026-02-16-xyz"
+  []

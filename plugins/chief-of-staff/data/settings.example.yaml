@@ -29,6 +29,7 @@ providers:
         bulk_flag: mcp__fastmail__bulk_flag
         send_email: mcp__fastmail__send_email
         reply_to_email: mcp__fastmail__reply_to_email
+        create_memo: mcp__fastmail__create_memo           # Attach private annotation to email
         get_thread: mcp__fastmail__get_thread
 
       # Gmail MCP (placeholder - update tool names when MCP is available)
@@ -48,6 +49,7 @@ providers:
         bulk_flag: mcp__gmail__batch_star
         send_email: mcp__gmail__send_message
         reply_to_email: mcp__gmail__send_reply
+        create_memo: null                                 # Not available for Gmail
         get_thread: mcp__gmail__get_thread
 
       # Outlook/Microsoft Graph MCP (placeholder - update when MCP is available)
@@ -67,6 +69,7 @@ providers:
         bulk_flag: mcp__outlook__batch_flag
         send_email: mcp__outlook__send_mail
         reply_to_email: mcp__outlook__reply
+        create_memo: null                                 # Not available for Outlook
         get_thread: mcp__outlook__get_conversation
 
   # Reminders provider (for inbox-to-reminder)
