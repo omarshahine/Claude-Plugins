@@ -2,7 +2,7 @@
 name: chief-of-staff
 description: |
   Chief-of-Staff is the orchestrator plugin for personal productivity. Use this knowledge when:
-  - User asks about inbox management, email triage, or filing
+  - User asks about email management, inbox triage, or filing
   - User mentions packages, shipping, or Parcel app
   - User wants to create reminders from emails
   - User mentions newsletters or unsubscribing

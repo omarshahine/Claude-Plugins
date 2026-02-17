@@ -1,8 +1,10 @@
 ---
+name: flight-radar
 description: |
   Real-time aircraft tracking using the official FlightRadar24 API.
   Use when the user asks where a plane is, wants to track a flight by tail number or callsign,
-  check aircraft status, or get recent flight history for a specific aircraft.
+  check aircraft status, get recent flight history for a specific aircraft,
+  or asks "where is my flight", "track tail number", "is the plane in the air".
 ---
 
 # Flight Radar
@@ -61,7 +63,7 @@ Present results clearly with:
 To show the user a map, pipe FR24 data through `flight-map.py`:
 
 ```bash
-echo '<JSON>' | python3 scripts/flight-map.py --stdin
+echo '<JSON>' | python3 "${CLAUDE_PLUGIN_ROOT}/skills/flight-radar/scripts/flight-map.py" --stdin
 ```
 
 The JSON should contain these fields (matching the map template):
@@ -102,10 +104,10 @@ Map to these fields from the FR24 MCP tool responses. If a field isn't available
 
 ```bash
 # Save to a specific file
-echo '<JSON>' | python3 scripts/flight-map.py --stdin --output map.html
+echo '<JSON>' | python3 "${CLAUDE_PLUGIN_ROOT}/skills/flight-radar/scripts/flight-map.py" --stdin --output map.html
 
 # Generate without opening browser
-echo '<JSON>' | python3 scripts/flight-map.py --stdin --no-open
+echo '<JSON>' | python3 "${CLAUDE_PLUGIN_ROOT}/skills/flight-radar/scripts/flight-map.py" --stdin --no-open
 ```
 
 The map shows:
