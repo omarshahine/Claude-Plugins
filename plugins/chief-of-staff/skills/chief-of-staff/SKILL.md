@@ -177,7 +177,7 @@ Chief-of-Staff integrates with:
   - MCP plugin (default): `playwright@claude-plugins-official` or bundled in chief-of-staff (loaded via `ToolSearch "+playwright browser"`)
   - CLI alternative: `brew install nicholasgriffintn/tap/playwright-cli`
   - Configure in settings.yaml `providers.playwright.active`: `mcp` | `cli`
-- **Apple PIM MCP** - Reminders and calendar (optional, separate plugin)
+- **Apple PIM MCP** - Reminders and calendar (optional, separate plugin). v2.4.0+ supports profiles for filtered PIM access -- configure at `~/.config/apple-pim/profiles/`. Set `APPLE_PIM_PROFILE` env var to select a profile.
 - **imsg CLI** - iMessage access (required for imessage-assistant, `brew install steipete/tap/imsg`)
 
 ## Email Provider Setup (Required)
