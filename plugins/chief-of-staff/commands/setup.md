@@ -137,6 +137,34 @@ AskUserQuestion:
    - Try to load apple-pim tools
    - Try to load playwright tools
 
+9. **Apple PIM Profile Detection** (if apple-pim tools found):
+   - Check if `~/.config/apple-pim/config.json` exists (indicates v2.4.0+)
+   - If yes, list available profiles from `~/.config/apple-pim/profiles/` using Glob
+   - If profiles found, present AskUserQuestion to select one:
+     ```
+     AskUserQuestion:
+       questions:
+         - question: "Apple PIM profiles detected. Which profile should Chief-of-Staff use for reminders/calendar access?"
+           header: "PIM Profile"
+           options:
+             - label: "None (use base config) (Recommended)"
+               description: "Use the default Apple PIM configuration without profile filtering"
+             - label: "[profile-1]"
+               description: "Use the [profile-1] profile for filtered PIM access"
+             - label: "[profile-2]"
+               description: "Use the [profile-2] profile for filtered PIM access"
+           multiSelect: false
+     ```
+   - Save selected profile to `settings.yaml` under `providers.reminders.apple_pim_profile`
+   - Advise user to set `APPLE_PIM_PROFILE={name}` in `~/.claude/settings.local.json` env block:
+     ```json
+     {
+       "env": {
+         "APPLE_PIM_PROFILE": "personal"
+       }
+     }
+     ```
+
 ### Phase 4: Configuration Files
 
 9. **Find plugin templates directory**:
@@ -252,7 +280,7 @@ This ensures the generated command only shows the relevant signature format.
 
 ## Integrations
 - Parcel API: ✓ Connected (package tracking enabled)
-- Apple PIM: ✓ Connected (reminders enabled)
+- Apple PIM: ✓ Connected (reminders enabled, profile: [name or "default"])
 - Playwright: ✓ Available (newsletter unsubscribe enabled)
 
 ## Folder Structure

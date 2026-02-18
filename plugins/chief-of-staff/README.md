@@ -121,8 +121,43 @@ All data is stored in `data/` (gitignored, with `.example.yaml` templates):
 
 **Optional (enhance functionality):**
 - Parcel API MCP - Package tracking
-- Apple PIM MCP - Reminders (`/plugin install apple-pim@omarshahine-agent-plugins`)
+- Apple PIM MCP v2.4.0+ - Reminders and calendar with profile support (`/plugin install apple-pim@omarshahine-agent-plugins`)
 - Playwright plugin - Newsletter unsubscribe web forms
+
+## Apple PIM Profile Integration
+
+Apple PIM v2.4.0+ supports **profiles** for filtered access to calendars, reminders, and contacts. Profiles let you restrict which PIM data is visible to Chief-of-Staff (e.g., only personal calendars, not work ones).
+
+### How Profiles Work
+
+Profiles are **transparent at the MCP tool layer**. The MCP server passes `APPLE_PIM_PROFILE` as an environment variable to the Swift CLIs. COS agents calling `mcp__apple-pim__*` tools don't need any code changes -- profiles are configured entirely via environment.
+
+### Setup
+
+1. **Create a profile** using the Apple PIM plugin:
+   ```bash
+   /apple-pim:configure
+   ```
+   Or manually create a JSON file at `~/.config/apple-pim/profiles/{name}.json`
+
+2. **Activate the profile** in `~/.claude/settings.local.json`:
+   ```json
+   {
+     "env": {
+       "APPLE_PIM_PROFILE": "personal"
+     }
+   }
+   ```
+
+3. **Run setup** to save the profile in COS settings:
+   ```bash
+   /chief-of-staff:setup
+   ```
+   Setup will auto-detect available profiles and let you select one.
+
+### No Profile (Default)
+
+If no profile is configured (`APPLE_PIM_PROFILE` is unset), Apple PIM uses the base config at `~/.config/apple-pim/config.json`, which provides access to all calendars, reminders, and contacts.
 
 ## Migration from Old Plugins
 

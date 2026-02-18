@@ -75,6 +75,11 @@ providers:
   # Reminders provider (for inbox-to-reminder)
   reminders:
     active: apple-pim
+    # Optional: Apple PIM profile for filtered access to calendars/reminders.
+    # Profiles live at ~/.config/apple-pim/profiles/{name}.json
+    # Set APPLE_PIM_PROFILE env var in ~/.claude/settings.local.json to activate.
+    # If null, uses base config at ~/.config/apple-pim/config.json
+    apple_pim_profile: null  # e.g., "personal", "work", "travel"
     mappings:
       apple-pim:
         reminder_lists: mcp__apple-pim__reminder_lists

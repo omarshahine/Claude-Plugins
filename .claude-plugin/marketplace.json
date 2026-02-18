@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Public plugin marketplace for Claude Code - email management, travel, file organization, and personal productivity",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "pluginRoot": "./plugins"
   },
   "plugins": [
@@ -13,7 +13,7 @@
       "name": "chief-of-staff",
       "source": "./plugins/chief-of-staff",
       "description": "The orchestrator plugin for personal productivity - inbox triage, package tracking, reminder creation, newsletter management, email action routing, and more",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "keywords": ["email", "inbox", "triage", "packages", "parcel", "reminders", "newsletters", "unsubscribe", "productivity", "orchestrator", "filing", "patterns", "learning", "imessage", "flight-tracking", "routing", "action-routes", "vacation-hold", "reading-digest", "summarize", "memo"],
       "category": "productivity"
     },
@@ -40,7 +40,7 @@
         "repo": "omarshahine/Apple-PIM-Agent-Plugin"
       },
       "description": "Native macOS integration for Calendar, Reminders, Contacts, and Mail using EventKit, Contacts, and JXA frameworks",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "keywords": ["calendar", "reminders", "contacts", "mail", "eventkit", "jxa", "macos", "pim", "scheduling"],
       "category": "productivity"
     },

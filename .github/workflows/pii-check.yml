@@ -75,7 +75,7 @@ jobs:
 
             # Check for email addresses (with allowlist)
             if grep -nP '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' "$file" 2>/dev/null | \
-               grep -vP '@example\.com|@anthropic\.com|@noreply|@users\.noreply\.github\.com|@placeholder\.com|@test\.com' 2>/dev/null; then
+               grep -vP '@([a-z0-9-]+\.)?example\.com|@anthropic\.com|@noreply|@users\.noreply\.github\.com|@placeholder\.com|@test\.com' 2>/dev/null; then
               # Skip author fields in plugin.json
               if [[ "$file" != *"plugin.json" ]]; then
                 echo "email:$file" >> "$FINDINGS_FILE"
