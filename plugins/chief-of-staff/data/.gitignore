@@ -1,0 +1,20 @@
+# User-specific data files (generated from examples)
+settings.yaml
+settings.local.yaml
+user-preferences.yaml
+user-preferences.local.yaml
+filing-rules.yaml
+delete-patterns.yaml
+decision-history.yaml
+interview-state.yaml
+batch-state.yaml
+sync-state.yaml
+newsletter-lists.yaml
+newsletter-lists.local.yaml
+email-action-routes.yaml
+reading-digest-state.yaml
+shipping-patterns.json
+
+# Keep example templates
+!*.example.yaml
+!*.example.json

@@ -1,0 +1,68 @@
+# Chief-of-Staff Batch Triage State
+# Tracks HTML batch triage sessions
+
+# Current/last session
+session:
+  # sessionId: "batch-2026-02-02-abc123"
+  # status: "generated"  # generated, submitted, processing, completed, partial
+  # generatedAt: "2026-02-02T10:00:00Z"
+  # submittedAt: null
+  # processedAt: null
+  # htmlPath: "/path/to/inbox-triage-batch-2026-02-02.html"
+  # decisionsFile: null
+  null
+
+# Results from last processed batch
+results:
+  # total: 32
+  # successful: 30
+  # failed: 2
+  # byAction:
+  #   archive: { attempted: 10, successful: 10 }
+  #   delete: { attempted: 4, successful: 4 }
+  #   parcel: { attempted: 5, successful: 5 }
+  #   unsubscribe: { attempted: 8, successful: 6, failed: 2 }
+  #   reminder: { attempted: 3, successful: 3 }
+  #   calendar: { attempted: 1, successful: 1 }
+  #   keep: { attempted: 1, successful: 1 }
+  null
+
+# Failed items (for retry)
+failures:
+  # - emailId: "email-xxx"
+  #   action: "unsubscribe"
+  #   error: "CAPTCHA detected"
+  #   url: "https://example.com/unsubscribe?token=xxx"
+  # - emailId: "email-yyy"
+  #   action: "unsubscribe"
+  #   error: "Login required"
+  []
+
+# Session history (last 10 sessions)
+history:
+  # - date: "2026-02-02"
+  #   sessionId: "batch-2026-02-02-abc123"
+  #   total: 32
+  #   successful: 30
+  #   failed: 2
+  []
+
+# Pending (carry-forward) emails from last generated HTML
+# Tracks emails that were presented in batch HTML but not yet processed.
+# Cleared when the batch processor completes, or when generator detects
+# that the session was already processed.
+pending:
+  # session_id: "batch-2026-02-14-001"    # Session that generated these emails
+  # generated_at: "2026-02-14T10:00:00Z"  # When the HTML was generated
+  # emails:                                # Raw email data (re-classified on carry-forward)
+  #   - id: "email-abc123"
+  #     from: { name: "John", email: "john@example.com" }
+  #     subject: "Meeting tomorrow"
+  #     preview: "Hey, about the meeting..."
+  #     receivedAt: "2026-02-13T10:00:00Z"
+  #   - id: "email-def456"
+  #     from: { name: "Jane", email: "jane@example.com" }
+  #     subject: "Invoice attached"
+  #     preview: "Please find the invoice..."
+  #     receivedAt: "2026-02-13T14:30:00Z"
+  null

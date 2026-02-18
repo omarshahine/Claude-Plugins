@@ -1,0 +1,11 @@
+{
+  "name": "travel-agent",
+  "version": "2.0.0",
+  "description": "Travel agents for flight research and trip tracking: Google Flights, ITA Matrix, Flighty, Tripsy",
+  "author": {
+    "name": "Omar Shahine"
+  },
+  "repository": "https://github.com/omarshahine/Agent-Plugins",
+  "license": "MIT",
+  "keywords": ["travel", "flights", "google-flights", "ita-matrix", "flighty", "tripsy"]
+}

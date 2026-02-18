@@ -1,0 +1,56 @@
+{
+  "name": "omarshahine-agent-plugins",
+  "owner": {
+    "name": "Omar Shahine"
+  },
+  "metadata": {
+    "description": "Public plugin marketplace for Claude Code - email management, travel, file organization, and personal productivity",
+    "version": "2.0.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "chief-of-staff",
+      "source": "./plugins/chief-of-staff",
+      "description": "The orchestrator plugin for personal productivity - inbox triage, package tracking, reminder creation, newsletter management, email action routing, and more",
+      "version": "2.0.0",
+      "keywords": ["email", "inbox", "triage", "packages", "parcel", "reminders", "newsletters", "unsubscribe", "productivity", "orchestrator", "filing", "patterns", "learning", "imessage", "flight-tracking", "routing", "action-routes", "vacation-hold", "reading-digest", "summarize", "memo"],
+      "category": "productivity"
+    },
+    {
+      "name": "travel-agent",
+      "source": "./plugins/travel-agent",
+      "description": "Travel agents for flight research and trip tracking: Google Flights, ITA Matrix, Flighty, Tripsy",
+      "version": "2.0.0",
+      "keywords": ["travel", "flights", "google-flights", "ita-matrix", "flighty", "tripsy"],
+      "category": "productivity"
+    },
+    {
+      "name": "rename-agent",
+      "source": "./plugins/rename-agent",
+      "description": "AI-powered file renaming using content analysis. Supports PDFs, images, and documents with pattern-based naming.",
+      "version": "2.0.0",
+      "keywords": ["rename", "files", "documents", "pdf", "organize", "naming", "patterns"],
+      "category": "productivity"
+    },
+    {
+      "name": "apple-pim",
+      "source": {
+        "source": "github",
+        "repo": "omarshahine/Apple-PIM-Agent-Plugin"
+      },
+      "description": "Native macOS integration for Calendar, Reminders, Contacts, and Mail using EventKit, Contacts, and JXA frameworks",
+      "version": "2.3.0",
+      "keywords": ["calendar", "reminders", "contacts", "mail", "eventkit", "jxa", "macos", "pim", "scheduling"],
+      "category": "productivity"
+    },
+    {
+      "name": "credit-card-benefits",
+      "source": "./plugins/credit-card-benefits",
+      "description": "Track and maximize premium credit card benefits with anniversary-aware checklists and YNAB integration",
+      "version": "2.0.0",
+      "keywords": ["credit-cards", "benefits", "travel-credits", "amex-platinum", "venture-x", "sapphire-reserve", "delta-reserve", "alaska-atmos", "ynab"],
+      "category": "finance"
+    }
+  ]
+}

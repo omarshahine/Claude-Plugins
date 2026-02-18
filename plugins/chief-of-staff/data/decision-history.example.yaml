@@ -1,0 +1,107 @@
+# Chief-of-Staff Decision History
+# Tracks user decisions for learning and pattern improvement
+
+metadata:
+  first_session: null
+  last_session: null
+  total_sessions: 0
+
+# Aggregated statistics
+statistics:
+  total_decisions: 0
+  suggestions_accepted: 0
+  suggestions_rejected: 0
+  acceptance_rate: 0.0
+
+  # By action type
+  by_action:
+    archive:
+      total: 0
+      accepted: 0
+      acceptance_rate: 0.0
+    delete:
+      total: 0
+      accepted: 0
+      acceptance_rate: 0.0
+    reminder:
+      total: 0
+      accepted: 0
+      acceptance_rate: 0.0
+    keep:
+      total: 0
+      accepted: 0
+      acceptance_rate: 0.0
+    parcel:
+      total: 0
+      accepted: 0
+      acceptance_rate: 0.0
+    unsubscribe:
+      total: 0
+      accepted: 0
+      acceptance_rate: 0.0
+    summarize:
+      total: 0
+      accepted: 0
+      acceptance_rate: 0.0
+    memo:
+      total: 0
+      accepted: 0
+      acceptance_rate: 0.0
+    summarize_archive:
+      total: 0
+      accepted: 0
+      acceptance_rate: 0.0
+    summarize_delete:
+      total: 0
+      accepted: 0
+      acceptance_rate: 0.0
+
+  # By domain (top domains)
+  by_domain: {}
+    # "chase.com":
+    #   total: 25
+    #   actions:
+    #     archive: 23
+    #     delete: 2
+
+# Recent decision history (for learning)
+history:
+  # Keep last 500 decisions for pattern detection
+  max_recent: 500
+  recent_decisions:
+    # - date: "2026-02-02T10:15:00Z"
+    #   emailId: "email-123"
+    #   senderDomain: "chase.com"
+    #   senderEmail: "alerts@chase.com"
+    #   subjectKeywords: ["statement", "ready"]
+    #
+    #   suggested_action: "archive"
+    #   suggested_folder: "Financial"
+    #   suggested_confidence: 0.85
+    #
+    #   actual_action: "archive"
+    #   actual_folder: "Financial"
+    #
+    #   accepted: true
+    []
+
+# Learned reading senders (auto-applied, no confirmation needed)
+# Domains with 3+ "summarize" decisions are added here automatically
+# Used by batch-html-generator to pre-classify emails into "reading" category
+reading_senders:
+  # - domain: "example-newsletter.com"
+  #   observation_count: 5
+  #   learned_at: "2026-02-15T10:00:00Z"
+  #   confidence: 0.85
+  []
+
+# Learned patterns (pending confirmation)
+learned_patterns:
+  # - domain: "bestbuy.com"
+  #   pattern_type: "domain"
+  #   action: "archive"
+  #   folder: "Orders"
+  #   observation_count: 5
+  #   calculated_confidence: 0.70
+  #   status: "pending_confirmation"  # or "applied" or "rejected"
+  []

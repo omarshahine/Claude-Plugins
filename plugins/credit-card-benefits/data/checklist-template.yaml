@@ -1,0 +1,827 @@
+# Credit Card Benefits Checklist
+# ================================
+# Track your premium credit card benefits and statement credits.
+#
+# Getting Started:
+# 1. Run /credit-card-benefits:configure to set up data sources
+# 2. The setup will auto-detect anniversaries from your transaction history
+# 3. Use /credit-card-benefits:sync to keep data current
+#
+# Reset Types:
+# - calendar-year: Resets January 1
+# - anniversary: Resets on your card's annual fee date
+# - monthly: Must use each month or lose it
+# - quarterly: Q1 (Jan-Mar), Q2 (Apr-Jun), Q3 (Jul-Sep), Q4 (Oct-Dec)
+# - semi-annual: H1 (Jan-Jun), H2 (Jul-Dec)
+
+version: "1.0.0"
+lastUpdated: 2026-01-01
+
+# =============================================================================
+# CONFIGURATION
+# =============================================================================
+# Run /credit-card-benefits:configure to set this up interactively
+config:
+  setupComplete: false
+  setupDate: null
+
+  # Data source for transaction tracking
+  # Options: ynab-mcp, ynab-api, csv, manual
+  dataSource:
+    primary: null           # Set during configure
+
+    # YNAB settings (if using ynab-mcp or ynab-api)
+    ynab:
+      method: null          # mcp or api
+      budgetId: null
+      # Token stored separately at ~/.config/credit-card-benefits/ynab-token
+      accountMapping:
+        amex-platinum: null
+        capital-one-venture-x: null
+        chase-sapphire-reserve: null
+        alaska-atmos-summit: null
+        delta-reserve: null
+
+    # CSV settings (if using csv)
+    csv:
+      importDirectory: ~/Downloads
+
+  # Sync tracking
+  sync:
+    initialSyncDate: null   # When 12-month lookback was performed
+    lastSyncDate: null      # Last incremental sync
+    autoSync: false         # Future: sync on session start
+
+  # Which cards are active for this user
+  cards:
+    enabled: []             # e.g., [amex-platinum, chase-sapphire-reserve]
+    disabled: []            # Cards in template but user doesn't have
+
+# =============================================================================
+# AMERICAN EXPRESS PLATINUM
+# =============================================================================
+amex-platinum:
+  name: American Express Platinum
+  annualFee: 895
+  resetType: mixed
+
+  # Anniversary tracking - the annual fee posting date IS your anniversary
+  # Import a CSV statement to auto-detect, or enter manually
+  accountOpenDate: null           # Original open date (optional)
+  lastAnnualFeeDate: null         # Most recent annual fee posting date
+  nextAnnualFeeDate: null         # Expected next annual fee date
+  annualFeeHistory: []            # Track fee changes over time
+  # Example:
+  #   - date: 2025-03-15
+  #     amount: 695
+  #   - date: 2026-03-15
+  #     amount: 895
+
+  benefits:
+    # -------------------------------------------------------------------------
+    # HOTEL CREDITS - $600/year ($300 semi-annual)
+    # Fine Hotels + Resorts or The Hotel Collection via Amex Travel
+    # -------------------------------------------------------------------------
+    hotel-credit-h1:
+      name: Hotel Credit (H1)
+      amount: 300
+      period: semi-annual
+      resetDate: "01-01"  # Expires June 30
+      used: 0
+      transactions: []
+
+    hotel-credit-h2:
+      name: Hotel Credit (H2)
+      amount: 300
+      period: semi-annual
+      resetDate: "07-01"  # Expires December 31
+      used: 0
+      transactions: []
+
+    # -------------------------------------------------------------------------
+    # RESY CREDITS - $400/year ($100 quarterly)
+    # Any restaurant booked through Resy
+    # -------------------------------------------------------------------------
+    resy-q1:
+      name: Resy Credit (Q1)
+      amount: 100
+      period: quarterly
+      resetDate: "01-01"  # Expires March 31
+      used: 0
+      transactions: []
+
+    resy-q2:
+      name: Resy Credit (Q2)
+      amount: 100
+      period: quarterly
+      resetDate: "04-01"  # Expires June 30
+      used: 0
+      transactions: []
+
+    resy-q3:
+      name: Resy Credit (Q3)
+      amount: 100
+      period: quarterly
+      resetDate: "07-01"  # Expires September 30
+      used: 0
+      transactions: []
+
+    resy-q4:
+      name: Resy Credit (Q4)
+      amount: 100
+      period: quarterly
+      resetDate: "10-01"  # Expires December 31
+      used: 0
+      transactions: []
+
+    # -------------------------------------------------------------------------
+    # DIGITAL ENTERTAINMENT - $300/year ($25/month)
+    # Disney+, ESPN+, Hulu, NYT, Paramount+, Peacock, WSJ, YouTube Premium/TV
+    # -------------------------------------------------------------------------
+    digital-entertainment:
+      name: Digital Entertainment Credit
+      amount: 300
+      monthlyAmount: 25
+      period: monthly
+      monthsUsed: []  # Add month numbers as used: [1, 2, 3...]
+
+    # -------------------------------------------------------------------------
+    # LULULEMON - $300/year ($75 quarterly)
+    # US stores or lululemon.com (excluding outlets)
+    # -------------------------------------------------------------------------
+    lululemon-q1:
+      name: Lululemon Credit (Q1)
+      amount: 75
+      period: quarterly
+      resetDate: "01-01"
+      used: 0
+      transactions: []
+
+    lululemon-q2:
+      name: Lululemon Credit (Q2)
+      amount: 75
+      period: quarterly
+      resetDate: "04-01"
+      used: 0
+      transactions: []
+
+    lululemon-q3:
+      name: Lululemon Credit (Q3)
+      amount: 75
+      period: quarterly
+      resetDate: "07-01"
+      used: 0
+      transactions: []
+
+    lululemon-q4:
+      name: Lululemon Credit (Q4)
+      amount: 75
+      period: quarterly
+      resetDate: "10-01"
+      used: 0
+      transactions: []
+
+    # -------------------------------------------------------------------------
+    # UBER - $200/year + Uber One
+    # $15/month + $20 bonus in December
+    # -------------------------------------------------------------------------
+    uber-cash:
+      name: Uber Cash
+      amount: 200
+      monthlyAmount: 15
+      decemberBonus: 20
+      period: monthly
+      monthsUsed: []  # Remember: December has $35 total!
+
+    uber-one:
+      name: Uber One Credit
+      amount: 120
+      monthlyAmount: 9.99
+      period: monthly
+      monthsUsed: []
+      notes: Auto-renewing Uber One membership
+
+    # -------------------------------------------------------------------------
+    # AIRLINE FEE CREDIT - $200/year
+    # Must select ONE airline. Covers incidental fees only (bags, seats, etc.)
+    # -------------------------------------------------------------------------
+    airline-fee:
+      name: Airline Fee Credit
+      amount: 200
+      period: annual
+      resetDate: "01-01"
+      used: 0
+      selectedAirline: null  # TODO: Set your airline (e.g., "Delta", "United")
+      transactions: []
+      notes: "Must select airline by Jan 31 each year"
+
+    # -------------------------------------------------------------------------
+    # SAKS FIFTH AVENUE - $100/year ($50 semi-annual)
+    # Tip: Can be used on gift cards
+    # -------------------------------------------------------------------------
+    saks-h1:
+      name: Saks Fifth Avenue (H1)
+      amount: 50
+      period: semi-annual
+      resetDate: "01-01"
+      used: 0
+      transactions: []
+
+    saks-h2:
+      name: Saks Fifth Avenue (H2)
+      amount: 50
+      period: semi-annual
+      resetDate: "07-01"
+      used: 0
+      transactions: []
+
+    # -------------------------------------------------------------------------
+    # EQUINOX - $300/year ($25/month)
+    # Gym membership or Equinox+ app
+    # -------------------------------------------------------------------------
+    equinox:
+      name: Equinox Credit
+      amount: 300
+      monthlyAmount: 25
+      period: monthly
+      monthsUsed: []
+
+    # -------------------------------------------------------------------------
+    # WALMART+ - ~$155/year ($12.95/month)
+    # Enrollment required in Amex account
+    # -------------------------------------------------------------------------
+    walmart-plus:
+      name: Walmart+ Credit
+      amount: 155
+      monthlyAmount: 12.95
+      period: monthly
+      enrolled: false  # TODO: Enroll in Amex account
+      monthsUsed: []
+
+    # -------------------------------------------------------------------------
+    # OTHER ANNUAL BENEFITS
+    # -------------------------------------------------------------------------
+    clear-plus:
+      name: CLEAR+ Credit
+      amount: 209
+      period: annual
+      resetDate: anniversary
+      used: false
+
+    global-entry:
+      name: Global Entry/TSA PreCheck
+      amount: 120
+      period: multi-year
+      intervalYears: 4
+      lastUsed: null
+      nextEligible: null
+      notes: "$120 Global Entry OR up to $85 TSA PreCheck (either/or, not both)"
+
+    # -------------------------------------------------------------------------
+    # OURA RING - $200/year
+    # New for 2026! Calendar year reset.
+    # -------------------------------------------------------------------------
+    oura-ring:
+      name: Oura Ring Credit
+      amount: 200
+      period: annual
+      resetDate: "01-01"
+      used: 0
+      transactions: []
+
+# =============================================================================
+# CAPITAL ONE VENTURE X
+# =============================================================================
+capital-one-venture-x:
+  name: Capital One Venture X
+  annualFee: 395
+  resetType: anniversary
+
+  # Anniversary tracking
+  accountOpenDate: null
+  lastAnnualFeeDate: null         # This IS your anniversary for credits
+  nextAnnualFeeDate: null
+  annualFeeHistory: []
+
+  benefits:
+    # -------------------------------------------------------------------------
+    # TRAVEL CREDIT - $300/year
+    # Must book through Capital One Travel portal
+    # -------------------------------------------------------------------------
+    travel-credit:
+      name: Annual Travel Credit
+      amount: 300
+      period: annual
+      resetDate: anniversary
+      used: 0
+      transactions: []
+
+    # -------------------------------------------------------------------------
+    # ANNIVERSARY BONUS - 10,000 miles
+    # Worth approximately $100-185 toward travel
+    # -------------------------------------------------------------------------
+    anniversary-miles:
+      name: Anniversary Bonus Miles
+      amount: 10000
+      estimatedValue: 100
+      period: annual
+      resetDate: anniversary
+      received: false
+
+    # -------------------------------------------------------------------------
+    # LOUNGE ACCESS (2026 changes!)
+    # Feb 1, 2026: Authorized users need $125/year
+    # Guests: $45 adults, $25 children 2-17
+    # Free guest access restored at $75K annual spend
+    # -------------------------------------------------------------------------
+    lounge-access:
+      name: Capital One Lounge Access
+      period: ongoing
+      guestPolicy:
+        adultFee: 45
+        childFee: 25
+        freeGuestThreshold: 75000
+      authorizedUserFee: 125  # Starting Feb 2026
+      notes: Priority Pass included through Jan 2026
+
+    global-entry:
+      name: Global Entry/TSA PreCheck
+      amount: 120
+      period: multi-year
+      intervalYears: 4
+      lastUsed: null
+      nextEligible: null
+
+# =============================================================================
+# CHASE SAPPHIRE RESERVE
+# =============================================================================
+chase-sapphire-reserve:
+  name: Chase Sapphire Reserve
+  annualFee: 795
+  resetType: mixed
+
+  # Anniversary tracking
+  accountOpenDate: null
+  lastAnnualFeeDate: null         # Travel credit resets on this date
+  nextAnnualFeeDate: null
+  annualFeeHistory: []
+
+  benefits:
+    # -------------------------------------------------------------------------
+    # TRAVEL CREDIT - $300/year
+    # Very flexible! Flights, hotels, Uber, Lyft, parking, tolls, trains
+    # -------------------------------------------------------------------------
+    travel-credit:
+      name: Annual Travel Credit
+      amount: 300
+      period: annual
+      resetDate: anniversary
+      used: 0
+      transactions: []
+
+    # -------------------------------------------------------------------------
+    # THE EDIT HOTEL CREDIT - $500/year ($250 x 2 per calendar year)
+    # Book prepaid through Chase Travel. 2-night minimum.
+    # 2026: Can use both anytime during calendar year (flexible timing)
+    # -------------------------------------------------------------------------
+    the-edit-h1:
+      name: The Edit Hotel Credit (1 of 2)
+      amount: 250
+      period: semi-annual
+      resetDate: "01-01"
+      used: 0
+      transactions: []
+      notes: "Two $250 credits per calendar year. Can use both anytime in 2026 (not tied to H1/H2)."
+
+    the-edit-h2:
+      name: The Edit Hotel Credit (2 of 2)
+      amount: 250
+      period: semi-annual
+      resetDate: "07-01"
+      used: 0
+      transactions: []
+      notes: "Two $250 credits per calendar year. Can use both anytime in 2026 (not tied to H1/H2)."
+
+    # -------------------------------------------------------------------------
+    # EXCLUSIVE TABLES DINING - $300/year ($150 semi-annual)
+    # -------------------------------------------------------------------------
+    exclusive-tables-h1:
+      name: Exclusive Tables Dining (H1)
+      amount: 150
+      period: semi-annual
+      resetDate: "01-01"
+      used: 0
+      transactions: []
+
+    exclusive-tables-h2:
+      name: Exclusive Tables Dining (H2)
+      amount: 150
+      period: semi-annual
+      resetDate: "07-01"
+      used: 0
+      transactions: []
+
+    # -------------------------------------------------------------------------
+    # 2026 SELECT HOTELS CREDIT - $250 ONE-TIME
+    # IHG, Montage, Pendry, Omni, Virgin, Minor, Pan Pacific
+    # Book prepaid via Chase Travel. 2-night minimum.
+    # WARNING: No points earned on this booking!
+    # NOTE: Does NOT continue into 2027!
+    #
+    # STACKING TIP: Some properties MAY qualify for both credits; stacking possible but not guaranteed
+    # -------------------------------------------------------------------------
+    select-hotels-2026:
+      name: 2026 Select Hotels Credit (One-Time)
+      amount: 250
+      period: one-time
+      validFrom: "2026-01-01"
+      validTo: "2026-12-31"
+      used: 0
+      transactions: []
+      notes: "2026 ONLY - does NOT continue into 2027. Some properties MAY qualify for stacking with The Edit (up to $800), but not guaranteed."
+
+    # -------------------------------------------------------------------------
+    # PELOTON CREDIT - $120/year ($10/month)
+    # Applies to membership or gear. Valid through Dec 31, 2027.
+    # -------------------------------------------------------------------------
+    peloton:
+      name: Peloton Credit
+      amount: 120
+      monthlyAmount: 10
+      period: monthly
+      validUntil: "2027-12-31"
+      monthsUsed: []
+
+    # -------------------------------------------------------------------------
+    # LYFT CREDIT - $120/year ($10/month)
+    # -------------------------------------------------------------------------
+    lyft:
+      name: Lyft Credit
+      amount: 120
+      monthlyAmount: 10
+      period: monthly
+      monthsUsed: []
+
+    # -------------------------------------------------------------------------
+    # DOORDASH RESTAURANT CREDIT - $60/year ($5/month)
+    # -------------------------------------------------------------------------
+    doordash-restaurant:
+      name: DoorDash Restaurant Credit
+      amount: 60
+      monthlyAmount: 5
+      period: monthly
+      monthsUsed: []
+
+    # -------------------------------------------------------------------------
+    # DOORDASH NON-RESTAURANT CREDIT - $240/year ($10 x 2/month)
+    # $10 credit applies twice per month
+    # -------------------------------------------------------------------------
+    doordash-non-restaurant:
+      name: DoorDash Non-Restaurant Credit
+      amount: 240
+      monthlyAmount: 20
+      period: monthly
+      monthsUsed: []
+      notes: "$10 credit applies twice per month"
+
+    # -------------------------------------------------------------------------
+    # STUBHUB/VIAGOGO CREDIT - $300/year ($150 semi-annual)
+    # -------------------------------------------------------------------------
+    stubhub-viagogo-h1:
+      name: StubHub/viagogo Credit (H1)
+      amount: 150
+      period: semi-annual
+      resetDate: "01-01"
+      used: 0
+      transactions: []
+
+    stubhub-viagogo-h2:
+      name: StubHub/viagogo Credit (H2)
+      amount: 150
+      period: semi-annual
+      resetDate: "07-01"
+      used: 0
+      transactions: []
+
+    # -------------------------------------------------------------------------
+    # APPLE STREAMING CREDITS - One-Time Enrollment
+    # Excludes Apple One bundles
+    # -------------------------------------------------------------------------
+    apple-music:
+      name: Apple Music Credit
+      period: one-time
+      enrolled: false
+      enrolledDate: null
+
+    apple-tv-plus:
+      name: Apple TV+ Credit
+      period: one-time
+      enrolled: false
+      enrolledDate: null
+      notes: Excludes Apple One bundles
+
+    global-entry:
+      name: Global Entry/TSA PreCheck/NEXUS
+      amount: 120
+      period: multi-year
+      intervalYears: 4
+      lastUsed: null
+      nextEligible: null
+      notes: "Covers $120 Global Entry, NEXUS, or up to $85 TSA PreCheck"
+
+    # -------------------------------------------------------------------------
+    # $75,000 ANNUAL SPEND BENEFITS
+    # Unlocked after $75K spend in a calendar year
+    # -------------------------------------------------------------------------
+    spend-75k-tier:
+      name: $75K Spend Benefits
+      spendThreshold: 75000
+      currentYearSpend: 0
+      unlocked: false
+      benefits:
+        ihg-diamond:
+          name: IHG One Rewards Diamond Elite Status
+          earned: false
+          notes: Highest IHG tier. Valid remainder of year + following year.
+        southwest-alist:
+          name: Southwest A-List Status
+          earned: false
+          notes: Priority boarding, same-day standby, bonus points
+        southwest-credit:
+          name: Southwest Airlines Credit
+          amount: 500
+          used: 0
+          notes: Via Chase Travel for Southwest flights
+        shops-at-chase:
+          name: Shops at Chase Credit
+          amount: 250
+          used: 0
+          notes: "Retailers: Baccarat, Bang & Olufsen, Breitling, Tumi, Dyson, Sony, Therabody"
+
+# =============================================================================
+# ALASKA AIRLINES ATMOS REWARDS SUMMIT
+# =============================================================================
+alaska-atmos-summit:
+  name: Alaska Airlines Atmos Rewards Summit
+  annualFee: 395
+  resetType: anniversary
+
+  # Anniversary tracking - lounge passes and companion fare reset on this date
+  accountOpenDate: null
+  lastAnnualFeeDate: null
+  nextAnnualFeeDate: null
+  annualFeeHistory: []
+
+  benefits:
+    # -------------------------------------------------------------------------
+    # LOUNGE PASSES - 8 per year (2 per quarter, use-it-or-lose-it)
+    # Valid entire travel day. Each pass includes 2 children.
+    # IMPORTANT: Quarterly issuance - passes do NOT roll over!
+    # -------------------------------------------------------------------------
+    lounge-passes:
+      name: Alaska Lounge Passes
+      passesPerQuarter: 2
+      period: quarterly
+      estimatedQuarterlyValue: 130
+      quarters:
+        q1:
+          remaining: 2
+          usageLog: []
+        q2:
+          remaining: 2
+          usageLog: []
+        q3:
+          remaining: 2
+          usageLog: []
+        q4:
+          remaining: 2
+          usageLog: []
+      notes: "2 passes per quarter, use-it-or-lose-it. Value is subjective (~$130/quarter)."
+      # Example usage log entry:
+      # - date: 2026-03-15
+      #   airport: SEA
+      #   guests: 1
+
+    # -------------------------------------------------------------------------
+    # WI-FI PASSES - 8 per year
+    # Resets on account anniversary
+    # -------------------------------------------------------------------------
+    wifi-passes:
+      name: Wi-Fi Passes
+      amount: 8
+      period: annual
+      resetDate: anniversary
+      passesRemaining: 8
+      usageLog: []
+
+    # -------------------------------------------------------------------------
+    # GLOBAL COMPANION AWARD - 25,000 points
+    # Resets on account anniversary
+    # -------------------------------------------------------------------------
+    global-companion-award:
+      name: Global Companion Award
+      amount: 25000
+      period: annual
+      resetDate: anniversary
+      used: false
+      notes: "25,000 points toward a companion fare"
+
+    # -------------------------------------------------------------------------
+    # ANNIVERSARY STATUS POINTS - 10,000 points
+    # Starting with first anniversary
+    # -------------------------------------------------------------------------
+    status-points:
+      name: Anniversary Status Points
+      amount: 10000
+      period: annual
+      resetDate: anniversary
+      received: false
+
+    # -------------------------------------------------------------------------
+    # COMPANION FARE - $99 + taxes
+    # Requires $6,000 annual spend to earn
+    # -------------------------------------------------------------------------
+    companion-fare:
+      name: Companion Fare
+      baseFare: 99
+      taxesRange: "23-250"
+      period: annual
+      resetDate: anniversary
+      spendRequired: 6000
+      currentYearSpend: 0
+      used: false
+      earned: false  # Set true when $6K threshold reached
+
+    # -------------------------------------------------------------------------
+    # PER-FLIGHT BENEFITS
+    # -------------------------------------------------------------------------
+    free-checked-bag:
+      name: Free Checked Bag
+      period: per-flight
+      notes: For cardholder + up to 6 guests on same reservation
+
+    priority-boarding:
+      name: Priority Boarding
+      period: per-flight
+      notes: For cardholder + up to 6 guests
+
+# =============================================================================
+# DELTA SKYMILES RESERVE
+# =============================================================================
+delta-reserve:
+  name: Delta SkyMiles Reserve
+  annualFee: 650
+  resetType: mixed
+
+  # Anniversary tracking - Delta Stays and Companion Cert reset on this date
+  accountOpenDate: null
+  lastAnnualFeeDate: null
+  nextAnnualFeeDate: null
+  annualFeeHistory: []
+
+  benefits:
+    # -------------------------------------------------------------------------
+    # RESY CREDIT - $240/year ($20/month)
+    # ENROLLMENT REQUIRED in Amex account
+    # -------------------------------------------------------------------------
+    resy-credit:
+      name: Resy Credit
+      amount: 240
+      monthlyAmount: 20
+      period: monthly
+      enrolled: false  # TODO: Set true after enrolling
+      monthsUsed: []
+
+    # -------------------------------------------------------------------------
+    # RIDESHARE CREDIT - $120/year ($10/month)
+    # ENROLLMENT REQUIRED in Amex account
+    # -------------------------------------------------------------------------
+    rideshare-credit:
+      name: Rideshare Credit
+      amount: 120
+      monthlyAmount: 10
+      period: monthly
+      enrolled: false  # TODO: Set true after enrolling
+      monthsUsed: []
+
+    # -------------------------------------------------------------------------
+    # UBER ONE CREDIT - ~$120/year ($9.99/month)
+    # LIMITED-TIME PROMOTIONAL BENEFIT - Must enroll by June 25, 2026!
+    # Do NOT include in standing benefit value calculations
+    # -------------------------------------------------------------------------
+    uber-one:
+      name: Uber One Credit
+      amount: 120
+      monthlyAmount: 9.99
+      period: monthly
+      promotional: true
+      enrollmentDeadline: "2026-06-25"
+      enrolled: false  # TODO: Enroll before June 25, 2026!
+      monthsUsed: []
+      notes: "LIMITED-TIME PROMO. Must enroll by June 25, 2026!"
+
+    # -------------------------------------------------------------------------
+    # DELTA STAYS CREDIT - $200/year
+    # Prepaid hotels/vacation rentals via delta.com/stays
+    # -------------------------------------------------------------------------
+    delta-stays:
+      name: Delta Stays Credit
+      amount: 200
+      period: annual
+      resetDate: anniversary
+      used: 0
+      transactions: []
+
+    # -------------------------------------------------------------------------
+    # COMPANION CERTIFICATE
+    # First, Comfort+, or Main cabin. Not valid for Basic Economy.
+    # -------------------------------------------------------------------------
+    companion-certificate:
+      name: Companion Certificate
+      period: annual
+      resetDate: anniversary
+      taxesRange: "22-250"
+      used: false
+      expirationDate: null  # Certificates have their own expiration
+
+    # -------------------------------------------------------------------------
+    # DELTA SKY CLUB ACCESS
+    # 15 visits per Medallion Year (resets Feb 1)
+    # Unlimited after $75K calendar year spend
+    # -------------------------------------------------------------------------
+    sky-club-visits:
+      name: Delta Sky Club Visits
+      amount: 15
+      period: medallion-year
+      visitsRemaining: 15
+      usageLog: []
+      unlimitedThreshold: 75000
+      currentYearSpend: 0
+      notes: "Resets Feb 1 (Medallion Year). Unlimited at $75K calendar year spend."
+      # Example usage log entry:
+      # - date: 2026-01-15
+      #   airport: ATL
+      #   guests: 1
+
+    # -------------------------------------------------------------------------
+    # SKY CLUB GUEST PASSES - 4 per year
+    # -------------------------------------------------------------------------
+    sky-club-guest-passes:
+      name: Sky Club Guest Passes
+      amount: 4
+      period: calendar-year
+      passesRemaining: 4
+      usageLog: []
+
+    # -------------------------------------------------------------------------
+    # MQD HEADSTART - $2,500
+    # Automatic each Medallion Qualification Year
+    # -------------------------------------------------------------------------
+    mqd-headstart:
+      name: MQD Headstart
+      amount: 2500
+      period: medallion-year
+      received: false
+
+    global-entry:
+      name: Global Entry/TSA PreCheck
+      amount: 120
+      period: multi-year
+      intervalYears: 4
+      lastUsed: null
+      nextEligible: null
+
+# =============================================================================
+# UPDATE HISTORY
+# =============================================================================
+# Tracks when benefit information was researched and updated
+# Run /credit-card-benefits:update to check for new/changed benefits
+updateHistory:
+  lastFullCheck: null           # Last time all cards were checked
+  nextRecommendedCheck: null    # Suggested next check date
+
+  # Log of changes applied
+  # Example:
+  #   - date: 2026-01-22
+  #     card: amex-platinum
+  #     changes:
+  #       - type: added
+  #         benefit: walmart-plus
+  #         details: "$12.95/month credit"
+  #       - type: modified
+  #         benefit: annual-fee
+  #         from: 695
+  #         to: 895
+  #     sources:
+  #       - americanexpress.com
+  #       - thepointsguy.com
+  changes: []
+
+# =============================================================================
+# END OF CHECKLIST
+# =============================================================================
+# Commands:
+# /credit-card-benefits:status  - See current benefit usage
+# /credit-card-benefits:sync    - Update from data source (YNAB/CSV)
+# /credit-card-benefits:remind  - See expiring benefits
+# /credit-card-benefits:update  - Check for new/changed benefits online

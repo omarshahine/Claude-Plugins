@@ -1,0 +1,136 @@
+name: PII Check
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pii-scan:
+    name: Scan for PII
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          # Get the list of changed files in the PR
+          git diff --name-only --diff-filter=ACMR "$BASE_SHA"..HEAD > changed_files.txt
+          echo "Changed files:"
+          cat changed_files.txt
+
+      - name: Scan for PII patterns
+        id: scan
+        run: |
+          FINDINGS_FILE=$(mktemp)
+          EXIT_CODE=0
+
+          # Skip excluded file patterns
+          EXCLUDE_PATTERNS=(
+            "node_modules/"
+            "package-lock.json"
+            ".min.js"
+            "bundle/"
+            ".env.example"
+            "CHANGELOG.md"
+            ".pii-patterns.yaml"
+            ".pii-patterns.local.yaml"
+            ".github/workflows/"
+          )
+
+          while IFS= read -r file; do
+            # Skip if file doesn't exist (deleted files)
+            [ ! -f "$file" ] && continue
+
+            # Skip excluded patterns
+            SKIP=false
+            for pattern in "${EXCLUDE_PATTERNS[@]}"; do
+              if [[ "$file" == *"$pattern"* ]]; then
+                SKIP=true
+                break
+              fi
+            done
+            [ "$SKIP" = true ] && continue
+
+            # Skip example files
+            if [[ "$file" == *.example.yaml ]] || [[ "$file" == *.example.json ]]; then
+              continue
+            fi
+
+            # Check for hardcoded user paths
+            if grep -nP '/Users/[a-zA-Z][a-zA-Z0-9_-]+/' "$file" 2>/dev/null; then
+              echo "hardcoded-path:$file" >> "$FINDINGS_FILE"
+              EXIT_CODE=1
+            fi
+
+            # Check for email addresses (with allowlist)
+            if grep -nP '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' "$file" 2>/dev/null | \
+               grep -vP '@example\.com|@anthropic\.com|@noreply|@users\.noreply\.github\.com|@placeholder\.com|@test\.com' 2>/dev/null; then
+              # Skip author fields in plugin.json
+              if [[ "$file" != *"plugin.json" ]]; then
+                echo "email:$file" >> "$FINDINGS_FILE"
+                EXIT_CODE=1
+              fi
+            fi
+
+            # Check for API keys/secrets (not env var references)
+            if grep -nP '(api_key|apikey|secret|token|Bearer)\s*[:=]\s*["\x27]?[a-zA-Z0-9_-]{20,}' "$file" 2>/dev/null | \
+               grep -vP '\$\{[A-Z_]+\}|YOUR_API_KEY|your-api-key' 2>/dev/null; then
+              echo "api-key:$file" >> "$FINDINGS_FILE"
+              EXIT_CODE=1
+            fi
+
+          done < changed_files.txt
+
+          if [ $EXIT_CODE -ne 0 ]; then
+            # Build findings summary
+            {
+              echo "findings<<FINDINGS_EOF"
+              while IFS=: read -r type file; do
+                case "$type" in
+                  hardcoded-path) echo "- Hardcoded user path in \`$file\`" ;;
+                  email) echo "- Email address in \`$file\`" ;;
+                  api-key) echo "- Possible API key/secret in \`$file\`" ;;
+                esac
+              done < "$FINDINGS_FILE"
+              echo "FINDINGS_EOF"
+            } >> "$GITHUB_OUTPUT"
+            echo "has_findings=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_findings=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          rm -f "$FINDINGS_FILE"
+          exit $EXIT_CODE
+
+      - name: Comment on PR
+        if: failure() && steps.scan.outputs.has_findings == 'true'
+        env:
+          FINDINGS: ${{ steps.scan.outputs.findings }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BODY="## PII Check Failed
+
+          The following potential PII was detected in this PR:
+
+          $FINDINGS
+
+          **Please fix before merging.** Use generic placeholders:
+          - Paths: \`~/\`, \`\${HOME}\`, or relative paths
+          - Emails: \`user@example.com\`
+          - Phone: \`555-123-4567\`
+          - Addresses: \`123 Main St\`
+          - Secrets: \`\${VAR_NAME}\`"
+
+          gh pr comment "$PR_NUMBER" --body "$BODY"

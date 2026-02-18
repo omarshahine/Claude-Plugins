@@ -1,0 +1,243 @@
+# Benefit Detection Patterns
+# ==========================
+# Used by /credit-card-benefits:sync to identify benefit-related transactions
+#
+# Pattern matching is case-insensitive
+# Patterns are matched against: payee_name, memo, category_name
+
+version: "1.0.0"
+lastUpdated: 2026-01-25
+
+# =============================================================================
+# ANNUAL FEE DETECTION
+# =============================================================================
+# Used to auto-detect card anniversary dates
+annual-fee-patterns:
+  payee:
+    - "annual fee"
+    - "annual membership"
+    - "membership fee"
+    - "member fee"
+    - "card fee"
+  memo:
+    - "annual fee"
+    - "annual membership"
+    - "membership fee"
+    - "card fee"
+  category:
+    - "annual fee"
+    - "membership"
+    - "credit card fee"
+    - "card fees"
+  amount_range:
+    min: 250
+    max: 1000  # Covers all premium cards with buffer for increases
+
+# =============================================================================
+# AMERICAN EXPRESS PLATINUM
+# =============================================================================
+amex-platinum:
+  # Monthly $15 Uber Cash ($35 in December)
+  # NOTE: This is NOT a statement credit - it's loaded to your Uber Cash balance
+  # Cannot be detected from YNAB/CSV - must be tracked manually or via Uber app
+  uber-credit:
+    tracking_type: manual
+    note: "Credits to Uber Cash balance, not card statement. Check Uber app."
+
+  # Monthly $20-25 Digital Entertainment
+  digital-entertainment:
+    payee: ["disney", "hulu", "espn", "nytimes", "new york times", "peacock", "wall street journal", "wsj", "paramount", "youtube"]
+    memo: ["disney", "hulu", "espn", "nytimes", "peacock", "wsj", "paramount", "youtube"]
+    credit_payee: ["digital entertainment credit", "entertainment credit"]
+    amount_range: { min: 5, max: 50 }
+    credit_amount: [20, 25]
+
+  # Quarterly $75 Lululemon
+  lululemon-credit:
+    payee: ["lululemon", "lulu lemon"]
+    memo: ["lululemon"]
+    credit_payee: ["lululemon credit", "platinum lululemon"]
+    amount_range: { min: 0, max: 500 }
+    credit_amount: [75]
+
+  # Quarterly $100 Resy
+  resy-credit:
+    payee: ["resy"]
+    memo: ["resy"]
+    credit_payee: ["resy credit", "platinum resy"]
+    amount_range: { min: 50, max: 500 }  # Must spend $50+ per transaction
+    credit_amount: [10, 100]  # $10 per qualifying transaction, up to $100/quarter
+
+  # Semi-annual $50 Saks
+  saks-credit:
+    payee: ["saks", "saks fifth"]
+    memo: ["saks"]
+    credit_payee: ["saks credit"]
+    amount_range: { min: 0, max: 200 }
+    credit_amount: [50]
+
+  # Annual $200 Airline Fee
+  airline-fee-credit:
+    payee: ["delta", "united", "american airlines", "southwest", "alaska", "jetblue", "frontier", "spirit"]
+    memo: ["baggage", "bag fee", "seat", "upgrade", "wifi", "lounge"]
+    category: ["airline", "travel"]
+    credit_payee: ["airline credit", "airline fee credit"]
+    amount_range: { min: 0, max: 250 }
+    credit_amount: [200]
+
+  # Annual $200 Hotel (FHR/THC)
+  hotel-credit:
+    payee: ["amex travel", "fine hotels", "hotel collection"]
+    memo: ["fhr", "thc", "fine hotels", "hotel collection"]
+    credit_payee: ["hotel credit", "fhr credit"]
+    amount_range: { min: 100, max: 5000 }
+    credit_amount: [200, 300]
+
+  # Annual $189-209 CLEAR
+  clear-plus:
+    payee: ["clear", "clearme"]
+    memo: ["clear"]
+    credit_payee: ["clear credit", "clear plus"]
+    amount_range: { min: 150, max: 250 }
+    credit_amount: [189, 209]
+
+  # Annual $96-120 Uber One
+  uber-one-credit:
+    payee: ["uber one", "uber membership"]
+    memo: ["uber one"]
+    credit_payee: ["uber one credit"]
+    amount_range: { min: 8, max: 15 }  # Monthly charge ~$9.99
+    credit_amount: [9.99, 96, 120]
+
+  # Annual $200 Oura Ring
+  oura-ring-credit:
+    payee: ["oura", "oura ring", "ouraring"]
+    memo: ["oura"]
+    credit_payee: ["oura credit", "oura ring credit"]
+    amount_range: { min: 5, max: 500 }
+    credit_amount: [200]
+
+  # Annual $155 Walmart+
+  walmart-plus:
+    payee: ["walmart", "walmart+", "walmart plus"]
+    memo: ["walmart+", "walmart plus"]
+    credit_payee: ["walmart credit", "walmart+ credit"]
+    amount_range: { min: 10, max: 20 }  # Monthly charge ~$12.95
+    credit_amount: [12.95, 14.29, 14.32, 155]
+
+  # Annual $300 Equinox
+  equinox-credit:
+    payee: ["equinox"]
+    memo: ["equinox"]
+    credit_payee: ["equinox credit"]
+    amount_range: { min: 20, max: 400 }
+    credit_amount: [25, 300]
+
+  # Global Entry / TSA PreCheck
+  global-entry:
+    payee: ["global entry", "tsa precheck", "goes", "ttp"]
+    memo: ["global entry", "tsa", "precheck"]
+    credit_payee: ["global entry credit", "tsa credit"]
+    amount_range: { min: 80, max: 130 }
+    credit_amount: [85, 100, 120]
+
+# =============================================================================
+# CHASE SAPPHIRE RESERVE
+# =============================================================================
+chase-sapphire-reserve:
+  # Annual $300 Travel Credit (cardmember year)
+  travel-credit:
+    category: ["travel", "airline", "hotel", "car rental", "parking", "transit", "uber", "lyft", "tolls"]
+    payee: ["airline", "hotel", "marriott", "hilton", "hyatt", "hertz", "avis", "enterprise", "parking", "lyft", "uber", "delta", "united", "american", "southwest", "alaska", "jetblue"]
+    credit_payee: ["travel credit"]
+    amount_range: { min: 0, max: 1000 }
+    credit_amount: [300]
+    note: "Auto-applies to travel purchases - no action needed"
+
+  # DoorDash DashPass
+  doordash-dashpass:
+    payee: ["doordash", "dash pass"]
+    memo: ["doordash", "dashpass"]
+    credit_payee: ["doordash credit", "dashpass"]
+    amount_range: { min: 0, max: 100 }
+    credit_amount: [60]
+
+  # The Edit Hotel Credit
+  the-edit-hotel-credit:
+    payee: ["the edit", "chase travel"]
+    memo: ["the edit"]
+    credit_payee: ["edit credit", "hotel credit"]
+    amount_range: { min: 0, max: 500 }
+    credit_amount: [50]
+
+  # Global Entry / TSA PreCheck
+  global-entry:
+    payee: ["global entry", "tsa precheck", "goes", "ttp"]
+    memo: ["global entry", "tsa", "precheck"]
+    credit_payee: ["global entry credit", "tsa credit"]
+    amount_range: { min: 80, max: 130 }
+    credit_amount: [100]
+
+# =============================================================================
+# CAPITAL ONE VENTURE X
+# =============================================================================
+capital-one-venture-x:
+  # Annual $300 Travel Credit (cardmember year)
+  travel-credit:
+    payee: ["capital one travel"]
+    memo: ["capital one travel"]
+    credit_payee: ["travel credit"]
+    amount_range: { min: 0, max: 2000 }
+    credit_amount: [300]
+    note: "Must book through Capital One Travel portal"
+
+  # Global Entry / TSA PreCheck
+  global-entry:
+    payee: ["global entry", "tsa precheck", "goes", "ttp"]
+    memo: ["global entry", "tsa", "precheck"]
+    credit_payee: ["global entry credit", "tsa credit"]
+    amount_range: { min: 80, max: 130 }
+    credit_amount: [100]
+
+# =============================================================================
+# DELTA SKYMILES RESERVE
+# =============================================================================
+delta-reserve:
+  # Monthly $10 Rideshare Credit
+  rideshare-credit:
+    payee: ["uber", "lyft", "taxi", "cab"]
+    memo: ["uber", "lyft", "taxi", "rideshare"]
+    credit_payee: ["rideshare credit", "uber credit", "lyft credit"]
+    amount_range: { min: 0, max: 100 }
+    credit_amount: [10]
+
+  # Annual $100 Resy Credit (calendar year)
+  resy-credit:
+    payee: ["resy"]
+    memo: ["resy"]
+    credit_payee: ["resy credit", "delta resy"]
+    amount_range: { min: 50, max: 500 }  # Must spend $50+
+    credit_amount: [10, 100]  # $10 per qualifying transaction
+
+  # Global Entry / TSA PreCheck
+  global-entry:
+    payee: ["global entry", "tsa precheck", "goes", "ttp"]
+    memo: ["global entry", "tsa", "precheck"]
+    credit_payee: ["global entry credit", "tsa credit"]
+    amount_range: { min: 80, max: 130 }
+    credit_amount: [100]
+
+# =============================================================================
+# ALASKA ATMOS SUMMIT
+# =============================================================================
+alaska-atmos-summit:
+  # No transaction-based credits - benefits are certificates/passes
+  # Detection is manual or via Alaska account integration
+
+  # Global Entry / TSA PreCheck (if available on this card)
+  global-entry:
+    payee: ["global entry", "tsa precheck", "goes", "ttp"]
+    memo: ["global entry", "tsa", "precheck"]
+    credit_payee: ["global entry credit", "tsa credit"]
+    amount_range: { min: 80, max: 130 }
+    credit_amount: [100]

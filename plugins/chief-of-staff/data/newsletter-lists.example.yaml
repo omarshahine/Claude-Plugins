@@ -1,0 +1,17 @@
+# Chief-of-Staff Newsletter Lists
+# Tracks allowlisted and unsubscribed newsletters
+
+# Allowlist - newsletters to keep (never suggest unsubscribe)
+allowlist:
+  # - example-newsletter.com
+  # - example-blog.net
+  []
+
+# Previously unsubscribed - track for repeat offender detection
+unsubscribed:
+  # - domain: example.com
+  #   email: newsletter@example.com
+  #   name: "Example Newsletter"
+  #   unsubscribed_date: "2026-01-21"
+  #   method: web  # or mailto
+  []

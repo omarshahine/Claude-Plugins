@@ -1,0 +1,87 @@
+# Chief-of-Staff Email Action Routes
+# Routes emails to specialized agents for active processing
+# Think of it as: filing rules route to folders; action routes route to agents.
+#
+# Routes are checked in priority order: sender_email > sender_domain > subject_pattern > combined
+# Matched routes surface as "Process: [label]" in triage (batch and interactive)
+
+metadata:
+  last_updated: null
+  total_routes: 0
+
+# Confidence thresholds (higher than filing rules — routing is more consequential)
+thresholds:
+  suggest_minimum: 0.80      # Minimum confidence to suggest routing in triage
+  auto_route_minimum: 0.95   # Future: auto-process without asking
+  deprecate_below: 0.50      # Routes below this are flagged for review
+
+routes:
+  # Exact sender email matches (highest priority)
+  sender_email:
+    # - email: "accounting@vendor.example.com"
+    #   subject_pattern: null           # Optional: additional subject filter
+    #   attachment_required: true        # Optional: only match if email has attachments
+    #   route:
+    #     plugin: "my-plugin"
+    #     agent: "invoice-processor"        # Must be an agent (skills can't be invoked via Task)
+    #     label: "Process Vendor Invoice"   # Human-readable name shown in triage
+    #     description: "Extract invoice data and generate accounting entries"
+    #     pass_attachments: true            # Fetch attachment metadata before invoking
+    #     post_action: "archive"            # What to do after: archive, delete, keep, none
+    #     post_action_folder: "Invoices"    # Folder name (for archive post_action)
+    #     post_action_folder_id: null       # Folder ID (optional, looked up if missing)
+    #   confidence: 0.95
+    #   match_count: 0
+    #   source: "manual"                    # manual, learned, migrated
+    #   enabled: true
+    []
+
+  # Domain-level route matches
+  sender_domain:
+    # - domain: "reports.example.com"
+    #   subject_pattern: "Result Available"
+    #   route:
+    #     plugin: "my-plugin"
+    #     agent: "report-downloader"
+    #     label: "Download Reports"
+    #     description: "Download verification PDF documents"
+    #     pass_attachments: false
+    #     post_action: "archive"
+    #   confidence: 0.95
+    #   match_count: 0
+    #   source: "manual"
+    #   enabled: true
+    []
+
+  # Subject pattern route matches
+  subject_pattern:
+    # - pattern: "Monthly Invoice"
+    #   sender_pattern: "billing@service.example.com"  # Optional: restrict by sender
+    #   route:
+    #     plugin: "my-plugin"
+    #     agent: "invoice-downloader"
+    #     label: "Download Service Invoices"
+    #     pass_attachments: false
+    #     post_action: "none"
+    #   confidence: 0.90
+    #   match_count: 0
+    #   source: "manual"
+    #   enabled: true
+    []
+
+  # Combined route matches (domain + subject)
+  combined:
+    # - domain: "example.com"
+    #   subject_pattern: "monthly report"
+    #   route:
+    #     plugin: "my-plugin"
+    #     agent: "report-processor"
+    #     label: "Process Monthly Report"
+    #     pass_attachments: true
+    #     post_action: "archive"
+    #     post_action_folder: "Reports"
+    #   confidence: 0.85
+    #   match_count: 0
+    #   source: "learned"
+    #   enabled: true
+    []

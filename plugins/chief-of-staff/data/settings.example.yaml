@@ -1,0 +1,132 @@
+# Chief-of-Staff Settings
+# Copy to settings.yaml and configure for your setup
+
+# Persona configuration (for dynamic summon command)
+persona:
+  name: null              # e.g., "Friday", "Max", "Jarvis" - REQUIRED for summon command
+  user_name: null         # Your name for greetings - if null, skips personalized greeting
+  greeting_style: friendly # professional, friendly, casual
+
+# Email provider configuration
+# Set 'active' to your email provider, then configure its tool mappings below
+providers:
+  email:
+    active: fastmail  # Options: fastmail, gmail, outlook, or your custom provider
+    mappings:
+      # Fastmail MCP (https://github.com/nicholasgriffintn/fastmail-mcp)
+      fastmail:
+        list_mailboxes: mcp__fastmail__list_mailboxes
+        list_emails: mcp__fastmail__list_emails
+        get_email: mcp__fastmail__get_email
+        search_emails: mcp__fastmail__search_emails
+        advanced_search: mcp__fastmail__advanced_search
+        get_inbox_updates: mcp__fastmail__get_inbox_updates  # JMAP incremental sync
+        move_email: mcp__fastmail__move_email
+        bulk_move: mcp__fastmail__bulk_move
+        bulk_delete: mcp__fastmail__bulk_delete
+        delete_email: mcp__fastmail__delete_email
+        flag_email: mcp__fastmail__flag_email
+        bulk_flag: mcp__fastmail__bulk_flag
+        send_email: mcp__fastmail__send_email
+        reply_to_email: mcp__fastmail__reply_to_email
+        create_memo: mcp__fastmail__create_memo           # Attach private annotation to email
+        get_thread: mcp__fastmail__get_thread
+
+      # Gmail MCP (placeholder - update tool names when MCP is available)
+      # Add your Gmail MCP server: claude mcp add --transport http gmail <url>
+      gmail:
+        list_mailboxes: mcp__gmail__list_labels        # Gmail uses "labels" not "mailboxes"
+        list_emails: mcp__gmail__list_messages         # Gmail uses "messages" not "emails"
+        get_email: mcp__gmail__get_message
+        search_emails: mcp__gmail__search_messages
+        advanced_search: mcp__gmail__search_messages   # Gmail search is already advanced
+        get_inbox_updates: null                        # Not available for Gmail (uses list_emails fallback)
+        move_email: mcp__gmail__modify_labels          # Gmail moves via label changes
+        bulk_move: mcp__gmail__batch_modify_labels
+        bulk_delete: mcp__gmail__batch_trash
+        delete_email: mcp__gmail__trash_message
+        flag_email: mcp__gmail__star_message           # Gmail uses "star" not "flag"
+        bulk_flag: mcp__gmail__batch_star
+        send_email: mcp__gmail__send_message
+        reply_to_email: mcp__gmail__send_reply
+        create_memo: null                                 # Not available for Gmail
+        get_thread: mcp__gmail__get_thread
+
+      # Outlook/Microsoft Graph MCP (placeholder - update when MCP is available)
+      # Add your Outlook MCP server: claude mcp add --transport http outlook <url>
+      outlook:
+        list_mailboxes: mcp__outlook__list_folders     # Outlook uses "folders"
+        list_emails: mcp__outlook__list_messages
+        get_email: mcp__outlook__get_message
+        search_emails: mcp__outlook__search_messages
+        advanced_search: mcp__outlook__search_messages
+        get_inbox_updates: null                        # Not available for Outlook (uses list_emails fallback)
+        move_email: mcp__outlook__move_message
+        bulk_move: mcp__outlook__batch_move
+        bulk_delete: mcp__outlook__batch_delete
+        delete_email: mcp__outlook__delete_message
+        flag_email: mcp__outlook__flag_message
+        bulk_flag: mcp__outlook__batch_flag
+        send_email: mcp__outlook__send_mail
+        reply_to_email: mcp__outlook__reply
+        create_memo: null                                 # Not available for Outlook
+        get_thread: mcp__outlook__get_conversation
+
+  # Reminders provider (for inbox-to-reminder)
+  reminders:
+    active: apple-pim
+    mappings:
+      apple-pim:
+        reminder_lists: mcp__apple-pim__reminder_lists
+        reminder_items: mcp__apple-pim__reminder_items
+        reminder_create: mcp__apple-pim__reminder_create
+        reminder_complete: mcp__apple-pim__reminder_complete
+        reminder_search: mcp__apple-pim__reminder_search
+
+  # Package tracking (for inbox-to-parcel)
+  parcel:
+    active: parcel-api
+    mappings:
+      parcel-api:
+        get_deliveries: mcp__parcel-api-mcp__get_deliveries
+        add_delivery: mcp__parcel-api-mcp__add_delivery
+        get_supported_carriers: mcp__parcel-api-mcp__get_supported_carriers
+
+  # Browser automation (for newsletter-unsubscriber, inbox-to-parcel web scraping)
+  playwright:
+    active: mcp  # Options: mcp, cli
+    mappings:
+      mcp:
+        # Automatically discovered via ToolSearch "+playwright browser"
+        # Tool names depend on installation (plugin-bundled or standalone)
+        browser_navigate: null   # Auto-resolved by ToolSearch
+        browser_snapshot: null
+        browser_click: null
+        browser_type: null
+        browser_fill_form: null
+        browser_close: null
+      cli:
+        # Uses playwright-cli bash commands (brew install nicholasgriffintn/tap/playwright-cli)
+        # No tool mappings needed - invoked via Bash tool
+        command: playwright-cli
+
+# Optional: folder settings
+folders:
+  inbox_id: null  # Will be auto-discovered
+  archive_id: null  # Will be auto-discovered
+  orders_folder_name: "Orders"
+  automated_folder_name: "Automated Emails"
+  unsubscribed_folder_name: "Unsubscribed"
+
+# Customizations
+customizations:
+  # Personal info for inbox-to-reminder
+  partner_name: null  # Set to partner's name for "emails from my partner" queries
+  family_list_name: "Family"  # Apple Reminders list for family tasks
+  family_members: []  # Additional family member names
+
+# Integration settings (which sub-agents are enabled)
+integrations:
+  parcel: true      # inbox-to-parcel
+  reminders: true   # inbox-to-reminder
+  newsletters: true # newsletter-unsubscriber

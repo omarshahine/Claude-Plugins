@@ -1,0 +1,27 @@
+{
+  "name": "chief-of-staff",
+  "version": "2.0.0",
+  "description": "The orchestrator plugin for personal productivity - inbox triage, package tracking, reminder creation, newsletter management, and more",
+  "author": {
+    "name": "Omar Shahine"
+  },
+  "license": "MIT",
+  "keywords": [
+    "email",
+    "inbox",
+    "triage",
+    "packages",
+    "parcel",
+    "reminders",
+    "newsletters",
+    "unsubscribe",
+    "productivity",
+    "imessage",
+    "orchestrator",
+    "vacation-hold",
+    "reading-digest",
+    "summarize",
+    "memo"
+  ],
+  "mcpServers": "./.mcp.json"
+}

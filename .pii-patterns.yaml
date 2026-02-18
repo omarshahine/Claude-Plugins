@@ -1,0 +1,85 @@
+# PII Detection Patterns for CI
+# These regex patterns are used by .github/workflows/pii-check.yml
+# to scan PRs for accidentally committed personal information.
+#
+# Pattern format: each entry has a name, pattern (regex), and optional
+# allowlist of patterns that are false positives.
+#
+# IMPORTANT: This file is PUBLIC. Do NOT add private literals here.
+# Use .pii-patterns.local.yaml for private patterns (gitignored).
+
+patterns:
+  - name: "Hardcoded user paths"
+    pattern: '/Users/[a-zA-Z][a-zA-Z0-9_-]+/'
+    severity: blocking
+    description: "Use ~/, ${HOME}, or relative paths instead"
+
+  - name: "Personal email addresses"
+    pattern: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+    severity: blocking
+    description: "Use @example.com or @noreply placeholders"
+    allowlist:
+      - '@example\.com'
+      - '@anthropic\.com'
+      - '@noreply'
+      - '@users\.noreply\.github\.com'
+      - 'omarshahine@users\.noreply\.github\.com'  # Author field in plugin.json
+      - '@placeholder\.com'
+      - '@test\.com'
+
+  - name: "US phone numbers"
+    pattern: '\b\d{3}[-.]?\d{3}[-.]?\d{4}\b'
+    severity: blocking
+    description: "Use 555-123-4567 placeholder"
+    allowlist:
+      - '555-'
+      - '000-000-0000'
+
+  - name: "US street addresses"
+    pattern: '\b\d{1,5}\s+(N|S|E|W|NE|NW|SE|SW)?\s*[A-Z][a-z]+\s+(St|Ave|Blvd|Dr|Ln|Rd|Way|Ct|Pl|Cir)\b'
+    severity: warning
+    description: "Use 123 Main St placeholder"
+    allowlist:
+      - '123 Main St'
+
+  - name: "API keys and secrets"
+    pattern: '(api_key|apikey|api-key|secret|token|Bearer)\s*[:=]\s*["\x27]?[a-zA-Z0-9_-]{20,}'
+    severity: blocking
+    description: "Use ${VAR} environment variables"
+    allowlist:
+      - '\$\{[A-Z_]+\}'
+      - 'YOUR_API_KEY'
+      - 'your-api-key'
+
+  - name: "Aircraft tail numbers"
+    pattern: '\bN\d{1,5}[A-Z]{0,2}\b'
+    severity: warning
+    description: "Use N12345 placeholder"
+
+  - name: "Real physical addresses with zip"
+    pattern: '\b[A-Z][a-z]+,?\s+[A-Z]{2}\s+\d{5}\b'
+    severity: warning
+    description: "Use Anytown, WA 98101 placeholder"
+
+# Files and patterns to exclude from scanning
+exclude_paths:
+  - 'node_modules/'
+  - 'package-lock.json'
+  - '*.min.js'
+  - 'bundle/'
+  - '.git/'
+  - '.env.example'
+  - 'CHANGELOG.md'
+  - '.pii-patterns.yaml'      # This file contains patterns, not PII
+  - '.pii-patterns.local.yaml'
+  - '**/*.example.yaml'
+  - '**/*.example.json'
+
+# Patterns that are OK in specific contexts
+context_allowlist:
+  - file: '**/plugin.json'
+    patterns: ['email addresses in author fields']
+  - file: '**/CLAUDE.md'
+    patterns: ['regex patterns in code review guidelines']
+  - file: '**/.github/workflows/*'
+    patterns: ['regex patterns in CI scripts']

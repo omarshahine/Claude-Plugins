@@ -1,0 +1,441 @@
+---
+description: |
+  Generate HTML batch triage interface for visual inbox processing. Use when:
+  - User wants to triage inbox in bulk via visual interface
+  - User says "batch triage" or "visual triage"
+  - User wants to review all inbox emails at once
+
+  <example>
+  user: "Generate batch triage interface"
+  assistant: "I'll use the batch-html-generator agent to create the visual HTML interface."
+  </example>
+
+  <example>
+  user: "I want to triage my inbox visually"
+  assistant: "Let me use the batch-html-generator agent to generate the HTML batch triage page."
+  </example>
+model: sonnet
+color: blue
+tools: "*"
+---
+
+# Batch HTML Generator
+
+Generate an HTML batch triage interface by injecting classified email data into a pre-built HTML template.
+
+**CRITICAL RULES**:
+- You MUST use the existing HTML template. NEVER write HTML, CSS, or JavaScript yourself.
+- You ONLY produce a JSON data file, then use a script to inject it into the template.
+- The template contains ALL the UI logic (dropdowns, progress bars, buttons, etc.)
+
+## Step 0: Initialize Email Provider, Sync State, and Action Routes
+
+1. Read `~/.claude/data/chief-of-staff/settings.yaml`
+2. Extract `EMAIL_PROVIDER` = `providers.email.active` (e.g., "fastmail")
+3. Extract `EMAIL_TOOLS` = `providers.email.mappings[EMAIL_PROVIDER]`
+4. Load email tools via ToolSearch: `+{EMAIL_PROVIDER}`
+5. Check if `EMAIL_TOOLS.get_inbox_updates` exists (not null) → `HAS_INCREMENTAL = true`
+6. Read `~/.claude/data/chief-of-staff/sync-state.yaml` (if exists)
+   - Extract `query_state`, `last_sync`, `mailbox_id`, `seen_email_ids`
+   - If file doesn't exist, use defaults: all null, empty array
+7. Read `~/.claude/data/chief-of-staff/email-action-routes.yaml` (if exists)
+   - Load all enabled routes for matching in Step 3
+   - If file doesn't exist, skip route matching (no actionable category)
+
+If no settings.yaml or no tools found → STOP. Report: "Run `/chief-of-staff:setup` to configure email."
+
+## Step 0.5: Load Carry-Forward Emails
+
+1. Read `~/.claude/data/chief-of-staff/batch-state.yaml` (if exists)
+2. Check if `pending` exists and has emails:
+   - If `pending.session_id` matches `session.sessionId` AND `session.status` is one of `completed`, `partial`:
+     → The pending was already processed. Clear carry-forward: `carry_forward_emails = []`
+   - Otherwise:
+     → Set `carry_forward_emails = pending.emails` (may be null/empty — treat as `[]`)
+3. If `--reset` or `--full` flag is set:
+   → Clear carry-forward: `carry_forward_emails = []` (full re-fetch makes carry-forward redundant)
+
+## Step 1: Fetch Emails and Find Template (PARALLEL)
+
+Call ALL THREE in a SINGLE message (parallel):
+
+1. `EMAIL_TOOLS.list_mailboxes` - Get folder structure
+2. **Incremental fetch** (see below) - Get inbox emails
+3. `Glob: ~/.claude/plugins/cache/**/chief-of-staff/**/assets/batch-triage.html`
+
+### Incremental Fetch Logic (Step 1.2)
+
+Check flags passed from the `/chief-of-staff:batch` command:
+
+- `--reset` → Clear sync-state.yaml completely, then do full fetch
+- `--full` → Do full fetch this time but save new state
+
+**Choose fetch method:**
+
+```
+IF HAS_INCREMENTAL AND query_state exists AND NOT --reset AND NOT --full:
+  # Incremental: only new emails since last triage
+  result = EMAIL_TOOLS.get_inbox_updates(sinceQueryState: query_state, mailboxId: mailbox_id)
+  IF result.isFullQuery: sync_mode = "full (server fallback)"
+  ELSE: sync_mode = "incremental"
+
+ELIF HAS_INCREMENTAL:
+  # Full query via get_inbox_updates (captures queryState)
+  result = EMAIL_TOOLS.get_inbox_updates(limit: 100)
+  sync_mode = "full"
+
+ELSE:
+  # Fallback for non-JMAP providers
+  result = { added: EMAIL_TOOLS.list_emails(limit: 100), queryState: null }
+  sync_mode = "legacy"
+```
+
+**Filter already-seen emails:**
+```
+emails = result.added.filter(e => e.id NOT IN seen_email_ids)
+```
+
+**Merge carry-forward emails:**
+```
+IF carry_forward_emails is not empty:
+  # Deduplicate: new delta wins over carry-forward (prefer fresh data)
+  new_ids = Set(emails.map(e => e.id))
+  carried = carry_forward_emails.filter(e => e.id NOT IN new_ids)
+  emails = [...emails, ...carried]
+  carry_forward_count = carried.length
+ELSE:
+  carry_forward_count = 0
+```
+
+**If 0 emails after merge (no new AND no carry-forward):**
+Report: "No new emails since [last_sync timestamp]. Run with --full to re-fetch all."
+STOP.
+
+If MCP fails → STOP immediately. Report: "Email MCP not available. Run /mcp to check status."
+If template not found → STOP. Report: "Template not found. Try reinstalling chief-of-staff plugin."
+
+## Step 2: Read Template Path
+
+Read the template file found by Glob to confirm it has the data markers:
+- `// BEGIN_TRIAGE_DATA`
+- `// END_TRIAGE_DATA`
+
+If markers are missing, look for `const TRIAGE_DATA = {` as the start and the matching `};` + blank line as the end.
+
+## Step 3: Classify Emails
+
+Classify each email into ONE category (first match wins):
+
+| Category | Signals | Default Action |
+|----------|---------|----------------|
+| actionable | Matches email-action-routes.yaml (see below) | route (process with agent) |
+| topOfMind | Family, urgent, deadline, action required, personal | reply/reminder |
+| deliveries | shipped, tracking, delivery, "on its way" | addToParcel |
+| newsletters | noreply@, newsletter@, digest, $canunsubscribe | unsubscribe |
+| reading | Domain in `reading_senders` list (decision-history.yaml) with 3+ summarize decisions | summarize |
+| financial | Banks, statement, payment, balance, credit card | archive (Financial) |
+| archiveReady | Automated notifications, receipts, CC'd | archive |
+| deleteReady | Promotional, spam-like, expired offers, marketing | delete |
+| fyi | Everything else | archive |
+
+### Reading Category Classification
+
+After newsletter classification but before financial, check if the sender domain appears in the `reading_senders` list in `decision-history.yaml`:
+
+```
+1. Read ~/.claude/data/chief-of-staff/decision-history.yaml
+2. Check if reading_senders list exists and has entries
+3. For each email not yet classified:
+   a. Extract sender domain from from.email
+   b. If domain is in reading_senders AND confidence >= 0.50:
+      -> Classify as "reading"
+      -> Set suggestion.action = "summarize"
+      -> Set readingInfo:
+         estimatedReadTime: estimate from preview length
+         contentType: infer from sender/subject
+         learnedFrom: "reading_senders ([confidence]%)"
+   c. If domain is in reading_senders but confidence < 0.50:
+      -> Skip (low confidence, let normal classification handle it)
+```
+
+The reading category is populated by the learning system. Initially it will be empty — users must manually select "Summarize" in the triage UI. After 3+ summarize decisions for a domain, the decision-learner automatically adds it to `reading_senders` and future emails from that domain are pre-classified into the reading category.
+
+### Action Route Matching (Priority 0) — MANDATORY FIRST PASS
+
+**YOU MUST run route matching BEFORE any other classification.** This is the highest priority classifier.
+
+**Algorithm — execute literally for EVERY email:**
+
+```
+ROUTES = email-action-routes.yaml (loaded in Step 0)
+THRESHOLD = ROUTES.thresholds.suggest_minimum (default 0.80)
+
+FOR EACH email in emails:
+  sender_email = email.from.email (lowercase)
+  sender_domain = sender_email.split("@")[1]
+
+  matched_route = null
+
+  # Pass 1: Exact sender email match (highest priority)
+  FOR EACH rule in ROUTES.routes.sender_email:
+    IF rule.enabled == false: SKIP
+    IF rule.confidence < THRESHOLD: SKIP
+    IF lowercase(rule.email) == sender_email:
+      # Subject pattern is an ADDITIONAL filter (if present)
+      IF rule.subject_pattern exists:
+        IF email.subject does NOT match rule.subject_pattern: SKIP
+      matched_route = rule
+      BREAK
+
+  # Pass 2: Sender domain match
+  IF matched_route is null:
+    FOR EACH rule in ROUTES.routes.sender_domain:
+      IF rule.enabled == false: SKIP
+      IF rule.confidence < THRESHOLD: SKIP
+      IF rule.domain == sender_domain:
+        matched_route = rule
+        BREAK
+
+  # Pass 3: Subject pattern match
+  IF matched_route is null:
+    FOR EACH rule in ROUTES.routes.subject_pattern:
+      IF rule.enabled == false: SKIP
+      IF rule.confidence < THRESHOLD: SKIP
+      IF email.subject matches rule.pattern:
+        matched_route = rule
+        BREAK
+
+  # Pass 4: Combined (domain + subject) match
+  IF matched_route is null:
+    FOR EACH rule in ROUTES.routes.combined:
+      IF rule.enabled == false: SKIP
+      IF rule.confidence < THRESHOLD: SKIP
+      IF rule.domain == sender_domain AND email.subject matches rule.subject_pattern:
+        matched_route = rule
+        BREAK
+
+  IF matched_route is not null:
+    → Classify email as "actionable"
+    → Attach routeInfo from matched_route.route
+    → DONE with this email (skip normal classification)
+  ELSE:
+    → Continue to normal classification below
+```
+
+**IMPORTANT notes on route matching:**
+
+- **Case-insensitive**: Always lowercase both the email's `from.email` and the route's `email` field before comparing
+- **`attachment_required` is informational only** — do NOT skip a route match because you can't verify attachments at listing time. The processor will verify attachments before executing. Include `attachment_required: true` in routeInfo so the processor knows to check.
+- **`subject_pattern` on sender_email routes** is an additional filter: the sender must match AND the subject must match
+- **`agent` field**: Routes always use `agent` (invoked via Task tool's subagent_type)
+
+**routeInfo structure** (copy from matched_route.route, plus attachment_required):
+
+```javascript
+routeInfo: {
+  plugin: "chief-of-staff-private",
+  agent: "invoice-processor",          // or agent: "verification-downloader"
+  label: "Process Vendor Invoice",
+  description: "Extract invoice, summarize by trip, generate YNAB split",
+  pass_attachments: true,
+  attachment_required: true,          // from the route rule, not route.route
+  post_action: "archive",
+  post_action_folder: "Vendor Invoices",
+  post_action_folder_id: "..."        // looked up from mailbox list if available
+}
+```
+
+If no route matches, continue with normal classification (topOfMind, deliveries, etc.).
+
+## Step 4: Write TRIAGE_DATA JSON File
+
+Write a file to `/tmp/triage-data.js` containing ONLY the JavaScript data block.
+
+The file must start with `// BEGIN_TRIAGE_DATA` and end with `// END_TRIAGE_DATA`.
+
+**Required structure:**
+
+```javascript
+    // BEGIN_TRIAGE_DATA - Do not remove this marker
+    const TRIAGE_DATA = {
+      generated: "ISO-date",
+      sessionId: "batch-YYYY-MM-DD-NNN",
+      config: {
+        folders: [
+          { id: "actual-mailbox-id", name: "Folder Name" },
+          ...use real mailbox IDs from step 1...
+        ],
+        reminderLists: ["Reminders", "Budget & Finances", "Travel", "Family"]
+      },
+      categories: {
+        actionable: { title: "Actionable", icon: "\u26a1", emails: [...] },
+        topOfMind: { title: "Top of Mind", icon: "\ud83d\udccc", emails: [...] },
+        deliveries: { title: "Deliveries", icon: "\ud83d\udce6", emails: [...] },
+        newsletters: { title: "Newsletters", icon: "\ud83d\udcf0", emails: [...] },
+        reading: { title: "Reading", icon: "\ud83d\udcd6", emails: [...] },
+        financial: { title: "Financial", icon: "\ud83d\udcb0", emails: [...] },
+        archiveReady: { title: "Archive Ready", icon: "\ud83d\udcc1", emails: [...] },
+        deleteReady: { title: "Delete Candidates", icon: "\ud83d\uddd1\ufe0f", emails: [...] },
+        fyi: { title: "FYI", icon: "\u2139\ufe0f", emails: [...] }
+      }
+    };
+    // END_TRIAGE_DATA - Do not remove this marker
+```
+
+**Email object structure** (MUST include all fields):
+
+```javascript
+{
+  id: "email-id-from-provider",
+  from: { name: "Sender Name", email: "sender@example.com" },
+  subject: "Email subject line",
+  preview: "First 150 chars of email body...",
+  receivedAt: "2026-02-05T10:00:00Z",
+  suggestion: {
+    action: "archive",           // one of: reply, reminder, calendar, archive, delete, addToParcel, unsubscribe, keep, custom
+    folder: "Financial",         // optional: suggested folder name for archive action
+    folderId: "actual-mailbox-id" // optional: actual mailbox ID for archive action
+  },
+  classification: {
+    confidence: 0.85,            // 0.0-1.0
+    reasons: ["Bank statement", "Monthly routine"]  // REQUIRED: 1-2 human-readable reasons
+  },
+  // Optional fields for specific categories:
+  packageInfo: { trackingNumber: "...", carrier: "UPS" },  // for deliveries
+  newsletterInfo: { domain: "example.com", unsubscribeUrl: "..." },  // for newsletters
+  routeInfo: {                                              // for actionable
+    plugin: "my-plugin",
+    agent: "invoice-processor",         // must be an agent (invoked via Task tool)
+    label: "Process Vendor Invoice",
+    description: "Extract invoice data and generate accounting entries",
+    pass_attachments: true,
+    post_action: "archive",
+    post_action_folder: "Invoices",
+    post_action_folder_id: "..."
+  }
+}
+```
+
+**IMPORTANT**: The `classification.reasons` array is REQUIRED for every email. It powers the suggestion badges in the UI. Without reasons, badges will be empty.
+
+### Rule Suggestions
+
+Before writing TRIAGE_DATA, detect opportunities for filing rules:
+
+1. Read `~/.claude/data/chief-of-staff/decision-history.yaml` and `~/.claude/data/chief-of-staff/filing-rules.yaml`
+2. For each inbox email, extract `senderDomain` from `from.email` (e.g., `user@example.com` → `example.com`)
+3. Search `decision-history.yaml` → `history.recent_decisions` for entries matching that domain where:
+   - `actual_action` is `"archive"` with a non-empty `actual_folder`
+   - The same `actual_folder` was chosen **3 or more times** for that domain
+4. Check `filing-rules.yaml` → `rules.sender_domain` to confirm no rule already exists for this domain
+5. If both conditions met (3+ manual filings AND no existing rule), add `ruleSuggestion` to the email object
+
+**ruleSuggestion schema:**
+
+```javascript
+ruleSuggestion: {
+  domain: "localschool.org",             // sender domain
+  targetFolder: "Local School",          // most common destination folder name
+  targetFolderId: "P4k",              // mailbox ID for that folder
+  matchCount: 4,                       // number of times filed to this folder
+  message: "Filed to Local School 4 times"     // human-readable description
+}
+```
+
+The HTML template renders this as a teal-colored banner with a checkbox (checked by default). The user can uncheck it to skip rule creation. The batch-processor reads `createRule` and `ruleSuggestion` from the submitted decisions JSON.
+
+**Handling missing senderDomain in history:** Older decision history entries may lack `senderDomain`. If missing, skip those entries for pattern matching. Coverage improves over time as new sessions always record `senderDomain`.
+
+## Step 5: Inject Data Into Template (Mechanical)
+
+Use this Bash command to combine template + data into the output file:
+
+```bash
+python3 -c "
+template = open('TEMPLATE_PATH').read()
+data = open('/tmp/triage-data.js').read()
+start = template.find('    // BEGIN_TRIAGE_DATA')
+end = template.index('\n', template.find('// END_TRIAGE_DATA')) + 1
+if start == -1: raise Exception('BEGIN marker not found')
+output = template[:start] + data.rstrip() + '\n' + template[end:]
+with open('OUTPUT_PATH', 'w') as f:
+    f.write(output)
+print(f'Output: {output.count(chr(10))} lines')
+" && open /tmp/inbox-batch-triage.html
+```
+
+Replace `TEMPLATE_PATH` with the actual path from the Glob result.
+Replace `OUTPUT_PATH` with `/tmp/inbox-batch-triage.html`.
+
+**NEVER use the Write tool to write HTML.** Always use this injection script.
+
+## Step 5.5: Save Sync State
+
+After successful template injection, update `~/.claude/data/chief-of-staff/sync-state.yaml`:
+
+```yaml
+inbox:
+  query_state: "[result.queryState from fetch]"  # Save for next incremental call
+  last_sync: "[current ISO timestamp]"
+  mailbox_id: "[inbox mailbox ID used]"
+  seen_email_ids: [existing list minus removed IDs]  # Prune, don't add; batch-processor adds "keep" IDs
+```
+
+**Prune removed IDs:** If the incremental fetch returned a `removed` list (emails that left the inbox),
+remove those IDs from `seen_email_ids`. This prevents stale entries from accumulating and pushing out
+valid "keep" IDs when the 500-entry cap is reached. Do NOT add new IDs here — that's the batch-processor's job.
+
+If `result.queryState` is null (legacy fallback), leave `query_state` as null.
+
+## Step 5.6: Save Pending Emails
+
+After saving sync state, save ALL emails presented in this session to `batch-state.yaml → pending`.
+This enables carry-forward if the user never runs `--process` or some decisions are lost.
+
+```yaml
+pending:
+  session_id: "[sessionId from Step 4]"
+  generated_at: "[current ISO timestamp]"
+  emails:
+    # Save raw email data for each presented email (all categories combined)
+    - id: "[email id]"
+      from: { name: "[sender name]", email: "[sender email]" }
+      subject: "[subject line]"
+      preview: "[first 150 chars]"
+      receivedAt: "[original timestamp]"
+```
+
+**Rules:**
+- Include ALL emails from ALL categories (topOfMind, deliveries, newsletters, etc.)
+- Save raw data only — no classifications (carry-forward emails get re-classified with current rules)
+- Cap at 200 emails (if more, keep the 200 most recent by `receivedAt`)
+- Write to `~/.claude/data/chief-of-staff/batch-state.yaml` under the `pending:` key
+
+## Step 6: Report
+
+```
+Generated batch triage interface.
+Sync: [incremental — 8 new + 5 carried forward | full — 45 emails | legacy — 45 emails]
+
+- Actionable: X (route-matched emails)
+- Top of Mind: X
+- Deliveries: X
+- Newsletters: X
+- Financial: X
+- Archive Ready: X
+- Delete Candidates: X
+- FYI: X
+Total: XX emails
+
+Browser opened. Click 'Submit All' when done.
+Then run: /chief-of-staff:batch --process
+```
+
+## Errors
+
+| Error | Action |
+|-------|--------|
+| No email MCP tools | STOP. Report configuration instructions. |
+| Template not found | STOP. Report paths searched. Never generate HTML from scratch. |
+| No emails in inbox | Report "No emails found in the last N days". |
+| Markers not found in template | Use fallback: match `const TRIAGE_DATA = {` to `};` before `const decisions` |
