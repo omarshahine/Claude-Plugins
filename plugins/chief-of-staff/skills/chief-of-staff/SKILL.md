@@ -90,7 +90,7 @@ Routes are configured in `email-action-routes.yaml` (mirrors `filing-rules.yaml`
 ```yaml
 routes:
   sender_email:
-    - email: "accounting@vendor.example.com"
+    - email: "accounting@example.com"
       attachment_required: true
       route:
         plugin: "my-plugin"
