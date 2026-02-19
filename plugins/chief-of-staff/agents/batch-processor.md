@@ -173,7 +173,7 @@ For each summarize decision:
    - Action Items: any tasks or deadlines mentioned (may be empty)
    - Estimated Read Time: estimate based on content length
    - Content Type: one of "analysis", "news", "tutorial", "update", "opinion"
-4. Attach a SHORT memo on the email (Fastmail memos have a ~255 char limit):
+4. Attach a SHORT memo on the email (email provider memos typically have a ~255 char limit):
    Call EMAIL_TOOLS.create_memo(emailId, memoText) where memoText is CONCISE:
      "{tldr} | {contentType} | {estimatedReadTime}"
    Example: "Pre-Order 8 pushed from Feb 24 to March 24 at 9am PT. | update | 2 min"
@@ -210,7 +210,6 @@ After processing ALL summarize decisions:
      model: sonnet
      prompt: |
        Generate reading digest HTML from reading-digest-state.yaml.
-       Session: [sessionId]
        Open the result in the browser when done.
 
    This step MUST execute after writing the state file. The user expects
