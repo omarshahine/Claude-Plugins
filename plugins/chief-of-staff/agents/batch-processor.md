@@ -173,11 +173,12 @@ For each summarize decision:
    - Action Items: any tasks or deadlines mentioned (may be empty)
    - Estimated Read Time: estimate based on content length
    - Content Type: one of "analysis", "news", "tutorial", "update", "opinion"
-4. Attach summary as Fastmail memo on the email:
-   Call EMAIL_TOOLS.create_memo(emailId, memoText) where memoText is:
-     "## AI Summary\n\n{tldr}\n\n### Key Points\n{keyPoints as bullet list}\n\n### Action Items\n{actionItems as bullet list or 'None'}\n\n---\nRead time: {estimatedReadTime} | Type: {contentType}\nSummarized: {timestamp}"
-   This persists the summary with the email in Fastmail so it's
-   accessible even after the digest is processed and the email archived.
+4. Attach a SHORT memo on the email (Fastmail memos have a ~255 char limit):
+   Call EMAIL_TOOLS.create_memo(emailId, memoText) where memoText is CONCISE:
+     "{tldr} | {contentType} | {estimatedReadTime}"
+   Example: "Pre-Order 8 pushed from Feb 24 to March 24 at 9am PT. | update | 2 min"
+   Keep under 200 characters. NO markdown headers, NO bullet lists, NO timestamps.
+   The full summary is stored in reading-digest-state.yaml — the memo is just a quick reference.
 5. Collect all summaries for batch writing
 ```
 
@@ -203,12 +204,17 @@ After processing ALL summarize decisions:
        contentType: "analysis|news|tutorial|update|opinion"
 3. Update metadata.total_items and metadata.last_generated
 4. Write updated reading-digest-state.yaml
-5. Launch reading-digest-generator sub-agent:
+5. **MANDATORY — Launch reading-digest-generator sub-agent NOW** (do NOT skip this step):
    Task:
      subagent_type: "chief-of-staff:reading-digest-generator"
+     model: sonnet
      prompt: |
        Generate reading digest HTML from reading-digest-state.yaml.
        Session: [sessionId]
+       Open the result in the browser when done.
+
+   This step MUST execute after writing the state file. The user expects
+   to see the digest HTML open in their browser after batch processing.
 ```
 
 #### Memo

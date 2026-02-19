@@ -132,6 +132,7 @@ Decisions recorded as summarize_archive/summarize_delete.
 ```
 Use the Task tool with:
   subagent_type: "chief-of-staff:batch-html-generator"
+  model: sonnet
   prompt: |
     Generate the HTML batch triage interface.
     Parameters:
@@ -151,6 +152,7 @@ Use the Task tool with:
 ```
 Use the Task tool with:
   subagent_type: "chief-of-staff:batch-processor"
+  model: sonnet
   prompt: |
     Process batch triage decisions from the downloaded JSON file.
 
@@ -163,12 +165,17 @@ Use the Task tool with:
     - Use reply_to_email with markdownBody for drafts
     - Initialize data files from .example templates if missing
     - Record all decisions to decision-history.yaml for learning
+    - CRITICAL: If any decisions have action "summarize", you MUST launch
+      the reading-digest-generator sub-agent AFTER writing reading-digest-state.yaml.
+      This generates the newspaper-style HTML digest and opens it in the browser.
+      Do NOT skip this step — the user expects the digest to appear automatically.
 ```
 
 **Digest Mode (--digest):**
 ```
 Use the Task tool with:
   subagent_type: "chief-of-staff:batch-processor"
+  model: sonnet
   prompt: |
     Process reading digest decisions from the downloaded JSON file.
 
@@ -188,6 +195,7 @@ Use the Task tool with:
 ```
 Use the Task tool with:
   subagent_type: "chief-of-staff:batch-processor"
+  model: sonnet
   prompt: |
     Retry failed items from the previous batch.
     Read failures from ~/.claude/data/chief-of-staff/batch-state.yaml and reprocess only those items.
